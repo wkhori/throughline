@@ -1,0 +1,8 @@
+{
+  "driftScore": 0.15,
+  "alignmentVerdict": "aligned",
+  "fixSuggestion": null,
+  "suggestedRelink": null,
+  "reasoning": "stub default — commit appears aligned to linked outcome",
+  "model": "claude-haiku-4-5-20251001"
+}

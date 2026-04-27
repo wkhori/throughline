@@ -17,8 +17,7 @@ public interface AIBudgetRepository extends JpaRepository<AIBudget, AIBudgetId> 
    * concurrent {@code preflight} checks across replicas without blocking unrelated rows.
    */
   @Lock(LockModeType.PESSIMISTIC_READ)
-  @Query(
-      "select b from AIBudget b where b.id.orgId = :orgId and b.id.monthStart = :monthStart")
+  @Query("select b from AIBudget b where b.id.orgId = :orgId and b.id.monthStart = :monthStart")
   Optional<AIBudget> findForUpdate(
       @Param("orgId") String orgId, @Param("monthStart") LocalDate monthStart);
 }

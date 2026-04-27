@@ -42,6 +42,12 @@ dependencies {
     // Caching for AI rate-limit (Phase 5a; harmless to include now)
     implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
 
+    // Phase 5a: Anthropic HTTP client (OkHttp + Jackson body codec).
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    // Phase 5b: WebSocket / STOMP for async T3/T4 fallback push channel (P16).
+    implementation("org.springframework.boot:spring-boot-starter-websocket")
+
     // Tests
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")

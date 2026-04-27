@@ -10,7 +10,9 @@ import org.springframework.data.repository.query.Param;
 
 public interface AIInsightRepository extends JpaRepository<AIInsight, String> {
 
-  /** Most-recent insight for a given (entityType, entityId, kind) — drives the dashboard hero card. */
+  /**
+   * Most-recent insight for a given (entityType, entityId, kind) — drives the dashboard hero card.
+   */
   @Query(
       "select i from AIInsight i where i.entityType = :entityType and i.entityId = :entityId and"
           + " i.kind = :kind order by i.createdAt desc limit 1")
@@ -30,8 +32,8 @@ public interface AIInsightRepository extends JpaRepository<AIInsight, String> {
 
   /** Most-recent T5 digest for a manager (P17 hero card). */
   @Query(
-      "select i from AIInsight i where i.kind = com.throughline.weeklycommit.domain.AIInsightKind.T5_DIGEST"
-          + " and i.entityType = 'user' and i.entityId = :managerId order by i.createdAt desc"
-          + " limit 1")
+      "select i from AIInsight i where i.kind ="
+          + " com.throughline.weeklycommit.domain.AIInsightKind.T5_DIGEST and i.entityType = 'user'"
+          + " and i.entityId = :managerId order by i.createdAt desc limit 1")
   Optional<AIInsight> findMostRecentDigestForManager(@Param("managerId") String managerId);
 }

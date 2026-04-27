@@ -1,0 +1,7 @@
+{
+  "supportingOutcomeId": null,
+  "confidence": 0,
+  "rationale": "no_credible_match",
+  "reasoning": "stub default for T1 — no per-hash fixture, returning null-match",
+  "model": "claude-haiku-4-5-20251001"
+}

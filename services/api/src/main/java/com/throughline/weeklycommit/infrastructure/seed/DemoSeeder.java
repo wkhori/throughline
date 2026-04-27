@@ -244,8 +244,7 @@ public class DemoSeeder implements CommandLineRunner {
                 "Demo Manager",
                 Role.MANAGER));
     User ic =
-        userRepo.save(
-            new User(org.getId(), icSub, "ic@demo.throughline.app", "Demo IC", Role.IC));
+        userRepo.save(new User(org.getId(), icSub, "ic@demo.throughline.app", "Demo IC", Role.IC));
 
     // Seed-team for the three personas: place them on Growth Eng so demo logins land on a team
     // with realistic data.

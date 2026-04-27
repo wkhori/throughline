@@ -14,8 +14,8 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 /**
- * Persisted AI output (PRD §3.3 V4). One row per AI call (or per cache-hit; cache hits store
- * {@code cost_cents=0} and {@code model='cache:<original>'} per P13). Append-only — never updated.
+ * Persisted AI output (PRD §3.3 V4). One row per AI call (or per cache-hit; cache hits store {@code
+ * cost_cents=0} and {@code model='cache:<original>'} per P13). Append-only — never updated.
  */
 @Entity
 @Table(name = "ai_insight")

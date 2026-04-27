@@ -1,0 +1,15 @@
+{
+  "headline": "Portfolio reviewed — clean shape across 5 commits",
+  "overallSeverity": "info",
+  "findings": [],
+  "chessGridSummary": {
+    "strategicShare": 0.4,
+    "operationalShare": 0.4,
+    "reactiveShare": 0.2,
+    "mustCount": 2,
+    "shouldCount": 2,
+    "couldCount": 1
+  },
+  "reasoning": "stub default — balanced portfolio",
+  "model": "claude-sonnet-4-6"
+}

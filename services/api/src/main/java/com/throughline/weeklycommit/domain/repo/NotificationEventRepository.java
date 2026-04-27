@@ -13,8 +13,8 @@ public interface NotificationEventRepository extends JpaRepository<NotificationE
   List<NotificationEvent> findByStateOrderByCreatedAtAsc(NotificationState state);
 
   /**
-   * Idempotency probe for the digest scheduler — pairs with the partial unique index P20/P38 in
-   * V4. Matches a SENT/PENDING digest for the same recipient + payload weekStart.
+   * Idempotency probe for the digest scheduler — pairs with the partial unique index P20/P38 in V4.
+   * Matches a SENT/PENDING digest for the same recipient + payload weekStart.
    */
   @Query(
       value =
