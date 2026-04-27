@@ -89,6 +89,37 @@ function shortId(id: string | null | undefined): string {
   return typeof id === 'string' && id.length > 0 ? id.slice(0, 8) : '—';
 }
 
+// Sonnet emits observedShare as either a percent string ("16.7%") or a decimal
+// fraction (0.1167). Normalise both into a clean "X%" label.
+function formatShare(raw: string | number | null | undefined): string {
+  if (raw == null) return '';
+  if (typeof raw === 'number') {
+    const pct = raw <= 1 ? raw * 100 : raw;
+    return `${pct.toFixed(1).replace(/\.0$/, '')}%`;
+  }
+  const trimmed = raw.trim();
+  if (trimmed.length === 0) return '';
+  const numeric = Number(trimmed.replace('%', ''));
+  if (Number.isFinite(numeric) && !trimmed.includes('%')) {
+    const pct = numeric <= 1 ? numeric * 100 : numeric;
+    return `${pct.toFixed(1).replace(/\.0$/, '')}%`;
+  }
+  return trimmed;
+}
+
+// Always produce a non-empty drawer body for a rally-cry drift chip — even when
+// the AI omits expectedRange or direction, render whatever we do have rather
+// than letting the drawer fall through to a JSON dump.
+function buildDriftDetail(observed: string, expected: string, direction: string): string {
+  if (observed && expected) {
+    return `Observed ${observed} vs expected ${expected}${direction ? ` (${direction})` : ''}.`;
+  }
+  if (observed) {
+    return `Observed share ${observed}${direction ? ` (${direction})` : ''}; expected range not provided.`;
+  }
+  return 'Drift detected against the team priority weights — no observed share returned.';
+}
+
 // Sonnet returns several field-name variants; the production payload uses
 // `outcomeId`/`outcomeTitle`, `rallyCry*` for drift, `weeksCarried`, and
 // `recommendedDrillDowns` (often with userId=null). Coerce defensively so
@@ -113,15 +144,12 @@ function chipsFor(payload: DigestPayload): InsightDrillDownEntity[] {
     if (isRallyCryShape) {
       const id = d.rallyCryId ?? `drift-${idx}`;
       const title = d.rallyCryTitle ?? `Rally cry #${shortId(id)}`;
-      const observed =
-        typeof d.observedShare === 'number' ? `${d.observedShare}%` : (d.observedShare ?? '');
+      const observed = formatShare(d.observedShare);
       const direction = d.direction ?? '';
       const expected = d.expectedRange ?? '';
       const labelTail = [observed, direction].filter(Boolean).join(' · ');
       const label = labelTail ? `${title} — ${labelTail}` : title;
-      const detailText = expected
-        ? `Observed ${observed} vs expected ${expected} (${direction || 'drift'}).`
-        : undefined;
+      const detailText = buildDriftDetail(observed, expected, direction);
       out.push({ entityType: 'rally_cry', entityId: id, label, detailText });
     } else {
       const id = d.userId ?? `drift-${idx}`;
