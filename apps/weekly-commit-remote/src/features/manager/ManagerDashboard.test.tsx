@@ -77,11 +77,10 @@ describe('ManagerDashboard', () => {
     expect(screen.getByTestId('team-member-table')).toBeInTheDocument();
   });
 
-  it('shows the placeholder when digest is null', async () => {
+  it('shows the AWAITING_AI variant when no digest exists', async () => {
     renderWithProviders(<ManagerDashboard />, 'MANAGER');
-    await waitFor(() =>
-      expect(screen.getByTestId('manager-digest-placeholder')).toBeInTheDocument(),
-    );
+    await waitFor(() => expect(screen.getByTestId('digest-awaiting')).toBeInTheDocument());
+    expect(screen.getByTestId('digest-state-badge')).toHaveTextContent('AWAITING_AI');
   });
 
   it('starved-outcomes panel surfaces seeded dysfunction', async () => {
