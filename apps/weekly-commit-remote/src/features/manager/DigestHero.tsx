@@ -68,7 +68,16 @@ function UserDetail({ userId }: { userId: string }) {
 }
 
 function defaultDetail(entity: InsightDrillDownEntity): ReactNode {
-  if (entity.entityType === 'user') return <UserDetail userId={entity.entityId} />;
+  if (entity.entityType === 'user' && entity.entityId) {
+    return <UserDetail userId={entity.entityId} />;
+  }
+  if (entity.detailText) {
+    return (
+      <p data-testid="digest-detail-text" className="whitespace-pre-wrap text-xs leading-relaxed text-(--color-panel-cell)">
+        {entity.detailText}
+      </p>
+    );
+  }
   return (
     <pre data-testid="digest-detail-default" className="whitespace-pre-wrap break-all">
       {JSON.stringify(entity, null, 2)}
@@ -80,52 +89,77 @@ function shortId(id: string | null | undefined): string {
   return typeof id === 'string' && id.length > 0 ? id.slice(0, 8) : '—';
 }
 
-// Sonnet's JSON shape varies — sometimes `outcomeId`/`outcomeTitle`, sometimes
-// `supportingOutcomeId`/`title`. Coerce defensively so a missing field never
-// crashes the dashboard.
+// Sonnet returns several field-name variants; the production payload uses
+// `outcomeId`/`outcomeTitle`, `rallyCry*` for drift, `weeksCarried`, and
+// `recommendedDrillDowns` (often with userId=null). Coerce defensively so
+// every chip gets a real label, a unique key, and a meaningful drawer body.
 function chipsFor(payload: DigestPayload): InsightDrillDownEntity[] {
   const out: InsightDrillDownEntity[] = [];
-  for (const s of payload.starvedOutcomes ?? []) {
-    const id =
-      s.supportingOutcomeId ??
-      (s as unknown as { outcomeId?: string }).outcomeId ??
-      '';
-    const title =
-      s.title ??
-      (s as unknown as { outcomeTitle?: string }).outcomeTitle ??
-      `outcome ${shortId(id)}`;
-    out.push({ entityType: 'supporting_outcome', entityId: id, label: title });
-  }
-  for (const [idx, d] of (payload.driftExceptions ?? []).entries()) {
-    const id = d.userId ?? '';
+  for (const [idx, s] of (payload.starvedOutcomes ?? []).entries()) {
+    const id = s.supportingOutcomeId ?? s.outcomeId ?? `starved-${idx}`;
+    const title = s.title ?? s.outcomeTitle ?? `outcome ${shortId(id)}`;
+    const reason = s.reason ?? s.note;
+    const weeks = s.weeksStarved && s.weeksStarved > 0 ? `${s.weeksStarved}w · ` : '';
     out.push({
-      entityType: 'user',
+      entityType: 'supporting_outcome',
       entityId: id,
-      label: d.displayName?.trim()
-        ? d.displayName
-        : id
-          ? `User #${shortId(id)}`
-          : `Direct report ${idx + 1}`,
+      label: `${weeks}${title}`,
+      detailText: reason,
     });
   }
-  for (const c of payload.longCarryForwards ?? []) {
-    const id = c.commitId ?? '';
-    if (!id) continue;
-    const weeks = c.weeks ?? 0;
+  for (const [idx, d] of (payload.driftExceptions ?? []).entries()) {
+    // Two shapes: per-user (legacy: userId/displayName) or per-rally-cry (live: rallyCryId/rallyCryTitle).
+    const isRallyCryShape = Boolean(d.rallyCryId || d.rallyCryTitle);
+    if (isRallyCryShape) {
+      const id = d.rallyCryId ?? `drift-${idx}`;
+      const title = d.rallyCryTitle ?? `Rally cry #${shortId(id)}`;
+      const observed =
+        typeof d.observedShare === 'number' ? `${d.observedShare}%` : (d.observedShare ?? '');
+      const direction = d.direction ?? '';
+      const expected = d.expectedRange ?? '';
+      const labelTail = [observed, direction].filter(Boolean).join(' · ');
+      const label = labelTail ? `${title} — ${labelTail}` : title;
+      const detailText = expected
+        ? `Observed ${observed} vs expected ${expected} (${direction || 'drift'}).`
+        : undefined;
+      out.push({ entityType: 'rally_cry', entityId: id, label, detailText });
+    } else {
+      const id = d.userId ?? `drift-${idx}`;
+      out.push({
+        entityType: 'user',
+        entityId: id,
+        label: d.displayName?.trim()
+          ? d.displayName
+          : d.userId
+            ? `User #${shortId(d.userId)}`
+            : `Direct report ${idx + 1}`,
+      });
+    }
+  }
+  for (const [idx, c] of (payload.longCarryForwards ?? []).entries()) {
+    const id = c.commitId ?? `carry-${idx}`;
+    const weeks = c.weeksCarried ?? c.weeks ?? 0;
     const text = c.commitText?.trim() || `Commit #${shortId(id)}`;
     const prefix = weeks > 0 ? `${weeks}w · ` : '';
-    out.push({ entityType: 'commit', entityId: id, label: `${prefix}${text}` });
-  }
-  for (const [idx, u] of (payload.drillDowns ?? []).entries()) {
-    const id = u.userId ?? '';
     out.push({
-      entityType: 'user',
+      entityType: 'commit',
       entityId: id,
+      label: `${prefix}${text}`,
+      detailText: c.note,
+    });
+  }
+  const drills = payload.recommendedDrillDowns ?? payload.drillDowns ?? [];
+  for (const [idx, u] of drills.entries()) {
+    const hasUser = typeof u.userId === 'string' && u.userId.length > 0;
+    out.push({
+      entityType: hasUser ? 'user' : 'note',
+      entityId: hasUser ? (u.userId as string) : `drill-${idx}`,
       label: u.displayName?.trim()
         ? u.displayName
-        : id
-          ? `User #${shortId(id)}`
+        : hasUser
+          ? `User #${shortId(u.userId as string)}`
           : `1:1 candidate ${idx + 1}`,
+      detailText: u.reason,
     });
   }
   return out;
@@ -281,7 +315,11 @@ export function DigestHero(props: DigestHeroProps = {}) {
               />
               <DigestSection
                 title="Recommended 1:1s"
-                count={envelope.digest.drillDowns?.length ?? 0}
+                count={
+                  (envelope.digest.recommendedDrillDowns?.length ??
+                    envelope.digest.drillDowns?.length ??
+                    0)
+                }
                 entities={chipsFor({
                   ...envelope.digest,
                   starvedOutcomes: [],

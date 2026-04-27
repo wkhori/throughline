@@ -1,12 +1,20 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 
-export type InsightDrillDownEntityType = 'commit' | 'supporting_outcome' | 'user' | 'team';
+export type InsightDrillDownEntityType =
+  | 'commit'
+  | 'supporting_outcome'
+  | 'user'
+  | 'team'
+  | 'rally_cry'
+  | 'note';
 
 export interface InsightDrillDownEntity {
   entityType: InsightDrillDownEntityType;
   entityId: string;
   /** Optional pre-resolved label so the trigger can render rich text without a separate fetch. */
   label?: string;
+  /** Optional inline detail (e.g., AI reasoning) rendered in the drawer when no fetch is available. */
+  detailText?: string;
 }
 
 export interface InsightDrillDownProps {
@@ -40,7 +48,7 @@ export function InsightDrillDown({ entities, renderTrigger, renderDetail }: Insi
 
   return (
     <span data-testid="insight-drill-down">
-      {entities.map((e) => {
+      {entities.map((e, idx) => {
         const label = e.label ?? `${e.entityType}:${e.entityId}`;
         const trigger = renderTrigger ? (
           renderTrigger(e, label)
@@ -49,7 +57,7 @@ export function InsightDrillDown({ entities, renderTrigger, renderDetail }: Insi
         );
         return (
           <span
-            key={`${e.entityType}:${e.entityId}`}
+            key={`${e.entityType}:${e.entityId}:${idx}`}
             data-testid="insight-drill-trigger"
             data-entity-type={e.entityType}
             data-entity-id={e.entityId}

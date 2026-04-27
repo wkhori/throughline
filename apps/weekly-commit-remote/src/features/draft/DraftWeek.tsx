@@ -82,6 +82,17 @@ export function DraftWeek({ week }: DraftWeekProps) {
         </button>
       </header>
 
+      <aside
+        data-testid="ai-copilot-banner"
+        className="rounded-md border border-(--color-commit-border) bg-(--color-commit-bg) px-4 py-3 text-xs text-(--color-commit-text)"
+      >
+        <p className="font-semibold">AI Copilot is live on this draft.</p>
+        <p className="mt-0.5 text-(--color-commit-muted)">
+          Outcome suggestions and quality lint fire as you type a commit (≥15 chars). Drift warnings
+          surface beneath any saved commit whose Supporting Outcome looks off.
+        </p>
+      </aside>
+
       <ChessMatrix commits={week.commits} rcdo={rcdo} weekState="DRAFT" onEditCommit={remove} />
 
       {atCap ? (

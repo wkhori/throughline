@@ -45,7 +45,9 @@ describe('RcdoTreeEditor', () => {
     );
     renderWithProviders(<RcdoTreeEditor />, 'ADMIN');
     expect(await screen.findByText('Win the SMB segment')).toBeInTheDocument();
-    expect(screen.getByText('0 Defining Objectives')).toBeInTheDocument();
+    expect(
+      screen.getByText(/0 Defining Objectives.*0 Outcomes.*0 Supporting/),
+    ).toBeInTheDocument();
   });
 
   it('rejects titles shorter than 5 chars without hitting the API', async () => {

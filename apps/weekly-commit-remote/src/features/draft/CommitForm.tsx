@@ -1,11 +1,14 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type {
   CommitCategory,
   CommitDto,
   CommitPriority,
   CreateCommitRequest,
+  OutcomeCandidateDto,
   RcdoTreeDto,
 } from '@throughline/shared-types';
+import { AiSuggestionPanel } from './AiSuggestionPanel.js';
+import { CommitQualityHint } from './CommitQualityHint.js';
 
 interface CommitFormProps {
   weekId: string;
@@ -32,11 +35,18 @@ export function CommitForm({
   const [supportingOutcomeId, setSO] = useState<string>(initial?.supportingOutcomeId ?? '');
   const [category, setCategory] = useState<CommitCategory>(initial?.category ?? 'OPERATIONAL');
   const [priority, setPriority] = useState<CommitPriority>(initial?.priority ?? 'SHOULD');
+  const [manualSelectAt, setManualSelectAt] = useState<number | null>(null);
 
   const tooShort = text.trim().length < 5;
   const tooLong = text.length > 280;
   const noSO = supportingOutcomeId === '';
   const disabled = tooShort || tooLong || noSO || submitting;
+
+  const candidates: OutcomeCandidateDto[] = useMemo(() => flattenCandidates(rcdo), [rcdo]);
+  const supportingOutcomeTitle = useMemo(() => {
+    const match = candidates.find((c) => c.supportingOutcomeId === supportingOutcomeId);
+    return match?.title ?? null;
+  }, [candidates, supportingOutcomeId]);
 
   const handle = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,13 +92,32 @@ export function CommitForm({
         <p className="mt-1.5 text-xs text-(--color-shell-muted)" data-testid="commit-text-counter">
           {text.length}/280
         </p>
+        <CommitQualityHint
+          commitId={initial?.id ?? `draft-${weekId}`}
+          commitText={text}
+          category={category}
+          priority={priority}
+          supportingOutcomeTitle={supportingOutcomeTitle}
+        />
+        <AiSuggestionPanel
+          draftCommitText={text}
+          candidates={candidates}
+          manuallySelectedAt={manualSelectAt}
+          onAccept={(soId) => {
+            setSO(soId);
+            setManualSelectAt(null);
+          }}
+        />
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <SelectField
           id="commit-so"
           label="Supporting Outcome"
           value={supportingOutcomeId}
-          onChange={setSO}
+          onChange={(v) => {
+            setSO(v);
+            setManualSelectAt(Date.now());
+          }}
           options={flattenSO(rcdo)}
           testId="commit-so-select"
         />
@@ -198,6 +227,27 @@ function flattenSO(tree: RcdoTreeDto | undefined): SelectOption[] {
       for (const o of defo.outcomes) {
         for (const so of o.supportingOutcomes) {
           out.push({ value: so.id, label: `${rc.title} › ${o.title} › ${so.title}` });
+        }
+      }
+    }
+  }
+  return out;
+}
+
+function flattenCandidates(tree: RcdoTreeDto | undefined): OutcomeCandidateDto[] {
+  if (!tree) return [];
+  const out: OutcomeCandidateDto[] = [];
+  for (const rc of tree.rallyCries) {
+    for (const defo of rc.definingObjectives) {
+      for (const o of defo.outcomes) {
+        for (const so of o.supportingOutcomes) {
+          out.push({
+            supportingOutcomeId: so.id,
+            title: so.title,
+            parentOutcomeTitle: o.title,
+            parentDOTitle: defo.title,
+            parentRallyCryTitle: rc.title,
+          });
         }
       }
     }

@@ -1,4 +1,9 @@
-import { useGetTeamRollupQuery, type RibbonEntry } from '../../api/managerEndpoints.js';
+import { useState } from 'react';
+import {
+  useGetTeamRollupQuery,
+  type RibbonEntry,
+  type TeamRollupRow,
+} from '../../api/managerEndpoints.js';
 import { DigestHero } from './DigestHero.js';
 import { ExceptionRibbon } from './ExceptionRibbon.js';
 import { TeamMemberTable } from './TeamMemberTable.js';
@@ -15,6 +20,11 @@ interface ManagerDashboardProps {
 // Plus the dense team roster table beneath.
 export function ManagerDashboard({ onSelectTeam }: ManagerDashboardProps) {
   const rollup = useGetTeamRollupQuery({ page: 0, size: 50 });
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+  const handleSelectTeam = (teamId: string) => {
+    setSelectedTeamId(teamId);
+    onSelectTeam?.(teamId);
+  };
 
   if (rollup.isLoading) {
     return (
@@ -132,7 +142,120 @@ export function ManagerDashboard({ onSelectTeam }: ManagerDashboardProps) {
 
       <ExceptionRibbon items={ribbonEntries} />
 
-      <TeamMemberTable rows={rows} onSelectTeam={onSelectTeam} />
+      <TeamMemberTable rows={rows} onSelectTeam={handleSelectTeam} />
+
+      {selectedTeamId ? (
+        <TeamDetailDrawer
+          row={rows.find((r) => r.teamId === selectedTeamId) ?? null}
+          onClose={() => setSelectedTeamId(null)}
+        />
+      ) : null}
     </section>
+  );
+}
+
+function TeamDetailDrawer({
+  row,
+  onClose,
+}: {
+  row: TeamRollupRow | null;
+  onClose: () => void;
+}) {
+  if (!row) return null;
+  const p = row.payload;
+  return (
+    <>
+      <div
+        data-testid="team-detail-backdrop"
+        aria-hidden="true"
+        onClick={onClose}
+        className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm"
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        data-testid="team-detail-drawer"
+        className="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col border-l border-(--color-panel-border) bg-(--color-panel-bg) text-(--color-panel-cell) shadow-2xl"
+      >
+        <header className="flex items-start justify-between gap-3 border-b border-(--color-panel-border) px-5 py-4">
+          <div>
+            <p className="text-[11px] font-medium uppercase tracking-wide text-(--color-panel-muted)">
+              team
+            </p>
+            <h3 className="mt-0.5 text-sm font-semibold text-(--color-panel-heading)">
+              {p.teamName}
+            </h3>
+          </div>
+          <button
+            type="button"
+            data-testid="team-detail-close"
+            onClick={onClose}
+            aria-label="Close"
+            className="rounded-md p-1 text-(--color-panel-muted) hover:bg-(--color-skeleton-bg) hover:text-(--color-panel-heading)"
+          >
+            ×
+          </button>
+        </header>
+        <div className="flex-1 space-y-3 overflow-auto px-5 py-4 text-xs">
+          <dl className="grid grid-cols-3 gap-2">
+            <Stat label="Members" value={p.memberCount} />
+            <Stat label="Locked" value={p.lockedCount} />
+            <Stat label="Reconciled" value={p.reconciledCount} />
+            <Stat label="Done" value={p.doneCount} />
+            <Stat label="Partial" value={p.partialCount} />
+            <Stat label="Not done" value={p.notDoneCount} />
+            <Stat label="Carry-forward" value={p.carryForwardCount} />
+          </dl>
+          <section>
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-(--color-panel-muted)">
+              Drift
+            </p>
+            {p.driftExceptions.length === 0 ? (
+              <p className="mt-1 text-(--color-panel-muted)">None this week.</p>
+            ) : (
+              <ul className="mt-1 space-y-1">
+                {p.driftExceptions.map((d) => (
+                  <li key={d.rallyCryId}>
+                    <span className="font-medium text-(--color-panel-heading)">
+                      {d.rallyCryTitle}
+                    </span>{' '}
+                    — {(d.observedShare * 100).toFixed(0)}% vs {(d.expectedLow * 100).toFixed(0)}–
+                    {(d.expectedHigh * 100).toFixed(0)}%
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+          <section>
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-(--color-panel-muted)">
+              Starved outcomes
+            </p>
+            {p.starvedOutcomes.length === 0 ? (
+              <p className="mt-1 text-(--color-panel-muted)">None this week.</p>
+            ) : (
+              <ul className="mt-1 space-y-1">
+                {p.starvedOutcomes.map((s) => (
+                  <li key={s.outcomeId}>
+                    <span className="font-medium text-(--color-panel-heading)">
+                      {s.outcomeTitle}
+                    </span>{' '}
+                    — {s.weeksStarved}w
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-md border border-(--color-panel-border) bg-(--color-shell-bg) px-2 py-1.5">
+      <dt className="text-[10px] uppercase tracking-wide text-(--color-panel-muted)">{label}</dt>
+      <dd className="mt-0.5 font-semibold text-(--color-panel-heading)">{value}</dd>
+    </div>
   );
 }

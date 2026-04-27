@@ -64,13 +64,47 @@ export interface PageResponse<T> {
   size: number;
 }
 
-/** T5 manager digest payload — matches docs/ai-copilot-spec.md §T5 output schema. */
+/** T5 manager digest payload — matches docs/ai-copilot-spec.md §T5 output schema.
+ *  The live AI produces several field-name variants; the optional aliases below
+ *  capture both the test-fixture shape and the production Sonnet shape. */
+export interface DigestStarvedOutcome {
+  supportingOutcomeId?: string;
+  outcomeId?: string;
+  title?: string;
+  outcomeTitle?: string;
+  reason?: string;
+  note?: string;
+  weeksStarved?: number;
+}
+export interface DigestDriftException {
+  userId?: string | null;
+  displayName?: string;
+  avgDriftScore?: number;
+  rallyCryId?: string;
+  rallyCryTitle?: string;
+  direction?: 'OVER' | 'UNDER' | string;
+  expectedRange?: string;
+  observedShare?: string | number;
+}
+export interface DigestLongCarryForward {
+  commitId: string;
+  weeks?: number;
+  weeksCarried?: number;
+  commitText?: string;
+  note?: string;
+}
+export interface DigestRecommendedDrillDown {
+  userId?: string | null;
+  displayName?: string;
+  reason: string;
+}
 export interface DigestPayload {
   alignmentHeadline: string;
-  starvedOutcomes: Array<{ supportingOutcomeId: string; title?: string; reason?: string }>;
-  driftExceptions: Array<{ userId: string; displayName?: string; avgDriftScore?: number }>;
-  longCarryForwards: Array<{ commitId: string; weeks: number; commitText?: string }>;
-  drillDowns: Array<{ userId: string; displayName?: string; reason: string }>;
+  starvedOutcomes: DigestStarvedOutcome[];
+  driftExceptions: DigestDriftException[];
+  longCarryForwards: DigestLongCarryForward[];
+  drillDowns?: DigestRecommendedDrillDown[];
+  recommendedDrillDowns?: DigestRecommendedDrillDown[];
   slackMessage: string;
   reasoning?: string;
   model?: string;

@@ -1,5 +1,11 @@
-import type { CommitDto, RcdoTreeDto } from '@throughline/shared-types';
+import { useMemo } from 'react';
+import type {
+  CommitDto,
+  DriftCheckLinkedOutcome,
+  RcdoTreeDto,
+} from '@throughline/shared-types';
 import { RcdoChip, resolveRcdoTrail } from '@throughline/shared-ui';
+import { DriftWarningBanner } from './DriftWarningBanner.js';
 
 interface CommitCardProps {
   commit: CommitDto;
@@ -11,6 +17,14 @@ interface CommitCardProps {
 export function CommitCard({ commit, rcdo, weekState, onEdit }: CommitCardProps) {
   const trail = resolveRcdoTrail(rcdo, commit.supportingOutcomeId);
   const interactive = weekState === 'DRAFT' && !!onEdit;
+  const linkedOutcome = useMemo<DriftCheckLinkedOutcome | null>(
+    () => buildLinkedOutcome(rcdo, commit.supportingOutcomeId),
+    [rcdo, commit.supportingOutcomeId],
+  );
+  const alternatives = useMemo(
+    () => buildAlternatives(rcdo, commit.supportingOutcomeId),
+    [rcdo, commit.supportingOutcomeId],
+  );
   const className = interactive
     ? 'cursor-pointer rounded-md border border-(--color-commit-border) bg-(--color-commit-bg) p-3 transition-colors hover:border-(--color-ribbon-link)'
     : 'rounded-md border border-(--color-commit-border) bg-(--color-commit-bg) p-3';
@@ -57,6 +71,57 @@ export function CommitCard({ commit, rcdo, weekState, onEdit }: CommitCardProps)
           {commit.priority}
         </span>
       </div>
+      {weekState === 'DRAFT' && linkedOutcome ? (
+        <DriftWarningBanner
+          commitId={commit.id}
+          commitText={commit.text}
+          linkedOutcome={linkedOutcome}
+          alternativeOutcomes={alternatives}
+        />
+      ) : null}
     </article>
   );
+}
+
+function buildLinkedOutcome(
+  tree: RcdoTreeDto | undefined,
+  supportingOutcomeId: string | null | undefined,
+): DriftCheckLinkedOutcome | null {
+  if (!tree || !supportingOutcomeId) return null;
+  for (const rc of tree.rallyCries) {
+    for (const defo of rc.definingObjectives) {
+      for (const o of defo.outcomes) {
+        for (const so of o.supportingOutcomes) {
+          if (so.id === supportingOutcomeId) {
+            return {
+              supportingOutcomeId: so.id,
+              title: so.title,
+              parentOutcomeTitle: o.title,
+              parentDOTitle: defo.title,
+              metricStatement: null,
+            };
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
+
+function buildAlternatives(
+  tree: RcdoTreeDto | undefined,
+  exclude: string | null | undefined,
+): Array<{ supportingOutcomeId: string; title: string }> {
+  if (!tree) return [];
+  const out: Array<{ supportingOutcomeId: string; title: string }> = [];
+  for (const rc of tree.rallyCries) {
+    for (const defo of rc.definingObjectives) {
+      for (const o of defo.outcomes) {
+        for (const so of o.supportingOutcomes) {
+          if (so.id !== exclude) out.push({ supportingOutcomeId: so.id, title: so.title });
+        }
+      }
+    }
+  }
+  return out.slice(0, 6);
 }

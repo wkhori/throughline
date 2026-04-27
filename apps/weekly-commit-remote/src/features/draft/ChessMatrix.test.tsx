@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
+import { renderWithProviders as render } from '../../test-utils.js';
 import userEvent from '@testing-library/user-event';
 import type { CommitDto } from '@throughline/shared-types';
 import { ChessMatrix } from './ChessMatrix.js';

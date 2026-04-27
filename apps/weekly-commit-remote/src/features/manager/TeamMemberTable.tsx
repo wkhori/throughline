@@ -47,12 +47,30 @@ export function TeamMemberTable({ rows, onSelectTeam }: TeamMemberTableProps) {
         <tbody>
           {rows.map((row) => {
             const p = row.payload;
+            const interactive = Boolean(onSelectTeam);
             return (
               <tr
                 key={row.teamId}
                 data-testid="team-member-row"
-                onClick={() => onSelectTeam?.(row.teamId)}
-                className="cursor-pointer border-b border-(--color-panel-border) transition-colors last:border-0 hover:bg-(--color-skeleton-bg)"
+                role={interactive ? 'button' : undefined}
+                tabIndex={interactive ? 0 : undefined}
+                onClick={interactive ? () => onSelectTeam!(row.teamId) : undefined}
+                onKeyDown={
+                  interactive
+                    ? (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          onSelectTeam!(row.teamId);
+                        }
+                      }
+                    : undefined
+                }
+                className={
+                  'border-b border-(--color-panel-border) transition-colors last:border-0 ' +
+                  (interactive
+                    ? 'cursor-pointer hover:bg-(--color-skeleton-bg)'
+                    : '')
+                }
               >
                 <td className="px-4 py-3 font-medium text-(--color-panel-heading)">{p.teamName}</td>
                 <td className="px-4 py-3 text-(--color-panel-muted)">{p.memberCount}</td>
