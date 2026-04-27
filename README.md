@@ -1,5 +1,10 @@
 # Throughline — Weekly Commit Module
 
+**[Live demo](https://host-production-963c.up.railway.app)** ·
+**[App](https://weekly-commit-remote-production.up.railway.app)** ·
+**[Architecture deep-dive](https://host-production-963c.up.railway.app/architecture)** ·
+**[API health](https://api-production-0faba.up.railway.app/actuator/health)**
+
 Production-ready weekly-planning system that replaces 15Five. Every weekly
 commit is foreign-keyed to a Supporting Outcome inside the org's RCDO
 hierarchy (Rally Cry → Defining Objective → Outcome → Supporting Outcome),
