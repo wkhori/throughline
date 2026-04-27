@@ -95,7 +95,7 @@ function shortId(id: string | null | undefined): string {
 
 // Sonnet emits observedShare as either a percent string ("16.7%") or a decimal
 // fraction (0.1167). Normalise both into a clean "X%" label.
-function formatShare(raw: string | number | null | undefined): string {
+export function formatShare(raw: string | number | null | undefined): string {
   if (raw == null) return '';
   if (typeof raw === 'number') {
     const pct = raw <= 1 ? raw * 100 : raw;
@@ -114,7 +114,7 @@ function formatShare(raw: string | number | null | undefined): string {
 // Always produce a non-empty drawer body for a rally-cry drift chip — even when
 // the AI omits expectedRange or direction, render whatever we do have rather
 // than letting the drawer fall through to a JSON dump.
-function buildDriftDetail(observed: string, expected: string, direction: string): string {
+export function buildDriftDetail(observed: string, expected: string, direction: string): string {
   if (observed && expected) {
     return `Observed ${observed} vs expected ${expected}${direction ? ` (${direction})` : ''}.`;
   }
