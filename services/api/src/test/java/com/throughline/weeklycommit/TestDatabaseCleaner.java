@@ -18,6 +18,12 @@ public class TestDatabaseCleaner {
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void clean() {
     // Self-FK on commit.parent_commit_id and app_user.manager_id need to be nulled before delete.
+    // V4 (Phase 5a): clear AI surface tables before tearing down their referenced entities.
+    em.createNativeQuery("DELETE FROM ai_user_hour_counter").executeUpdate();
+    em.createNativeQuery("DELETE FROM alignment_risk").executeUpdate();
+    em.createNativeQuery("DELETE FROM notification_event").executeUpdate();
+    em.createNativeQuery("DELETE FROM ai_insight").executeUpdate();
+    em.createNativeQuery("DELETE FROM ai_budget").executeUpdate();
     // V5: clear the manager rollup cache before tearing down team rows.
     em.createNativeQuery("DELETE FROM team_rollup_cache").executeUpdate();
     em.createNativeQuery("UPDATE \"commit\" SET parent_commit_id = NULL").executeUpdate();

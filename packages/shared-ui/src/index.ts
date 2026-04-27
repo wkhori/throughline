@@ -4,3 +4,4 @@ export * from './store/authSlice.js';
 export * from './store/createBaseApi.js';
 export * from './hooks/useAuthToken.js';
 export * from './hooks/useApiBaseUrl.js';
+export * from './components/InsightDrillDown/InsightDrillDown.js';

@@ -237,10 +237,9 @@ class ManagerControllerContractTest extends PostgresIntegrationTestBase {
   // --- GET /manager/digest/current -----------------------------------------------------------
 
   @Test
-  void digestCurrent_returns_200_with_digest_null_in_phase_4() throws Exception {
+  void digestCurrent_returns_200_with_AWAITING_AI_when_no_T5_yet() throws Exception {
     mvc.perform(asUser(get("/api/v1/manager/digest/current"), managerSub, "MANAGER"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.digest").doesNotExist())
         .andExpect(jsonPath("$.state").value("AWAITING_AI"));
   }
 
@@ -258,12 +257,15 @@ class ManagerControllerContractTest extends PostgresIntegrationTestBase {
   // --- POST /manager/digest/regenerate -------------------------------------------------------
 
   @Test
-  void digestRegenerate_manager_returns_202_with_digest_null_in_phase_4() throws Exception {
+  void digestRegenerate_manager_returns_202_with_digest_payload_in_phase_5c() throws Exception {
     mvc.perform(asUser(post("/api/v1/manager/digest/regenerate"), managerSub, "MANAGER"))
         .andExpect(status().isAccepted())
-        .andExpect(jsonPath("$.digest").doesNotExist())
-        .andExpect(jsonPath("$.state").value("QUEUED"))
-        .andExpect(jsonPath("$.message").exists());
+        .andExpect(jsonPath("$.digest").exists())
+        .andExpect(
+            jsonPath("$.state")
+                .value(
+                    org.hamcrest.Matchers.anyOf(
+                        org.hamcrest.Matchers.is("OK"), org.hamcrest.Matchers.is("FALLBACK"))));
   }
 
   // --- GET /manager/alignment-risks ----------------------------------------------------------

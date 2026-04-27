@@ -1,0 +1,10 @@
+{
+  "alignmentHeadline": "Team week looked balanced — activation work led, no critical exceptions.",
+  "starvedOutcomes": [],
+  "driftExceptions": [],
+  "longCarryForwards": [],
+  "drillDowns": [],
+  "slackMessage": "*Team week looked balanced — activation work led, no critical exceptions.*\n\n• See dashboard <DASHBOARD_URL> for full breakdown.",
+  "reasoning": "stub default for T5",
+  "model": "claude-sonnet-4-6"
+}

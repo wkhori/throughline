@@ -60,9 +60,35 @@ Feature: Manager dashboard
     When I open "/manager"
     Then the dashboard renders the empty state "No teammates in scope"
 
-  @ai @phase-5
-  Scenario: T5 manager digest replaces the hero card placeholder (deferred to phase/4-ai)
-    Given the AI provider is configured
+  @stub @ai @phase-5 @ai-t5
+  Scenario: T5 manager digest renders in the hero card from /manager/digest/current
+    Given the AI provider is configured (stub mode)
+    And a T5_DIGEST AIInsight has been written for me
     When I open "/manager"
     Then the hero card renders an AIInsight matching schema "T5_DIGEST"
     And every affected entity in the digest opens via <InsightDrillDown>
+
+  @stub @happy-path @phase-5 @ai-t5
+  Scenario: /manager/digest/current returns null when no digest has been generated
+    Given no T5_DIGEST AIInsight exists for me
+    When I send "GET /api/v1/manager/digest/current"
+    Then the response status is 200
+    And the response body's digest is null
+
+  @stub @happy-path @phase-5 @ai-t5
+  Scenario: On-demand digest regeneration enforces ≤2/day per manager
+    Given I have already triggered "POST /manager/digest/regenerate" twice today
+    When I send "POST /api/v1/manager/digest/regenerate" again
+    Then the response status is 429
+
+  @integration @ai @phase-5 @ai-t5
+  Scenario: Real Sonnet digest produces a Slack-shaped string
+    Given the Anthropic provider is configured with a real API key
+    And the seeded org contains the four deliberate dysfunctions
+    When I send "POST /api/v1/manager/digest/regenerate"
+    Then the response body matches schema "T5_DIGEST" within 25 seconds
+    And the slackMessage is at most 900 chars
+    And the slackMessage starts with the alignmentHeadline verbatim
+    And the slackMessage contains "<DASHBOARD_URL>"
+    And the slackMessage uses Slack mrkdwn (bullets `•`, `*bold*`, no `**bold**`)
+    And the AIInsight row's model is "claude-sonnet-4-6"

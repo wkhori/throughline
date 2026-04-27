@@ -1,0 +1,8 @@
+{
+  "severity": "medium",
+  "finding": "Outcome appears starved relative to team priority signal.",
+  "suggestedAction": "Raise this outcome in the staff meeting and assign capacity from a teammate with low load.",
+  "affectedEntities": [],
+  "reasoning": "stub default for T6",
+  "model": "claude-haiku-4-5-20251001"
+}

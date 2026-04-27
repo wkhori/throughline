@@ -67,8 +67,33 @@ Feature: Reconcile the week
     When I send "PUT /api/v1/weeks/{id}/reconcile" with my JWT
     Then the response status is 403
 
-  @ai @phase-5
-  Scenario: Real T4 alignment delta attaches to the response (deferred to phase/4-ai)
-    Given the AI provider is configured
+  @stub @ai @phase-5 @ai-t4
+  Scenario: T4 alignment delta attaches to reconcile response within 10s sync window
+    Given the AI provider is configured (stub mode)
     When I submit reconcile
-    Then the response body's alignmentDelta matches schema "T4_DELTA" within 10 seconds
+    Then the response body's alignmentDelta matches schema "T4_DELTA"
+    And an AIInsight row of kind=T4_DELTA is persisted
+
+  @stub @ai @phase-5 @ai-t4
+  Scenario: T4 priorCarryForwardWeeks reflects pre-mutation state per P11
+    Given the slipped commit's carry_forward_weeks is 2 BEFORE reconcile mutation
+    When I submit reconcile with that commit marked NOT_DONE and carryForward=true
+    Then the request body sent to Anthropic has priorCarryForwardWeeks=2
+    And the recommended action is in [drop,re-scope]
+
+  @stub @ai-fallback @phase-5 @ai-t4
+  Scenario: T4 hard failure falls back to deterministic counts-only delta
+    Given the Anthropic provider returns 503 on all retries
+    When I submit reconcile
+    Then the reconcile still succeeds with status 200
+    And the eventual deterministic AIInsight has model="deterministic"
+    And the deterministic delta lists raw counts of done/partial/not_done by Outcome
+
+  @integration @ai @phase-5 @ai-t4
+  Scenario: Real Sonnet alignment delta classifies slip causes
+    Given the Anthropic provider is configured with a real API key
+    And one of my commits was reconciled NOT_DONE with note "blocked on Auth0 callback URL change"
+    When I submit reconcile
+    Then the response body matches schema "T4_DELTA" within 10 seconds
+    And the slipped[] entry's slipCause is in [blocked_external,unclear]
+    And the AIInsight row's model is "claude-sonnet-4-6"

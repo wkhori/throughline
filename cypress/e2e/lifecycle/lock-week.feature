@@ -57,9 +57,34 @@ Feature: Lock the week
     When I send "POST /api/v1/weeks/{id}/lock" with my JWT
     Then the response status is 403
 
-  @ai @phase-5
-  Scenario: Real T3 portfolio review attaches to the response (deferred to phase/4-ai)
-    Given the AI provider is configured
+  @stub @ai @phase-5 @ai-t3
+  Scenario: T3 portfolio review attaches to lock response within 8s sync window
+    Given the AI provider is configured (stub mode)
+    When I lock my draft week
+    Then the response body's portfolioReview matches schema "T3_PORTFOLIO"
+    And an AIInsight row of kind=T3_PORTFOLIO is persisted
+
+  @stub @ai @phase-5 @ai-t3
+  Scenario: T3 sync timeout falls back to async websocket push
+    Given the Anthropic provider deliberately delays beyond 8 seconds
+    When I lock my draft week
+    Then the response body's portfolioReview is null
+    And the websocket "/topic/insights.{weekId}" pushes a T3_PORTFOLIO insight within 60 seconds
+
+  @stub @ai-fallback @phase-5 @ai-t3
+  Scenario: T3 hard failure falls back to deterministic skeleton
+    Given the Anthropic provider returns 503 on all retries
+    When I lock my draft week
+    Then the lock still succeeds with status 200
+    And the LockedWeek view eventually shows "Portfolio review unavailable; manual retry"
+    And the eventual deterministic AIInsight has model="deterministic"
+
+  @integration @ai @phase-5 @ai-t3
+  Scenario: Real Sonnet portfolio review surfaces concentration findings
+    Given the Anthropic provider is configured with a real API key
+    And my draft week has 5 of 7 commits on the same Supporting Outcome
     When I lock my draft week
     Then the response body's portfolioReview matches schema "T3_PORTFOLIO" within 8 seconds
-    Or the response body's portfolioReview is null and a websocket update arrives within 60 seconds
+    And the findings array contains at least one entry with dimension=outcome_concentration
+    And the cost-cents accrued is below 3
+    And the AIInsight row's model is "claude-sonnet-4-6"
