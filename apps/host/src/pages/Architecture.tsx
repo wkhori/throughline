@@ -1165,7 +1165,67 @@ function SectionTestEval() {
           </article>
         ))}
       </div>
+      <LatestEvalRun />
     </SectionBlock>
+  );
+}
+
+function LatestEvalRun() {
+  const rows: Array<{ id: string; name: string; passes: string; cost: string }> = [
+    { id: 'T1', name: 'Outcome suggestion', passes: '3/3', cost: '$0.0036' },
+    { id: 'T2', name: 'Drift warning', passes: '3/3', cost: '$0.0035' },
+    { id: 'T3', name: 'Portfolio review', passes: '3/3', cost: '$0.0399' },
+    { id: 'T4', name: 'Alignment delta', passes: '3/3', cost: '$0.0570' },
+    { id: 'T5', name: 'Manager digest', passes: '3/3', cost: '$0.0631' },
+    { id: 'T7', name: 'Commit quality lint', passes: '3/3', cost: '$0.0041' },
+  ];
+  return (
+    <div className="mt-8">
+      <p className="text-xs font-medium uppercase tracking-wider text-(--color-shell-muted)">
+        Latest eval run
+      </p>
+      <h3 className="mt-1 text-base font-semibold text-(--color-shell-text)">
+        18/18 attempts passed against the live Anthropic API · $0.1713 / 146 s
+      </h3>
+      <div className="mt-4 overflow-x-auto rounded-md border border-(--color-panel-border)">
+        <table className="w-full border-collapse text-sm">
+          <thead className="bg-(--color-ribbon-bg) text-left text-xs uppercase tracking-wider text-(--color-shell-muted)">
+            <tr>
+              <th className="px-4 py-3 font-medium">Touchpoint</th>
+              <th className="px-4 py-3 font-medium">Passes</th>
+              <th className="px-4 py-3 font-medium">Cost</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-(--color-panel-border)">
+            {rows.map((r) => (
+              <tr key={r.id}>
+                <td className="px-4 py-2.5 text-(--color-panel-cell)">
+                  <span className="mr-2 font-mono text-xs font-semibold text-(--color-shell-text)">
+                    {r.id}
+                  </span>
+                  {r.name}
+                </td>
+                <td className="px-4 py-2.5 text-(--color-panel-cell)">{r.passes}</td>
+                <td className="px-4 py-2.5 text-(--color-panel-cell)">{r.cost}</td>
+              </tr>
+            ))}
+            <tr className="bg-(--color-ribbon-bg) font-medium">
+              <td className="px-4 py-2.5 text-(--color-shell-text)">Total</td>
+              <td className="px-4 py-2.5 text-(--color-shell-text)">18/18</td>
+              <td className="px-4 py-2.5 text-(--color-shell-text)">$0.1713 in 146 s</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p className="mt-3 text-xs text-(--color-shell-muted)">
+        Full per-attempt detail in{' '}
+        <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-[11px] text-(--color-badge-fg)">
+          evals/last-run.md
+        </code>
+        . T6 alignment-risk alert is a scheduled job, not an LLM call you can fixture in isolation
+        — covered by the alignment-risk integration suite instead.
+      </p>
+    </div>
   );
 }
 

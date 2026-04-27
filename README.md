@@ -98,6 +98,18 @@ flip green automatically. See [`docs/orchestration-plan.md`](./docs/orchestratio
   `evals/fixtures/{t1..t7}/`; latest report in `evals/last-run.md`. See
   `docs/ai-copilot-spec.md` §Eval Harness.
 
+  **Latest run — 18/18 attempts passed live against Anthropic in 146 s for $0.1713:**
+
+  | Touchpoint              | Passes | Cost     |
+  |-------------------------|--------|----------|
+  | T1 Outcome suggestion   | 3/3    | $0.0036  |
+  | T2 Drift warning        | 3/3    | $0.0035  |
+  | T3 Portfolio review     | 3/3    | $0.0399  |
+  | T4 Alignment delta      | 3/3    | $0.0570  |
+  | T5 Manager digest       | 3/3    | $0.0631  |
+  | T7 Commit quality lint  | 3/3    | $0.0041  |
+  | **Total**               | **18/18** | **$0.1713** |
+
 ## Live deployment
 
 - **Marketing landing:** https://host-production-963c.up.railway.app
