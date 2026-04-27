@@ -769,13 +769,40 @@ function TreatmentTag({ treatment }: { treatment: DecisionRow['treatment'] }) {
 function Section7Federation() {
   return (
     <SectionBlock>
-      <SectionHeading index="07" title="Module Federation — contract on, runtime deferred" />
+      <SectionHeading index="07" title="Micro-frontend — host shell + weekly-commit remote" />
+      <div className="overflow-hidden rounded-md border border-(--color-panel-border) bg-(--color-panel-bg) p-6">
+        <FederationDiagramSvg />
+      </div>
       <Prose>
         <p>
-          The host and remote ship as separate Vite SPAs that share a stable JWT-passing
-          interface, pinned singleton React/Redux/RTK versions, and independent deploy boundaries.
-          That is everything Module Federation gives us at the architectural level. The runtime
-          plugin itself is the part we have deferred.
+          Throughline is a two-app micro-frontend. The{' '}
+          <strong className="text-(--color-shell-text)">host shell</strong> ships at{' '}
+          <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
+            host-production-963c.up.railway.app
+          </code>{' '}
+          — landing, /architecture, marketing. The{' '}
+          <strong className="text-(--color-shell-text)">weekly-commit remote</strong> ships at{' '}
+          <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
+            weekly-commit-remote-production.up.railway.app
+          </code>{' '}
+          — IC, Manager, and Admin views. Two services on Railway, two CDN-cacheable
+          deploys, one shared JWT contract.
+        </p>
+        <p>
+          The two apps share singleton React/Redux/RTK versions pinned in{' '}
+          <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
+            packages/shared-deps-versions.json
+          </code>
+          , a shared component library{' '}
+          <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
+            @throughline/shared-ui
+          </code>
+          , and a shared DTO mirror{' '}
+          <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
+            @throughline/shared-types
+          </code>
+          . That is everything Module Federation gives us at the architectural level — the
+          runtime plugin itself is the only part we have deferred.
         </p>
         <p>
           We evaluated{' '}
@@ -808,6 +835,77 @@ function Section7Federation() {
         </p>
       </Prose>
     </SectionBlock>
+  );
+}
+
+function FederationDiagramSvg() {
+  const node = 'fill-[oklch(1_0_0)] stroke-[oklch(0.78_0.04_230)]';
+  const text = 'fill-[oklch(0.2_0.01_250)] text-[12px] font-medium';
+  const muted = 'fill-[oklch(0.5_0.01_250)] text-[11px]';
+  const link = 'stroke-[oklch(0.78_0.04_230)] fill-none';
+  return (
+    <svg
+      viewBox="0 0 720 240"
+      className="h-auto w-full"
+      role="img"
+      aria-label="Two-app micro-frontend: host shell and weekly-commit remote sharing the same JWT contract via shared-ui + shared-types packages."
+    >
+      <rect x="40" y="40" width="220" height="140" rx="10" className={node} />
+      <text x="150" y="68" textAnchor="middle" className={text}>
+        Host shell
+      </text>
+      <text x="150" y="90" textAnchor="middle" className={muted}>
+        landing · /architecture
+      </text>
+      <text x="150" y="106" textAnchor="middle" className={muted}>
+        host-production-963c.up.railway.app
+      </text>
+      <text x="150" y="138" textAnchor="middle" className={muted}>
+        Vite 5 · React 18
+      </text>
+      <text x="150" y="156" textAnchor="middle" className={muted}>
+        nginx · CloudFront-ready
+      </text>
+
+      <rect x="460" y="40" width="220" height="140" rx="10" className={node} />
+      <text x="570" y="68" textAnchor="middle" className={text}>
+        Weekly-commit remote
+      </text>
+      <text x="570" y="90" textAnchor="middle" className={muted}>
+        IC · Manager · Admin
+      </text>
+      <text x="570" y="106" textAnchor="middle" className={muted}>
+        weekly-commit-remote-production
+      </text>
+      <text x="570" y="138" textAnchor="middle" className={muted}>
+        Vite 5 · React 18
+      </text>
+      <text x="570" y="156" textAnchor="middle" className={muted}>
+        Auth-aware RTK Query slice
+      </text>
+
+      <rect
+        x="290"
+        y="92"
+        width="140"
+        height="56"
+        rx="8"
+        className="fill-[oklch(0.95_0.01_230)] stroke-[oklch(0.78_0.04_230)]"
+      />
+      <text x="360" y="116" textAnchor="middle" className={text}>
+        @throughline/shared-ui
+      </text>
+      <text x="360" y="134" textAnchor="middle" className={muted}>
+        + shared-types
+      </text>
+
+      <line x1="260" y1="120" x2="290" y2="120" className={link} strokeDasharray="4 3" />
+      <line x1="430" y1="120" x2="460" y2="120" className={link} strokeDasharray="4 3" />
+
+      <text x="360" y="200" textAnchor="middle" className={muted}>
+        Both apps consume the same JWT, the same Redux store contract, and the same DTOs.
+      </text>
+    </svg>
   );
 }
 
