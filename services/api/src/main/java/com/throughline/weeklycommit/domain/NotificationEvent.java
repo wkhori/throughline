@@ -56,6 +56,11 @@ public class NotificationEvent {
   @Column(name = "sent_at")
   private Instant sentAt;
 
+  /** P1 — set when the recipient first views the digest dashboard. Drives the
+   *  `avgManagerDigestViewMinutesAfterDeliver` metric in {@code MetricsService}. */
+  @Column(name = "viewed_at")
+  private Instant viewedAt;
+
   @Column(name = "created_at", nullable = false, updatable = false)
   private Instant createdAt;
 
@@ -124,6 +129,10 @@ public class NotificationEvent {
     return sentAt;
   }
 
+  public Instant getViewedAt() {
+    return viewedAt;
+  }
+
   public Instant getCreatedAt() {
     return createdAt;
   }
@@ -146,5 +155,9 @@ public class NotificationEvent {
 
   public void setSentAt(Instant sentAt) {
     this.sentAt = sentAt;
+  }
+
+  public void setViewedAt(Instant viewedAt) {
+    this.viewedAt = viewedAt;
   }
 }

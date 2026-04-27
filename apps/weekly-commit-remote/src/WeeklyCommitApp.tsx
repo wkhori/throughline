@@ -1,6 +1,7 @@
 import { lazy, Suspense, type ReactNode } from 'react';
 import { useSelector } from 'react-redux';
 import { selectHasRole, selectMe } from '@throughline/shared-ui';
+import { AdminMetricsPanel } from './features/admin/AdminMetricsPanel.js';
 import { RcdoTreeEditor } from './features/admin/RcdoTreeEditor.js';
 
 // PRD §7 sub-second initial render gate — heavy IC surfaces lazy-load so the host shell ships
@@ -28,7 +29,12 @@ export function WeeklyCommitApp(): ReactNode {
   }
 
   if (isAdmin) {
-    return <RcdoTreeEditor />;
+    return (
+      <div data-testid="admin-shell">
+        <AdminMetricsPanel />
+        <RcdoTreeEditor />
+      </div>
+    );
   }
 
   if (isManager) {
