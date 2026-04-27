@@ -1,21 +1,26 @@
 # Throughline — Weekly Commit Module
 
-Production-ready micro-frontend that replaces 15Five for weekly planning.
-Every weekly commit is FK-linked to a Supporting Outcome inside the org's
-RCDO hierarchy (Rally Cry → Defining Objective → Outcome → Supporting Outcome),
+Production-ready weekly-planning system that replaces 15Five. Every weekly
+commit is foreign-keyed to a Supporting Outcome inside the org's RCDO
+hierarchy (Rally Cry → Defining Objective → Outcome → Supporting Outcome),
 enforcing strategic alignment as a structural property — not a self-report.
 
-> **Required reading for any contributor:** [`CLAUDE.md`](./CLAUDE.md). It is
-> also a project deliverable — the hiring reviewer reads it to understand how
-> the build was driven.
+The product layers an AI Strategic Alignment Copilot over that structured
+graph: ICs get inline outcome suggestions, drift warnings, and quality lints
+as they draft; managers get a pre-digested weekly digest, alignment-risk
+alerts, and a portfolio review that no unstructured-text tool can produce.
+
+> **Architecture + decision log:** [`CLAUDE.md`](./CLAUDE.md) for the operating
+> rule and reframe; [`docs/architecture-decisions.md`](./docs/architecture-decisions.md)
+> for the 33-row requirement-treatment table.
 
 ## Why this exists
 
-The brief: 15Five collects weekly check-ins as unstructured text; managers
-infer alignment manually. Manager attention is the scarce resource. The IC +
-AI copilot do the alignment work as a natural byproduct of planning. The
-manager's default view is a pre-digested strategic dashboard. They drill in
-only when the AI flags something worth their attention.
+15Five collects weekly check-ins as unstructured text; managers infer
+alignment manually. Manager attention is the scarce resource. ICs + the AI
+copilot do the alignment work as a natural byproduct of planning. The
+manager's default view is a pre-digested strategic dashboard — they drill in
+only when something is genuinely worth their attention.
 
 ## Differentiation vs. 15Five
 
@@ -84,30 +89,19 @@ flip green automatically. See [`docs/orchestration-plan.md`](./docs/orchestratio
   `docs/ai-copilot-spec.md` §Eval Harness and `docs/architecture-decisions.md`
   row 34 (P41) for why this substitutes for `@wkhori/evalkit`.
 
-## Deliverables
+## Live deployment
 
-1. **Hosted demo URL (Railway):**
-   - Host SPA — https://host-production-963c.up.railway.app
-   - Weekly-commit remote — https://weekly-commit-remote-production.up.railway.app
-   - API — https://api-production-0faba.up.railway.app
-   - Demo accounts (Auth0 password grant or universal login):
-     - `ic@demo.throughline.app` / `manager@demo.throughline.app` / `admin@demo.throughline.app`
-     - Password: stored in `.env.local` as `DEMO_USERS_PASSWORD` (rotated; ask the maintainer).
-2. This repo: https://github.com/wkhori/throughline.
-3. [`CLAUDE.md`](./CLAUDE.md).
+- **Marketing landing:** https://host-production-963c.up.railway.app
+- **App:** https://weekly-commit-remote-production.up.railway.app
+- **API:** https://api-production-0faba.up.railway.app
+- **Architecture deep-dive:** https://host-production-963c.up.railway.app/architecture
 
-### Submission checklist
-
-- [x] Hosted demo URL live (`/actuator/health/readiness` returns `UP`).
-- [x] Repo public on GitHub.
-- [x] `main` tagged `v0.1.0`.
-- [x] All seven AI touchpoints (T1–T7) verified live with real Anthropic models +
-      cost > 0 — see `evals/last-run.md` for the latest deterministic eval pass
-      and `ai_insight` table for the live demo replay.
-- [x] Slack digest delivered: `notification_event` rows in state `SENT` with
-      `kind = WEEKLY_DIGEST`.
-- [x] Production-target Terraform skeleton + Helm chart in `infra/` —
-      `terraform validate` and `helm lint` clean.
+The app defaults to the IC persona on first visit; the persona bar at the top
+of the page swaps between IC, Manager, and Admin views without re-auth so
+each surface is one click away. Demo personas are minted via
+`POST /api/v1/auth/demo-login` (HS256 tokens issued by the same Spring service
+that verifies them), so Auth0 credentials are not needed to walk through the
+demo.
 
 ## Methodology + decisions
 

@@ -647,10 +647,16 @@ const decisionRows: DecisionRow[] = [
       'Slack via NotificationChannel adapter — SlackChannel live, OutlookGraphChannel stub, LogChannel for tests. Channel selected by config. Swap path: implement the stub, flip config.',
   },
   {
+    requirement: 'AI Strategic Alignment Copilot',
+    treatment: 'Additional',
+    rationale:
+      'Not in the brief — the brief specifies a weekly-commit module, not an AI copilot. Added because the structured RCDO graph makes seven specific AI touchpoints valuable (outcome suggestion, drift, portfolio review, alignment delta, manager digest, alignment-risk alert, commit lint). Haiku for high-volume tasks, Sonnet for analytical work. Full prompts and schemas in docs/ai-copilot-spec.md.',
+  },
+  {
     requirement: 'evalkit as the AI eval framework',
     treatment: 'Additional',
     rationale:
-      'Not in the brief. Added so each AI touchpoint has a deterministic eval gate before merge — temperature 0, N=3, ≥2/3 pass, per-touchpoint fixtures. Mapped one fixture per T1–T7 scenario from docs/ai-copilot-spec.md.',
+      'Not in the brief. Added so each AI touchpoint has a deterministic eval gate before merge — temperature 0, N=3, ≥2/3 pass, per-touchpoint fixtures.',
   },
   {
     requirement: 'Per-org Anthropic budget guard',

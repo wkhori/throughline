@@ -120,58 +120,94 @@ export function RcdoTreeEditor() {
           className="divide-y divide-(--color-panel-border) overflow-hidden rounded-lg border border-(--color-panel-border) bg-(--color-panel-bg)"
         >
           {tree.rallyCries.map((rc) => (
-            <li key={rc.id} className="space-y-2 px-5 py-4">
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="text-base font-semibold text-(--color-panel-heading)">
-                  {rc.title}
-                </span>
-                <span className="text-xs text-(--color-panel-muted)">
-                  {rc.definingObjectives.length} Defining Objective
-                  {rc.definingObjectives.length === 1 ? '' : 's'}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => handleArchive(rc.id)}
-                  data-testid={`archive-rc-${rc.id}`}
-                  className="ml-auto rounded-md border border-(--color-panel-border) bg-transparent px-3 py-1 text-xs font-medium text-(--color-panel-cell) hover:bg-(--color-skeleton-bg)"
+            <li key={rc.id} className="px-5 py-3">
+              <details className="group">
+                <summary
+                  className="flex cursor-pointer list-none flex-wrap items-center gap-3 outline-none [&::-webkit-details-marker]:hidden"
+                  data-testid={`rc-summary-${rc.id}`}
                 >
-                  Archive
-                </button>
-              </div>
-              {rc.definingObjectives.length > 0 && (
-                <ul className="space-y-1.5 border-l border-(--color-panel-border) pl-4">
-                  {rc.definingObjectives.map((defo) => (
-                    <li key={defo.id} className="space-y-1.5">
-                      <p className="text-sm text-(--color-panel-cell)">{defo.title}</p>
-                      {defo.outcomes.length > 0 && (
-                        <ul className="space-y-1 border-l border-(--color-panel-border) pl-4">
-                          {defo.outcomes.map((o) => (
-                            <li key={o.id} className="space-y-1">
-                              <p className="text-xs text-(--color-panel-muted)">{o.title}</p>
-                              {o.supportingOutcomes.length > 0 && (
-                                <ul className="space-y-1 border-l border-dashed border-(--color-panel-border) pl-4">
-                                  {o.supportingOutcomes.map((so) => (
-                                    <li
-                                      key={so.id}
-                                      className="text-[11px] text-(--color-panel-muted)"
-                                    >
-                                      {so.title}
-                                    </li>
-                                  ))}
-                                </ul>
-                              )}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
+                  <svg
+                    className="h-3.5 w-3.5 shrink-0 text-(--color-panel-muted) transition-transform group-open:rotate-90"
+                    viewBox="0 0 12 12"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M4 2 L8 6 L4 10" />
+                  </svg>
+                  <span className="text-base font-semibold text-(--color-panel-heading)">
+                    {rc.title}
+                  </span>
+                  <span className="text-xs text-(--color-panel-muted)">
+                    {rc.definingObjectives.length} Defining Objective
+                    {rc.definingObjectives.length === 1 ? '' : 's'} ·{' '}
+                    {countOutcomes(rc)} Outcome{countOutcomes(rc) === 1 ? '' : 's'} ·{' '}
+                    {countSupporting(rc)} Supporting
+                  </span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      void handleArchive(rc.id);
+                    }}
+                    data-testid={`archive-rc-${rc.id}`}
+                    className="ml-auto rounded-md border border-(--color-panel-border) bg-transparent px-3 py-1 text-xs font-medium text-(--color-panel-cell) hover:bg-(--color-skeleton-bg)"
+                  >
+                    Archive
+                  </button>
+                </summary>
+                {rc.definingObjectives.length > 0 && (
+                  <ul className="mt-2 space-y-1.5 border-l border-(--color-panel-border) pl-4">
+                    {rc.definingObjectives.map((defo) => (
+                      <li key={defo.id} className="space-y-1.5">
+                        <p className="text-sm text-(--color-panel-cell)">{defo.title}</p>
+                        {defo.outcomes.length > 0 && (
+                          <ul className="space-y-1 border-l border-(--color-panel-border) pl-4">
+                            {defo.outcomes.map((o) => (
+                              <li key={o.id} className="space-y-1">
+                                <p className="text-xs text-(--color-panel-muted)">{o.title}</p>
+                                {o.supportingOutcomes.length > 0 && (
+                                  <ul className="space-y-1 border-l border-dashed border-(--color-panel-border) pl-4">
+                                    {o.supportingOutcomes.map((so) => (
+                                      <li
+                                        key={so.id}
+                                        className="text-[11px] text-(--color-panel-muted)"
+                                      >
+                                        {so.title}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </details>
             </li>
           ))}
         </ul>
       )}
     </section>
   );
+}
+
+function countOutcomes(rc: RcdoTreeDto['rallyCries'][number]): number {
+  let n = 0;
+  for (const dobj of rc.definingObjectives) n += dobj.outcomes.length;
+  return n;
+}
+
+function countSupporting(rc: RcdoTreeDto['rallyCries'][number]): number {
+  let n = 0;
+  for (const dobj of rc.definingObjectives) {
+    for (const o of dobj.outcomes) n += o.supportingOutcomes.length;
+  }
+  return n;
 }

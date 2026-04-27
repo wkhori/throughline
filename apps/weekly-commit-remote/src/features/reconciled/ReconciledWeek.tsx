@@ -9,6 +9,7 @@ interface ReconciledWeekProps {
 
 export function ReconciledWeek({ week }: ReconciledWeekProps) {
   const { data: rcdo } = useGetRcdoTreeQuery();
+  const stats = computeStats(week.commits);
   return (
     <section data-testid="reconciled-week" className="mx-auto max-w-6xl space-y-6 p-6">
       <header className="rounded-lg border border-(--color-hero-border) bg-(--color-hero-bg) p-6">
@@ -22,6 +23,15 @@ export function ReconciledWeek({ week }: ReconciledWeekProps) {
           Reconciled {formatTimestamp(week.reconciledAt)} · {week.commits.length} commits
         </p>
       </header>
+      <div
+        data-testid="ic-stats"
+        className="grid grid-cols-2 gap-3 sm:grid-cols-4"
+      >
+        <StatCard label="Done" value={stats.done} tone="ok" />
+        <StatCard label="Partial" value={stats.partial} tone="medium" />
+        <StatCard label="Not done" value={stats.notDone} tone="high" />
+        <StatCard label="Carried forward" value={stats.carriedForward} tone="low" />
+      </div>
       <AlignmentDeltaCard weekId={week.id} />
       <ul className="space-y-3" data-testid="reconciled-rows">
         {week.commits.map((c) => (
@@ -29,6 +39,52 @@ export function ReconciledWeek({ week }: ReconciledWeekProps) {
         ))}
       </ul>
     </section>
+  );
+}
+
+function computeStats(commits: CommitDto[]): {
+  done: number;
+  partial: number;
+  notDone: number;
+  carriedForward: number;
+} {
+  let done = 0;
+  let partial = 0;
+  let notDone = 0;
+  let carriedForward = 0;
+  for (const c of commits) {
+    if (c.reconciliationOutcome === 'DONE') done += 1;
+    else if (c.reconciliationOutcome === 'PARTIAL') partial += 1;
+    else if (c.reconciliationOutcome === 'NOT_DONE') notDone += 1;
+    if (c.state === 'CARRIED_FORWARD') carriedForward += 1;
+  }
+  return { done, partial, notDone, carriedForward };
+}
+
+function StatCard({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone: 'ok' | 'low' | 'medium' | 'high';
+}) {
+  const toneClass =
+    tone === 'ok'
+      ? 'text-[oklch(0.35_0.13_150)]'
+      : tone === 'medium'
+        ? 'text-(--color-ribbon-medium-fg)'
+        : tone === 'high'
+          ? 'text-(--color-ribbon-high-fg)'
+          : 'text-(--color-ribbon-low-fg)';
+  return (
+    <div className="rounded-lg border border-(--color-panel-border) bg-(--color-panel-bg) p-4">
+      <p className="text-[11px] font-medium uppercase tracking-wide text-(--color-panel-muted)">
+        {label}
+      </p>
+      <p className={`mt-1 text-2xl font-semibold tabular-nums ${toneClass}`}>{value}</p>
+    </div>
   );
 }
 

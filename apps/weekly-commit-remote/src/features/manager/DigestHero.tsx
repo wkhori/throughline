@@ -96,13 +96,16 @@ function chipsFor(payload: DigestPayload): InsightDrillDownEntity[] {
       `outcome ${shortId(id)}`;
     out.push({ entityType: 'supporting_outcome', entityId: id, label: title });
   }
-  for (const d of payload.driftExceptions ?? []) {
+  for (const [idx, d] of (payload.driftExceptions ?? []).entries()) {
     const id = d.userId ?? '';
-    if (!id && !d.displayName) continue;
     out.push({
       entityType: 'user',
       entityId: id,
-      label: d.displayName?.trim() ? d.displayName : `User #${shortId(id)}`,
+      label: d.displayName?.trim()
+        ? d.displayName
+        : id
+          ? `User #${shortId(id)}`
+          : `Direct report ${idx + 1}`,
     });
   }
   for (const c of payload.longCarryForwards ?? []) {
@@ -113,13 +116,16 @@ function chipsFor(payload: DigestPayload): InsightDrillDownEntity[] {
     const prefix = weeks > 0 ? `${weeks}w · ` : '';
     out.push({ entityType: 'commit', entityId: id, label: `${prefix}${text}` });
   }
-  for (const u of payload.drillDowns ?? []) {
+  for (const [idx, u] of (payload.drillDowns ?? []).entries()) {
     const id = u.userId ?? '';
-    if (!id && !u.displayName) continue;
     out.push({
       entityType: 'user',
       entityId: id,
-      label: u.displayName?.trim() ? u.displayName : `User #${shortId(id)}`,
+      label: u.displayName?.trim()
+        ? u.displayName
+        : id
+          ? `User #${shortId(id)}`
+          : `1:1 candidate ${idx + 1}`,
     });
   }
   return out;
