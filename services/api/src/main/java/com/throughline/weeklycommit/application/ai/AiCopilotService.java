@@ -102,8 +102,19 @@ public class AiCopilotService {
   /**
    * Generic Anthropic invocation. Public so Phase 5b/5c services can layer T3/T4/T5/T6 on top.
    * Caller supplies the entity (type/id) the resulting {@link AIInsight} is associated with.
+   *
+   * <p>{@code noRollbackFor} on the routine "Anthropic-said-no" exceptions: those are recoverable
+   * outcomes the caller will translate into either a 429 (BudgetExhausted) or a deterministic
+   * fallback (T3/T4/T5/T6). The cost-guard hour-counter increment must NOT roll back when the
+   * downstream call fails, otherwise a malicious caller could spin the rate-limit counter back to
+   * zero by triggering invalid-JSON responses.
    */
-  @Transactional
+  @Transactional(
+      noRollbackFor = {
+        AnthropicException.class,
+        AnthropicInvalidJsonException.class,
+        com.throughline.weeklycommit.infrastructure.ai.BudgetExhaustedException.class
+      })
   public AIInsight invoke(
       AIInsightKind kind,
       AnthropicModel model,

@@ -50,6 +50,13 @@ public class StubAnthropicClient implements AnthropicClient {
   @Override
   public AnthropicResponse send(AnthropicRequest request) {
     String contentJson = resolveContent(request);
+    // Mirror AnthropicClientImpl.parseResponse: a non-JSON content body must surface as the
+    // typed exception so the caller's fallback path is exercised in tests.
+    String trimmed = contentJson == null ? "" : contentJson.trim();
+    if (trimmed.isEmpty() || (!trimmed.startsWith("{") && !trimmed.startsWith("["))) {
+      throw new AnthropicInvalidJsonException(
+          "stub: content was not a JSON object/array", contentJson);
+    }
     String modelId =
         request.model() == AnthropicModel.HAIKU ? "claude-haiku-4-5-20251001" : "claude-sonnet-4-6";
     return new AnthropicResponse(modelId, contentJson, 100, 80, 0, 12);
