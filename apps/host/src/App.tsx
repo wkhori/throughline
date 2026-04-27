@@ -1,20 +1,26 @@
-import { AppShell } from './components/AppShell.js';
-import { CommandPalette } from './components/CommandPalette.js';
-import { buildPaletteActions } from './components/paletteActions.js';
-import { PersonaSwitcher } from './components/PersonaSwitcher.js';
-import { RemoteBoundary } from './components/RemoteBoundary.js';
-import { isAuth0Configured } from './auth.js';
+import { useEffect } from 'react';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { Landing } from './pages/Landing.js';
+import { Architecture } from './pages/Architecture.js';
 
-const actions = buildPaletteActions((path) => window.location.assign(path));
+const REMOTE_APP_URL = 'https://weekly-commit-remote-production.up.railway.app/';
+
+function RemoteRedirect() {
+  useEffect(() => {
+    window.location.href = REMOTE_APP_URL;
+  }, []);
+  return null;
+}
 
 export function App() {
   return (
-    <>
-      {!isAuth0Configured() && <PersonaSwitcher />}
-      <CommandPalette actions={actions} />
-      <AppShell>
-        <RemoteBoundary />
-      </AppShell>
-    </>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/architecture" element={<Architecture />} />
+        <Route path="/app" element={<RemoteRedirect />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
