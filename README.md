@@ -88,13 +88,15 @@ flip green automatically. See [`docs/orchestration-plan.md`](./docs/orchestratio
 - **Frontend.** Vitest ≥80% lines/branches/functions/statements. `yarn nx run-many -t test`.
 - **E2E acceptance.** Cypress + Cucumber/Gherkin. `.feature` files in
   `cypress/e2e/**` are **deliverable spec artifacts**, not just tests.
-- **AI evals.** `yarn evals` runs an inline harness honouring the
-  [`@wkhori/evalkit`](https://www.npmjs.com/package/evalkit) contract against
-  the real Anthropic API: temperature 0, N=3, ≥2/3 pass per scenario,
-  deterministic assertions on the JSON schema. Fixtures in
+- **AI evals.** `yarn evals` runs the
+  [`evalkit`](https://www.npmjs.com/package/evalkit) package directly against
+  the real Anthropic API. Each scenario is invoked N=3 times at temperature 0;
+  every response is fed through `evalkit.runChecks` for the universal
+  JSON-validity + non-empty + schema-match leg, and a project-specific
+  path-based assertion DSL handles per-scenario value/range/oneOf checks.
+  ≥2/3 pass per scenario gates the run. Fixtures in
   `evals/fixtures/{t1..t7}/`; latest report in `evals/last-run.md`. See
-  `docs/ai-copilot-spec.md` §Eval Harness and `docs/architecture-decisions.md`
-  row 34 for the swap path back to the published package.
+  `docs/ai-copilot-spec.md` §Eval Harness.
 
 ## Live deployment
 

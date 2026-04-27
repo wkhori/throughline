@@ -25,6 +25,9 @@
     "db:down": "docker compose down",
     "evals": "node --experimental-strip-types --no-warnings evals/runner.ts"
   },
+  "dependencies": {
+    "evalkit": "0.2.0"
+  },
   "devDependencies": {
     "@badeball/cypress-cucumber-preprocessor": "^24.0.1",
     "@bahmutov/cypress-esbuild-preprocessor": "^2.2.8",

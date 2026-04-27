@@ -15,13 +15,13 @@ const COPILOT: readonly CopilotTouch[] = [
   {
     id: 'T1',
     title: 'Outcome suggestion',
-    description: 'Recommends the Supporting Outcome each commit should attach to.',
+    description: 'Suggests the Supporting Outcome each commit most likely advances.',
     stage: 'DRAFT',
   },
   {
     id: 'T2',
     title: 'Drift warning',
-    description: 'Flags commits whose phrasing drifts from the linked Outcome.',
+    description: 'Checks whether the commit still matches the linked Outcome.',
     stage: 'DRAFT',
   },
   {
@@ -39,13 +39,14 @@ const COPILOT: readonly CopilotTouch[] = [
   {
     id: 'T5',
     title: 'Weekly digest',
-    description: 'Pre-digested manager view delivered through Slack today; Outlook on the swap path.',
+    description:
+      'Evidence-backed manager summary delivered through Slack today; Outlook on the swap path.',
     stage: 'MANAGER',
   },
   {
     id: 'T6',
     title: 'Alignment-risk alert',
-    description: 'Hourly background scan that pings only when attention is warranted.',
+    description: 'Hourly rule-backed scan that notifies managers only when a real risk appears.',
     stage: 'MANAGER',
   },
   {
@@ -61,7 +62,7 @@ const STAGES: ReadonlyArray<{ id: string; caption: string }> = [
   { id: 'LOCKED', caption: 'Week is sealed. Portfolio review runs.' },
   { id: 'RECONCILING', caption: 'IC marks done, partial, or not done with notes.' },
   { id: 'RECONCILED', caption: 'Alignment delta computed. Manager digest fires.' },
-  { id: 'CARRIED_FORWARD', caption: 'Slipped commits spawn next week with parent reference.' },
+  { id: 'CARRY-FORWARD', caption: 'Slipped commits can spawn next-week lineage.' },
 ];
 
 export function Landing() {
@@ -95,12 +96,13 @@ function Hero() {
               <br />
               by design.
               <br />
-              <span className="text-(--color-hero-text)">Not by manager-on-the-hook.</span>
+              <span className="text-(--color-hero-text)">Built into the weekly workflow.</span>
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-relaxed text-(--color-hero-text)">
-              ICs and an AI copilot do the alignment work as a natural byproduct of weekly planning.
-              Managers get a pre-digested strategic dashboard and drill in only when something is
-              genuinely worth their attention.
+              Throughline replaces unstructured weekly planning with a lifecycle where every
+              commitment maps to a Supporting Outcome. The copilot helps ICs link, sharpen, and
+              reconcile work; managers get an exception-oriented dashboard instead of a pile of
+              check-ins.
             </p>
             <div className="mt-10 flex flex-wrap items-center gap-3">
               <a
@@ -151,15 +153,16 @@ function Problem() {
             </h2>
             <div className="mt-6 space-y-5 text-lg leading-relaxed text-(--color-hero-text)">
               <p>
-                In the legacy weekly-commit ritual, ICs fill in unstructured forms and the manager
-                tries to infer alignment by reading every entry. The data model is unstructured. The
-                cognitive load is concentrated. The loop is broken at the manager.
+                In many weekly-planning rituals, ICs write free-text updates and the manager tries
+                to infer strategic alignment by reading every entry. The work may be useful, but the
+                structure needed for portfolio-level coverage is missing. The cognitive load lands
+                on the manager.
               </p>
               <p>
-                Throughline moves the alignment work to the place it belongs &mdash; into the
-                planning surface itself. ICs link each commit to a Supporting Outcome on a
-                strategy-to-execution graph. The AI copilot grades, suggests, and flags as they
-                type. Managers stop reading. They review.
+                Throughline moves that work into the planning surface itself. ICs link each commit
+                to a Supporting Outcome on a strategy-to-execution graph. The copilot suggests
+                links, checks drift, and flags unclear commitments. Managers review exceptions
+                backed by evidence instead of reconstructing alignment from raw updates.
               </p>
             </div>
           </div>
@@ -178,8 +181,8 @@ function Problem() {
                 <path d="M7 7h4v4H7zM13 7h4v4h-4z" strokeLinejoin="round" />
               </svg>
               <blockquote className="mt-6 text-2xl leading-snug font-medium text-(--color-hero-heading)">
-                &ldquo;Manager-on-the-hook&rdquo; is the broken loop. The fix is structural, not
-                another form field.
+                The fix is structural: make weekly work carry its strategic context at the moment it
+                is planned.
               </blockquote>
               <figcaption className="mt-6 text-sm text-(--color-hero-muted)">
                 The core operating premise of the product.
@@ -201,7 +204,7 @@ function Differentiator() {
             The structural difference
           </p>
           <h2 className="text-3xl leading-tight font-semibold tracking-tight text-(--color-hero-heading) sm:text-4xl">
-            Same prompt &ldquo;AI-powered.&rdquo; Different data model.
+            The advantage is the data model, not the prompt.
           </h2>
           <p className="mt-4 text-base leading-relaxed text-(--color-hero-text)">
             Throughline&rsquo;s differentiator is not the model behind the assistant. It is what the
@@ -212,7 +215,7 @@ function Differentiator() {
           <article className="flex flex-col rounded-xl border border-(--color-hero-border) bg-(--color-panel-bg) p-8">
             <header className="flex items-baseline justify-between">
               <h3 className="text-lg font-semibold text-(--color-hero-heading)">
-                What 15Five sees
+                What unlinked weekly updates can answer
               </h3>
               <span className="rounded-full bg-(--color-badge-bg) px-2.5 py-1 text-xs font-medium text-(--color-badge-fg)">
                 Unstructured text
@@ -224,13 +227,14 @@ function Differentiator() {
 - Pair with K. on the SMB onboarding bug
 - Continue the Q3 metrics dashboard
 
-What an LLM can produce from this:
+What a generic summary can produce:
 "The team focused on testing,
  onboarding, and dashboards."`}
             </pre>
             <p className="mt-6 text-sm leading-relaxed text-(--color-hero-muted)">
-              A summary of the words. No way to answer &ldquo;which Outcome received zero effort
-              this week?&rdquo; — the data model doesn&rsquo;t carry that signal.
+              A useful summary of the words, but not a reliable answer to &ldquo;which strategic
+              Outcome received zero effort this week?&rdquo; The data model has to carry that
+              signal.
             </p>
           </article>
           <article className="flex flex-col rounded-xl border border-(--color-ribbon-link) bg-(--color-panel-bg) p-8 ring-1 ring-(--color-ribbon-link)/30">
@@ -258,8 +262,8 @@ Long carry-forward: commit 01KQ6Q7R…
 carried 3 weeks — needs resolution.`}
             </pre>
             <p className="mt-6 text-sm leading-relaxed text-(--color-hero-muted)">
-              Every commit is foreign-keyed to a Supporting Outcome. That single structural property
-              is what turns a model summary into a manager-actionable digest.
+              Every commit is foreign-keyed to a Supporting Outcome. That structural property turns
+              a model summary into a manager-actionable digest.
             </p>
           </article>
         </div>
@@ -350,11 +354,11 @@ function CopilotGrid() {
             The copilot lives across the lifecycle
           </p>
           <h2 className="text-3xl leading-tight font-semibold tracking-tight text-(--color-hero-heading) sm:text-4xl">
-            Seven touchpoints. One coherent surface.
+            Seven touchpoints. One coherent workflow.
           </h2>
           <p className="mt-4 text-base leading-relaxed text-(--color-hero-text)">
-            The AI copilot is not a chat panel bolted on the side. It runs at every stage of the
-            weekly commit, from drafting through manager review.
+            The copilot is not a chat panel bolted onto planning. It runs where the decisions
+            happen, from commit drafting through manager review.
           </p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -400,7 +404,7 @@ function LifecycleRibbon() {
             The lifecycle
           </p>
           <h2 className="text-3xl leading-tight font-semibold tracking-tight text-(--color-hero-heading) sm:text-4xl">
-            One ritual. Five states. Always reconcile.
+            Four week states. Carry-forward lineage. Always reconcile.
           </h2>
         </div>
         <ol className="grid gap-3 lg:grid-cols-5">
@@ -449,7 +453,8 @@ function FinalCta() {
           See it in motion.
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-(--color-hero-text)">
-          A live, seeded demo &mdash; IC drafting, manager dashboard, the full lifecycle.
+          A live, seeded demo &mdash; IC drafting, manager dashboard, reconciliation, and
+          carry-forward lineage.
         </p>
         <div className="mt-10 flex justify-center">
           <a

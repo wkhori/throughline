@@ -1,4 +1,5 @@
-// Throughline AI eval runner — minimal harness substituting for `@wkhori/evalkit` (see P41).
+// Throughline AI eval runner — wraps the published `evalkit` npm package
+// (https://www.npmjs.com/package/evalkit, ADR row 34).
 //
 // Behaviour:
 //   1. Loads .env.local for ANTHROPIC_API_KEY (mandatory).
@@ -6,8 +7,10 @@
 //      - Reads `evals/fixtures/<id>/input.json` (a Record passed verbatim as the user message).
 //      - Reads `evals/fixtures/<id>/expected.json` (assertion list).
 //      - Calls Anthropic Messages API N=3 times at temperature 0.
-//      - Parses each response as JSON; runs the assertion list deterministically.
-//      - Tracks pass count + cumulative cost (per docs/ai-copilot-spec.md pricing).
+//      - Hands every Anthropic response to evalkit's `runChecks` for the JSON-validity +
+//        schema-match + content-match leg of every scenario, and applies the project-specific
+//        path-based assertion DSL on top for value/range/oneOf checks evalkit doesn't expose
+//        out of the box.
 //   3. Writes a Markdown report to `evals/last-run.md`.
 //   4. Exits non-zero if any scenario passed fewer than PASS_THRESHOLD of N runs.
 //
@@ -19,6 +22,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { runChecks, type CheckSuiteResult } from 'evalkit';
 import {
   N,
   PASS_THRESHOLD,
@@ -222,6 +226,22 @@ async function runScenario(apiKey: string, scenario: EvalScenario): Promise<RunR
       const cost = costCents(scenario.model, usage);
       totalCostCents += cost;
       const failures: string[] = [];
+
+      // evalkit's runChecks owns the universal assertions every Anthropic JSON response should
+      // pass: response is non-empty, parses as JSON, and is an object (not a bare value or
+      // array). Per-scenario schema/content checks come from the fixture.
+      const evalkitResult: CheckSuiteResult = runChecks({
+        responseText: rawText,
+        json: { text: rawText, requireObject: true },
+      });
+      if (!evalkitResult.passed) {
+        for (const r of evalkitResult.results) {
+          if (!r.passed) failures.push(`evalkit:${r.key} → ${r.details}`);
+        }
+      }
+
+      // Project-specific path-based assertions: pick the value at a JSON path, then check it
+      // against an exact / range / oneOf / present / absent / contains predicate.
       for (const a of assertions) {
         const value = pickPath(json, a.path);
         const result = assertOnce(value, a);
@@ -229,6 +249,7 @@ async function runScenario(apiKey: string, scenario: EvalScenario): Promise<RunR
           failures.push(`path=${a.path.join('.')} kind=${a.kind} → ${result.reason}`);
         }
       }
+
       const pass = failures.length === 0;
       if (pass) passes++;
       attempts.push({

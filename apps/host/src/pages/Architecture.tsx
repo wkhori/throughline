@@ -67,8 +67,9 @@ function PageIntro() {
         Architecture
       </h1>
       <p className="mt-4 max-w-2xl text-base leading-relaxed text-(--color-hero-text)">
-        The full reasoning behind every meaningful choice in this repository. Every section below is
-        a deliverable. Read top to bottom in order.
+        The product and engineering decisions behind this work sample: where the brief was
+        implemented directly, where a practical demo path was substituted, and how each substitution
+        can be swapped back to the original requirement.
       </p>
     </div>
   );
@@ -86,7 +87,7 @@ function Section1Methodology() {
           list.
         </blockquote>
         <p>
-          Every requirement from the brief receives exactly one of three treatments. We
+          Every requirement from the brief receives one of four explicit treatments. We
           <strong className="text-(--color-shell-text)"> implement as specified</strong> when the
           requirement directly serves the problem statement. We{' '}
           <strong className="text-(--color-shell-text)">substitute and document</strong> when the
@@ -94,8 +95,10 @@ function Section1Methodology() {
           better — every substitution lands in the requirement-treatment table with rationale and a
           swap path back to the original. We mark a requirement{' '}
           <strong className="text-(--color-shell-text)">out of scope and document why</strong> when
-          two requirements compete for the same job and one carries it more cleanly. No silent
-          skips, no silent expansions.
+          two requirements compete for the same job and one carries it more cleanly. We mark a
+          capability <strong className="text-(--color-shell-text)">additional</strong> when it was
+          not in the brief but materially improves the product. No silent skips, no unlabelled
+          expansions.
         </p>
       </Prose>
     </SectionBlock>
@@ -114,14 +117,15 @@ function Section2Reframe() {
         </p>
         <p>
           The IC plus the AI copilot do the alignment work as a natural byproduct of weekly
-          planning. The manager&apos;s default view is a pre-digested strategic dashboard — they
-          drill in only when the AI flags something worth their attention.
+          planning. The manager&apos;s default view is an exception-oriented strategic dashboard —
+          they drill in only when the system has evidence that something deserves attention.
         </p>
         <blockquote className="border-l-2 border-(--color-ribbon-link) pl-4 text-(--color-shell-text)">
           Our data model is a strategy-to-execution graph: every weekly commit is FK-linked to a
-          Supporting Outcome in the RCDO tree. Our AI generates insights 15Five structurally cannot
-          — &ldquo;Outcome 3.2 received 47% of org effort this week, Outcome 3.1 received
-          zero,&rdquo; or &ldquo;this commit has been carry-forwarded four weeks running.&rdquo;
+          Supporting Outcome in the RCDO tree. That lets the system answer questions that unlinked
+          weekly updates cannot answer reliably — &ldquo;Outcome 3.2 received 47% of org effort this
+          week, Outcome 3.1 received zero,&rdquo; or &ldquo;this commit has been carry-forwarded
+          four weeks running.&rdquo;
         </blockquote>
       </Prose>
     </SectionBlock>
@@ -141,7 +145,7 @@ function Section3DomainModel() {
         <Prose>
           <p>
             Every weekly commit is FK-linked to a Supporting Outcome. That single structural
-            property is what lets the copilot generate insights 15Five cannot — &ldquo;Outcome 3.2
+            property is what lets the copilot generate evidence-backed insights — &ldquo;Outcome 3.2
             received 47% of org effort this week,&rdquo; &ldquo;this commit has been carry-forwarded
             four weeks running,&rdquo; &ldquo;Rally Cry 2 has zero coverage from this team.&rdquo;
             The graph is the differentiator, not the prompt library.
@@ -300,7 +304,7 @@ function RcdoGraphSvg() {
 function Section4Lifecycle() {
   return (
     <SectionBlock>
-      <SectionHeading index="04" title="Lifecycle state machine" />
+      <SectionHeading index="04" title="Lifecycle state machine + carry-forward lineage" />
       <div className="overflow-hidden rounded-md border border-(--color-panel-border) bg-(--color-panel-bg) p-6">
         <LifecycleSvg />
       </div>
@@ -308,7 +312,7 @@ function Section4Lifecycle() {
         <table className="w-full border-collapse text-sm">
           <thead className="bg-(--color-ribbon-bg) text-left text-xs uppercase tracking-wider text-(--color-shell-muted)">
             <tr>
-              <th className="px-4 py-3 font-medium">State</th>
+              <th className="px-4 py-3 font-medium">State / transition</th>
               <th className="px-4 py-3 font-medium">Who acts</th>
               <th className="px-4 py-3 font-medium">AI fires</th>
               <th className="px-4 py-3 font-medium">Manager touchpoint</th>
@@ -340,7 +344,7 @@ function Section4Lifecycle() {
               <td className="px-4 py-3">Slack digest + dashboard hero</td>
             </tr>
             <tr>
-              <td className="px-4 py-3 font-medium text-(--color-shell-text)">CARRIED_FORWARD</td>
+              <td className="px-4 py-3 font-medium text-(--color-shell-text)">CARRY-FORWARD</td>
               <td className="px-4 py-3">System spawns next-week DRAFT with parentCommitId</td>
               <td className="px-4 py-3">T6 risk alert (hourly background)</td>
               <td className="px-4 py-3">Drill-down on flagged carry-forwards</td>
@@ -362,7 +366,7 @@ function LifecycleSvg() {
       viewBox="0 0 820 200"
       className="h-auto w-full"
       role="img"
-      aria-label="Lifecycle state machine: DRAFT to LOCKED to RECONCILING to RECONCILED to CARRIED_FORWARD, with CARRIED_FORWARD spawning a new DRAFT in week N plus 1."
+      aria-label="Lifecycle state machine: DRAFT to LOCKED to RECONCILING to RECONCILED, with carry-forward spawning a new DRAFT in week N plus 1."
     >
       <defs>
         <marker
@@ -396,7 +400,7 @@ function LifecycleSvg() {
         </text>
         <rect x="660" y="80" width="140" height="40" rx="8" className={node} />
         <text x="730" y="105" textAnchor="middle" className={text}>
-          CARRIED_FORWARD
+          CF LINEAGE
         </text>
       </g>
       <g markerEnd="url(#arrow)" className={arrow}>
@@ -520,19 +524,19 @@ const touchpoints: Touchpoint[] = [
 function Section5Copilot() {
   return (
     <SectionBlock>
-      <SectionHeading index="05" title="AI copilot — seven hands-on stages" />
+      <SectionHeading index="05" title="AI copilot — seven touchpoints" />
       <Prose>
         <p>
-          The Throughline copilot guides ICs and managers through seven stages of the weekly
+          The Throughline copilot guides ICs and managers through seven touchpoints in the weekly
           lifecycle — from the first commit draft to the manager review on Monday morning. Each
           stage runs against the structured RCDO graph rather than free text, which is what makes
-          the output meaningfully different from a model that has only the words to work with.
+          the output meaningfully different from a model that has only raw update text to work with.
         </p>
         <p className="text-sm text-(--color-shell-muted)">
           Implementation note: each stage is internally numbered T1 through T7. Haiku handles
-          high-volume classification; Sonnet handles the analytical work that produces the
-          artefact a manager actually reads. Full prompts, schemas, per-call cost, retry policy,
-          and eval scenarios live in{' '}
+          high-volume classification; Sonnet handles the analytical work that produces the artefact
+          a manager actually reads. Full prompts, schemas, per-call cost, retry policy, and eval
+          scenarios live in{' '}
           <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
             docs/ai-copilot-spec.md
           </code>
@@ -589,9 +593,9 @@ type DecisionRow = {
 const decisionRows: DecisionRow[] = [
   {
     requirement: 'Vite 5 + Module Federation host/remote',
-    treatment: 'Implemented',
+    treatment: 'Substituted',
     rationale:
-      'Self-built minimal host shell + weekly-commit remote. Same MF contract: shared singletons, JWT propagation, runtime remoteEntry.js.',
+      'Runtime federation is deferred because @module-federation/vite 1.14.5 deadlocks the host build. v1 ships as two Vite SPAs with the host/remote contract preserved: shared packages, version-pinned singleton dependencies, and one JWT contract. Swap path: re-enable the plugin once the upstream cycle is fixed or migrate to @originjs/vite-plugin-federation.',
   },
   {
     requirement: 'Redux Toolkit + RTK Query',
@@ -644,7 +648,7 @@ const decisionRows: DecisionRow[] = [
     requirement: 'Outlook Graph API integration',
     treatment: 'Substituted',
     rationale:
-      'Slack via NotificationChannel adapter — SlackChannel live, OutlookGraphChannel stub, LogChannel for tests. Channel selected by config. Swap path: implement the stub, flip config.',
+      'Slack ships through the NotificationChannel adapter and LogChannel covers tests. Outlook Graph remains the documented swap path: implement an Outlook channel behind the same adapter and flip config.',
   },
   {
     requirement: 'AI Strategic Alignment Copilot',
@@ -653,10 +657,10 @@ const decisionRows: DecisionRow[] = [
       'Not in the brief — the brief specifies a weekly-commit module, not an AI copilot. Added because the structured RCDO graph makes seven specific AI touchpoints valuable (outcome suggestion, drift, portfolio review, alignment delta, manager digest, alignment-risk alert, commit lint). Haiku for high-volume tasks, Sonnet for analytical work. Full prompts and schemas in docs/ai-copilot-spec.md.',
   },
   {
-    requirement: '@wkhori/evalkit as the AI eval framework',
-    treatment: 'Substituted',
+    requirement: 'evalkit as the AI eval framework',
+    treatment: 'Additional',
     rationale:
-      'Not in the brief — added because the AI copilot needed deterministic eval gates. The published @wkhori/evalkit package was not yet stable at integration time, so we shipped an inline harness (evals/runner.ts) honouring the same contract: temperature 0, N=3, ≥2/3 pass, per-touchpoint fixtures. Swap path: replace evals/runner.ts with a thin import once the package locks.',
+      'Not in the brief — added because the AI copilot needed deterministic eval gates. The published evalkit npm package (v0.2.0) is wired directly: every Anthropic response is fed through evalkit.runChecks for the universal JSON-validity + non-empty + schema-match leg, with a project-specific path-based assertion DSL on top for value/range/oneOf checks. Temperature 0, N=3, ≥2/3 pass per scenario.',
   },
   {
     requirement: 'Per-org Anthropic budget guard',
@@ -679,8 +683,7 @@ function Section6DecisionTable() {
       <Prose>
         <p>
           The most material rows from the requirement-treatment table. Substitutions are bolded.
-          Each substitution row in the source doc carries a swap path back to the original
-          requirement.
+          Each substitution row carries a concrete swap path back to the original requirement.
         </p>
       </Prose>
       <div className="mt-6 overflow-x-auto rounded-md border border-(--color-panel-border)">
@@ -785,8 +788,8 @@ function Section7Federation() {
           <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
             weekly-commit-remote-production.up.railway.app
           </code>{' '}
-          — IC, Manager, and Admin views. Two services on Railway, two CDN-cacheable
-          deploys, one shared JWT contract.
+          — IC, Manager, and Admin views. Two services on Railway, two CDN-cacheable deploys, one
+          shared JWT contract.
         </p>
         <p>
           The two apps share singleton React/Redux/RTK versions pinned in{' '}
@@ -801,8 +804,8 @@ function Section7Federation() {
           <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
             @throughline/shared-types
           </code>
-          . That is everything Module Federation gives us at the architectural level — the
-          runtime plugin itself is the only part we have deferred.
+          . Those are the architectural seams the host and remote need to preserve; the runtime
+          federation plugin itself is the part deferred for v1.
         </p>
         <p>
           We evaluated{' '}
@@ -814,12 +817,13 @@ function Section7Federation() {
           <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
             eager
           </code>{' '}
-          escape hatch is not exposed in this plugin version. Forking the plugin to fix this is
-          not a v1-scoped change.
+          escape hatch is not exposed in this plugin version. Forking the plugin to fix this is not
+          a v1-scoped change.
         </p>
         <p>
-          So v1 ships separate Vite SPAs with the federation contract preserved. Flipping the
-          runtime on is a config change once upstream lands a fix or we migrate to{' '}
+          So v1 ships separate Vite SPAs with the federation contract preserved. Re-enabling the
+          runtime should be a narrow config and integration change once upstream lands a fix or we
+          migrate to{' '}
           <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
             @originjs/vite-plugin-federation
           </code>
@@ -922,11 +926,11 @@ function Section8AwsTarget() {
         <Prose>
           <p>
             The current deploy is Railway, documented as a substitution. The production target is
-            AWS: ALB in front of three Fargate services (host, remote, api), RDS Postgres with
+            AWS: ALB in front of EKS workloads for host, remote, and api; RDS Postgres with
             ElastiCache for session and prompt caches, EventBridge as the cron scheduler for the T6
-            hourly alignment-risk scan, and three outbound integrations (Anthropic for the copilot,
-            Slack for the manager digest, Outlook Graph as a stub awaiting credentials). Terraform
-            modules live in{' '}
+            hourly alignment-risk scan, and outbound integrations for Anthropic plus the configured
+            notification channel. Outlook Graph remains on the documented adapter swap path.
+            Terraform modules live in{' '}
             <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
               infra/terraform/
             </code>{' '}
@@ -952,7 +956,7 @@ function AwsDiagramSvg() {
       viewBox="0 0 940 480"
       className="h-auto w-full"
       role="img"
-      aria-label="AWS production architecture: CloudFront in front of S3 + ALB; ALB to EKS pods (host, remote, api); api to RDS Postgres, ElastiCache, EventBridge, SQS/SNS; outbound to Anthropic, Slack, Outlook Graph stub."
+      aria-label="AWS production architecture: CloudFront in front of S3 plus ALB; ALB to EKS workloads for host, remote, and api; api to RDS Postgres, ElastiCache, EventBridge, SQS/SNS, Anthropic, Slack, and an Outlook Graph adapter swap path."
     >
       <defs>
         <marker
@@ -1029,7 +1033,7 @@ function AwsDiagramSvg() {
           Outlook Graph
         </text>
         <text x="800" y="296" textAnchor="middle" className={muted}>
-          (stub — credentials pending)
+          (adapter swap path)
         </text>
       </g>
       <g markerEnd="url(#arrow2)" className={arrow}>
@@ -1056,9 +1060,8 @@ function AwsDiagramSvg() {
         Outbound integrations
       </text>
       <text x="20" y="450" className={muted}>
-        CloudFront fronts the host bundle and proxies S3 (remoteEntry, hero-video). SQS/SNS fans
-        out manager digest events to subscribers. Demo deploys to Railway; swap path: terraform
-        apply, ECR push, helm install.
+        CloudFront fronts static host/remote assets. SQS/SNS fans out manager digest events to
+        subscribers. Demo deploys to Railway; swap path: terraform apply, ECR push, helm install.
       </text>
     </svg>
   );
@@ -1076,13 +1079,13 @@ function Section9CostGuard() {
             $0.26
           </span>
           <span className="text-base font-medium text-(--color-hero-text)">
-            per employee · per month · at 175 ICs
+            per employee · per month · at 175 employees
           </span>
         </div>
         <p className="mt-4 text-sm leading-relaxed text-(--color-hero-text)">
           That number is the projected monthly Anthropic spend across all seven touchpoints,
-          assuming every IC plans and reconciles every week. Holding it there is what the cost
-          guard is for.
+          assuming every IC plans and reconciles every week. Holding it there is what the cost guard
+          is for.
         </p>
       </div>
       <div className="mt-6">
@@ -1100,12 +1103,12 @@ function Section9CostGuard() {
             <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
               AIBudget
             </code>{' '}
-            row before any call dispatches, debits the projected token cost, and rejects with a
-            429 if the projection would exceed the org cap. The lock is what makes this safe under
+            row before any call dispatches, debits the projected token cost, and rejects with a 429
+            if the projection would exceed the org cap. The lock is what makes this safe under
             concurrent fan-out (a runaway prompt cannot exhaust the budget during the same lock
             cycle). Haiku handles the high-volume cheap touchpoints (T1, T2, T6, T7) where latency
-            matters more than depth; Sonnet handles the analytical work (T3, T4, T5) where the
-            model reasons over multi-commit structure to produce the artefact a manager reads.
+            matters more than depth; Sonnet handles the analytical work (T3, T4, T5) where the model
+            reasons over multi-commit structure to produce the artefact a manager reads.
           </p>
         </Prose>
       </div>
@@ -1117,7 +1120,8 @@ function SectionTestEval() {
   const buckets = [
     {
       heading: 'Frontend unit',
-      detail: 'Vitest. Every component has a test colocated next to it.',
+      detail:
+        'Vitest coverage gates for interactive product surfaces; static marketing pages are excluded from unit coverage and verified by build/smoke checks.',
       proof: 'apps/weekly-commit-remote/src/**/*.test.tsx',
     },
     {
@@ -1133,8 +1137,8 @@ function SectionTestEval() {
     {
       heading: 'AI evals',
       detail:
-        'Inline harness (evals/runner.ts) honouring the @wkhori/evalkit contract. One fixture per T1–T7 scenario from docs/ai-copilot-spec.md. Temperature 0, N=3, ≥2/3 pass, deterministic assertions on the JSON schema.',
-      proof: 'evals/fixtures/*.json',
+        'evalkit (npm) wraps every Anthropic response with runChecks for JSON-validity + non-empty + schema-match. One fixture per T1–T7 scenario from docs/ai-copilot-spec.md. Temperature 0, N=3, ≥2/3 pass, deterministic per-touchpoint path assertions on top.',
+      proof: 'evals/fixtures/{t1..t7}/',
     },
   ];
   return (
@@ -1142,9 +1146,9 @@ function SectionTestEval() {
       <SectionHeading index="10" title="Test and eval coverage" />
       <Prose>
         <p>
-          Four independent test surfaces because each catches a different failure mode. The AI
-          evals are the new layer; they pin behaviour against the JSON schema rather than asserting
-          on prose, which is what makes them deterministic enough to live in CI.
+          Four independent test surfaces because each catches a different failure mode. The AI evals
+          are the new layer; they pin behaviour against the JSON schema rather than asserting on
+          prose, which is what makes them deterministic enough for CI or prompt-labelled gates.
         </p>
       </Prose>
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -1193,7 +1197,7 @@ function Section11Stack() {
             'Hibernate / JPA + Spring Data',
             'Flyway migrations',
             'Anthropic SDK (Haiku + Sonnet)',
-            'Slack webhook · Outlook Graph stub',
+            'Slack webhook · Outlook Graph swap path',
           ]}
         />
       </div>
