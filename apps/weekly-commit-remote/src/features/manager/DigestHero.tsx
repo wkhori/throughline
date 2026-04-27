@@ -1,9 +1,10 @@
-import { type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { InsightDrillDown, type InsightDrillDownEntity } from '@throughline/shared-ui';
 import {
   useGetCurrentDigestQuery,
   useGetTeamMemberCurrentWeekQuery,
   useRegenerateDigestMutation,
+  useDispatchDigestToSlackMutation,
   type DigestEnvelope,
   type DigestPayload,
 } from '../../api/managerEndpoints.js';
@@ -97,27 +98,28 @@ function chipsFor(payload: DigestPayload): InsightDrillDownEntity[] {
   }
   for (const d of payload.driftExceptions ?? []) {
     const id = d.userId ?? '';
+    if (!id && !d.displayName) continue;
     out.push({
       entityType: 'user',
       entityId: id,
-      label: d.displayName ?? `user ${shortId(id)}`,
+      label: d.displayName?.trim() ? d.displayName : `User #${shortId(id)}`,
     });
   }
   for (const c of payload.longCarryForwards ?? []) {
     const id = c.commitId ?? '';
+    if (!id) continue;
     const weeks = c.weeks ?? 0;
-    out.push({
-      entityType: 'commit',
-      entityId: id,
-      label: `${weeks}w · ${c.commitText ?? shortId(id)}`,
-    });
+    const text = c.commitText?.trim() || `Commit #${shortId(id)}`;
+    const prefix = weeks > 0 ? `${weeks}w · ` : '';
+    out.push({ entityType: 'commit', entityId: id, label: `${prefix}${text}` });
   }
   for (const u of payload.drillDowns ?? []) {
     const id = u.userId ?? '';
+    if (!id && !u.displayName) continue;
     out.push({
       entityType: 'user',
       entityId: id,
-      label: u.displayName ?? `1:1 ${shortId(id)}`,
+      label: u.displayName?.trim() ? u.displayName : `User #${shortId(id)}`,
     });
   }
   return out;
@@ -126,6 +128,16 @@ function chipsFor(payload: DigestPayload): InsightDrillDownEntity[] {
 export function DigestHero(props: DigestHeroProps = {}) {
   const live = useGetCurrentDigestQuery(undefined, { skip: props.override === 'props' });
   const [regenerate, regen] = useRegenerateDigestMutation();
+  const [dispatchSlack, dispatch] = useDispatchDigestToSlackMutation();
+  const [dispatchAck, setDispatchAck] = useState<'idle' | 'sent' | 'failed'>('idle');
+  const onDispatchSlack = async () => {
+    try {
+      await dispatchSlack().unwrap();
+      setDispatchAck('sent');
+    } catch {
+      setDispatchAck('failed');
+    }
+  };
   const envelope: DigestEnvelope | null =
     props.override === 'props' ? (props.envelope ?? null) : (live.data ?? null);
   const isLoading =
@@ -163,6 +175,33 @@ export function DigestHero(props: DigestHeroProps = {}) {
           {variant}
         </span>
       </div>
+
+      {variant !== 'AWAITING_AI' ? (
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            data-testid="digest-dispatch-slack"
+            disabled={dispatch.isLoading}
+            onClick={onDispatchSlack}
+            className="inline-flex items-center gap-2 rounded-md border border-(--color-hero-border) bg-(--color-shell-bg) px-3 py-1.5 text-xs font-medium text-(--color-hero-heading) transition-colors hover:bg-(--color-skeleton-bg) disabled:opacity-50"
+          >
+            {dispatch.isLoading ? 'Sending…' : 'Send digest to Slack'}
+          </button>
+          {dispatchAck === 'sent' ? (
+            <span
+              data-testid="digest-dispatch-ack"
+              className="text-xs text-(--color-hero-muted)"
+            >
+              Dispatched. Check the channel.
+            </span>
+          ) : null}
+          {dispatchAck === 'failed' ? (
+            <span className="text-xs text-(--color-shell-error)">
+              Dispatch failed — see API logs.
+            </span>
+          ) : null}
+        </div>
+      ) : null}
 
       {isLoading ? (
         <p data-testid="digest-loading" className="text-sm text-(--color-hero-muted)">

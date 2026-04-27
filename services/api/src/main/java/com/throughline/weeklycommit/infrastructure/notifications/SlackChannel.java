@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.throughline.weeklycommit.domain.NotificationEvent;
+import com.throughline.weeklycommit.domain.NotificationKind;
 import com.throughline.weeklycommit.domain.NotificationState;
 import com.throughline.weeklycommit.domain.repo.NotificationEventRepository;
 import java.time.Clock;
@@ -126,15 +127,62 @@ public class SlackChannel implements NotificationChannel {
       text = payload.path("finding").asText(payload.path("alignmentHeadline").asText(""));
     }
     text = text.replace("<DASHBOARD_URL>", dashboardUrl);
+
     ObjectNode root = MAPPER.createObjectNode();
-    root.put("text", text);
+    root.put("text", deriveFallbackText(event, text));
     ArrayNode blocks = root.putArray("blocks");
+
+    String header = headerFor(event);
+    if (header != null) {
+      ObjectNode hb = blocks.addObject();
+      hb.put("type", "header");
+      ObjectNode ht = hb.putObject("text");
+      ht.put("type", "plain_text");
+      ht.put("text", header);
+    }
+
     ObjectNode section = blocks.addObject();
     section.put("type", "section");
     ObjectNode txt = section.putObject("text");
     txt.put("type", "mrkdwn");
-    txt.put("text", text);
+    txt.put("text", text.isBlank() ? "_No body for this event._" : text);
+
+    if (event.getKind() == NotificationKind.WEEKLY_DIGEST
+        || event.getKind() == NotificationKind.ALIGNMENT_RISK) {
+      blocks.addObject().put("type", "divider");
+      ObjectNode actions = blocks.addObject();
+      actions.put("type", "actions");
+      ArrayNode els = actions.putArray("elements");
+      ObjectNode btn = els.addObject();
+      btn.put("type", "button");
+      ObjectNode btnText = btn.putObject("text");
+      btnText.put("type", "plain_text");
+      btnText.put("text", "Open dashboard");
+      btn.put("url", dashboardUrl);
+      btn.put("style", "primary");
+    }
     return MAPPER.writeValueAsString(root);
+  }
+
+  private String headerFor(NotificationEvent event) {
+    return switch (event.getKind()) {
+      case WEEKLY_DIGEST -> "Weekly manager digest";
+      case ALIGNMENT_RISK -> "Alignment risk";
+      case LOCK_CONFIRM -> "Week locked";
+      case RECONCILE_REMINDER -> "Reconciliation reminder";
+      case RECONCILE_COMPLETE -> "Reconciliation submitted";
+    };
+  }
+
+  private String deriveFallbackText(NotificationEvent event, String text) {
+    if (!text.isBlank()) return text;
+    return switch (event.getKind()) {
+      case WEEKLY_DIGEST -> "Weekly digest pending — see " + dashboardUrl + " for the live rollup.";
+      case ALIGNMENT_RISK -> "Alignment risk detected — see " + dashboardUrl + ".";
+      case LOCK_CONFIRM -> "Week locked.";
+      case RECONCILE_REMINDER -> "Reconciliation reminder.";
+      case RECONCILE_COMPLETE -> "Reconciliation submitted.";
+    };
   }
 
   @Override

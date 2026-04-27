@@ -126,6 +126,15 @@ body {
   background: oklch(0.34 0.018 250);
   border-color: oklch(0.45 0.018 250);
 }
+.persona-btn-active {
+  background: oklch(0.95 0.005 250);
+  color: oklch(0.18 0.01 250);
+  border-color: oklch(0.95 0.005 250);
+}
+.persona-btn-active:hover:not(:disabled) {
+  background: oklch(1 0 0);
+  border-color: oklch(1 0 0);
+}
 .persona-btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
@@ -142,4 +151,118 @@ body {
 .persona-error {
   color: oklch(0.78 0.13 25);
   margin-left: 12px;
+}
+
+/* ------------------------------------------------------------------------- */
+/* Shared design primitives. The three personas all sit on the same shell,    */
+/* so a small set of semantic utility classes guarantees consistent           */
+/* hierarchy, spacing, and badge tone without per-surface re-spec.            */
+/* ------------------------------------------------------------------------- */
+
+.tl-eyebrow {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-shell-muted);
+}
+
+.tl-card {
+  background: var(--color-panel-bg);
+  border: 1px solid var(--color-panel-border);
+  border-radius: 10px;
+  padding: 20px 22px;
+}
+
+.tl-card-tight {
+  background: var(--color-panel-bg);
+  border: 1px solid var(--color-panel-border);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.tl-divider {
+  height: 1px;
+  background: var(--color-panel-border);
+  border: 0;
+  margin: 20px 0;
+}
+
+.tl-state-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 4px;
+  padding: 2px 8px;
+  background: var(--color-badge-bg);
+  color: var(--color-badge-fg);
+}
+.tl-state-badge[data-tone='neutral'] {
+  background: var(--color-badge-bg);
+  color: var(--color-badge-fg);
+}
+.tl-state-badge[data-tone='ok'] {
+  background: oklch(0.94 0.05 150);
+  color: oklch(0.35 0.13 150);
+}
+.tl-state-badge[data-tone='low'] {
+  background: var(--color-ribbon-low-bg);
+  color: var(--color-ribbon-low-fg);
+}
+.tl-state-badge[data-tone='medium'] {
+  background: var(--color-ribbon-medium-bg);
+  color: var(--color-ribbon-medium-fg);
+}
+.tl-state-badge[data-tone='high'] {
+  background: var(--color-ribbon-high-bg);
+  color: var(--color-ribbon-high-fg);
+}
+.tl-state-badge[data-tone='muted'] {
+  background: var(--color-skeleton-bg);
+  color: var(--color-shell-muted);
+}
+
+.tl-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-shell-text);
+  color: var(--color-shell-bg);
+  border: 0;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 160ms var(--ease-snap);
+}
+.tl-btn-primary:hover:not(:disabled) {
+  opacity: 0.9;
+}
+.tl-btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.tl-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  color: var(--color-shell-text);
+  border: 1px solid var(--color-panel-border);
+  border-radius: 6px;
+  padding: 7px 13px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 160ms var(--ease-snap);
+}
+.tl-btn-ghost:hover:not(:disabled) {
+  background: var(--color-skeleton-bg);
 }

@@ -78,10 +78,10 @@ describe('LockWeekDialog', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it('shows the placeholder portfolio review section in Phase 2', () => {
+  it('shows the portfolio-review hint pointing at the locked-week surface', () => {
     render(
       <LockWeekDialog open commits={[mk({ id: 'a' })]} onConfirm={vi.fn()} onClose={vi.fn()} />,
     );
-    expect(screen.getByTestId('lock-dialog-portfolio-placeholder')).toBeInTheDocument();
+    expect(screen.getByTestId('lock-dialog-portfolio-hint')).toBeInTheDocument();
   });
 });

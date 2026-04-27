@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Logo } from '@throughline/shared-ui';
 
 const REMOTE_APP_URL = 'https://weekly-commit-remote-production.up.railway.app/';
 
@@ -8,11 +9,10 @@ export function Nav() {
       <nav className="mx-auto flex h-16 max-w-300 items-center justify-between px-6 lg:px-10">
         <Link
           to="/"
-          className="flex items-center gap-2 text-(--color-shell-text) transition-opacity hover:opacity-80"
+          className="flex items-center text-(--color-shell-text) transition-opacity hover:opacity-80"
           aria-label="Throughline home"
         >
-          <Logomark />
-          <span className="text-base font-semibold tracking-tight">Throughline</span>
+          <Logo size={26} />
         </Link>
         <div className="flex items-center gap-2 sm:gap-6">
           <Link
@@ -30,24 +30,5 @@ export function Nav() {
         </div>
       </nav>
     </header>
-  );
-}
-
-function Logomark() {
-  return (
-    <svg
-      width="22"
-      height="22"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M4 4 L12 12 L4 20" />
-      <path d="M12 12 L20 12" />
-    </svg>
   );
 }

@@ -1,6 +1,7 @@
 package com.throughline.weeklycommit.application.ai;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -168,6 +169,48 @@ public class ManagerDigestService {
     root.put("reasoning", "Deterministic skeleton — Anthropic unavailable.");
     root.put("model", "deterministic");
     return root.toString();
+  }
+
+  /**
+   * Manual re-dispatch — used by the "Send digest to Slack" button on the manager view so the
+   * caller can preview the live notification template without burning another LLM call. Bypasses
+   * the {@code WEEKLY_DIGEST} unique index by writing a one-off {@code ALIGNMENT_RISK} kind event
+   * with the digest payload, since that kind has no dedup constraint.
+   */
+  @Transactional
+  public void manualDispatchLatest(User manager) {
+    AIInsight insight =
+        findLatestDigestForManager(manager.getId())
+            .orElseThrow(
+                () ->
+                    new IllegalStateException(
+                        "No digest insight to dispatch — run regenerate first"));
+    ObjectNode payload = MAPPER.createObjectNode();
+    payload.put("weekStart", currentWeekStart(manager).toString());
+    payload.put("managerId", manager.getId());
+    payload.put("insightId", insight.getId());
+    payload.put("manualDispatch", true);
+    JsonNode aiPayload = parse(insight.getPayloadJson());
+    payload.set("aiPayload", aiPayload);
+    String aiSlackMessage = aiPayload.path("slackMessage").asText("");
+    String headlinePrefix = "*Manual Slack preview* — manager dispatched the latest digest.\n\n";
+    payload.put(
+        "slackMessage",
+        aiSlackMessage.isBlank()
+            ? headlinePrefix + "No slackMessage on the latest insight."
+            : headlinePrefix + aiSlackMessage);
+    String payloadJson;
+    try {
+      payloadJson = MAPPER.writeValueAsString(payload);
+    } catch (JsonProcessingException e) {
+      throw new IllegalStateException(e);
+    }
+    dispatcher.dispatch(
+        manager.getOrgId(),
+        NotificationKind.ALIGNMENT_RISK,
+        NotificationChannelKind.SLACK,
+        manager.getId(),
+        payloadJson);
   }
 
   private void dispatchSlack(User manager, AIInsight insight) {

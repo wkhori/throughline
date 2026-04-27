@@ -5,65 +5,63 @@ type LogoProps = {
   showWordmark?: boolean;
   className?: string;
   style?: CSSProperties;
+  /** Override the endpoint dot color. Defaults to the Throughline accent green. */
+  dotColor?: string;
 };
 
+const DEFAULT_DOT = 'oklch(0.72 0.18 150)';
+
 /**
- * Throughline logo — three nested arcs converging into a single right-pointing
- * arrow head, expressing "many streams of work flowing through a single line of
- * strategic intent." The wordmark uses the system font at the optical weight
- * of the mark; tracking is tightened slightly so the lockup reads like one
- * shape from across the room.
+ * Throughline mark — a horizontal line that sweeps into a right-pointing chevron
+ * and lands on a single accent endpoint. The line is the throughline; the dot is
+ * where the work resolves. Canonical across header, favicon, and the marketing
+ * video so the brand reads as one shape from across the room.
  */
-export function Logo({ size = 24, showWordmark = true, className, style }: LogoProps) {
+export function Logo({
+  size = 24,
+  showWordmark = true,
+  className,
+  style,
+  dotColor = DEFAULT_DOT,
+}: LogoProps) {
   return (
     <span
       className={className}
-      style={{ display: 'inline-flex', alignItems: 'center', gap: 8, ...style }}
+      style={{ display: 'inline-flex', alignItems: 'center', gap: Math.round(size * 0.32), ...style }}
     >
       <svg
         width={size}
         height={size}
-        viewBox="0 0 24 24"
+        viewBox="0 0 48 48"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         aria-hidden="true"
       >
         <path
-          d="M3 6c4 4 8 4 12 0"
+          d="M6 24 L20 24"
           stroke="currentColor"
-          strokeOpacity="0.35"
-          strokeWidth="1.6"
+          strokeWidth={3}
           strokeLinecap="round"
         />
         <path
-          d="M3 12c5 5 10 5 14 0"
+          d="M20 12 L34 24 L20 36"
           stroke="currentColor"
-          strokeOpacity="0.65"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-        />
-        <path
-          d="M3 18c6 6 12 6 16 0"
-          stroke="currentColor"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-        />
-        <path
-          d="M16 12l5 0M16 12l-3-3M16 12l-3 3"
-          stroke="currentColor"
-          strokeWidth="1.8"
+          strokeWidth={3}
           strokeLinecap="round"
           strokeLinejoin="round"
+          fill="none"
         />
+        <circle cx={40} cy={24} r={3} fill={dotColor} />
       </svg>
       {showWordmark ? (
         <span
           style={{
             fontFamily: 'var(--font-sans)',
             fontWeight: 600,
-            fontSize: Math.round(size * 0.66),
+            fontSize: Math.round(size * 0.6),
             letterSpacing: '-0.015em',
             color: 'currentColor',
+            lineHeight: 1,
           }}
         >
           Throughline

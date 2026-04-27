@@ -8,8 +8,9 @@ interface LogoProps {
 }
 
 /**
- * Inline Throughline logo: the alignment-arrow glyph + wordmark.
- * The arrow is a simple chevron sweeping right — "alignment in motion".
+ * Throughline mark — line + chevron + endpoint dot. Mirrors
+ * packages/shared-ui/src/components/Logo/Logo.tsx so the brand reads as one
+ * shape across header, favicon, and this video.
  */
 export const Logo: React.FC<LogoProps> = ({
   size = 48,

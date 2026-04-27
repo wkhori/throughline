@@ -182,7 +182,7 @@ function Problem() {
                 another form field.
               </blockquote>
               <figcaption className="mt-6 text-sm text-(--color-hero-muted)">
-                From the project brief, paraphrased.
+                The core operating premise of the product.
               </figcaption>
             </figure>
           </div>
@@ -212,39 +212,55 @@ function Differentiator() {
           <article className="flex flex-col rounded-xl border border-(--color-hero-border) bg-(--color-panel-bg) p-8">
             <header className="flex items-baseline justify-between">
               <h3 className="text-lg font-semibold text-(--color-hero-heading)">
-                15Five &mdash; unstructured text
+                What 15Five sees
               </h3>
               <span className="rounded-full bg-(--color-badge-bg) px-2.5 py-1 text-xs font-medium text-(--color-badge-fg)">
-                Legacy
+                Unstructured text
               </span>
             </header>
             <pre className="mt-6 overflow-hidden rounded-md border border-(--color-hero-border) bg-(--color-hero-bg) p-5 text-sm leading-relaxed whitespace-pre-wrap text-(--color-hero-text)">
-              {`Priority for the week:
-- Wrap up the onboarding flow refactor
-- Pair with K. on the billing bug
-- Continue the Q3 metrics dashboard work`}
+              {`Priorities this week:
+- Refactor billing service test suite
+- Pair with K. on the SMB onboarding bug
+- Continue the Q3 metrics dashboard
+
+What an LLM can produce from this:
+"The team focused on testing,
+ onboarding, and dashboards."`}
             </pre>
             <p className="mt-6 text-sm leading-relaxed text-(--color-hero-muted)">
-              A free-text block. A model can summarize it, but cannot tell you which Outcome
-              received zero effort, or which commit has been carry-forwarded four weeks running.
+              A summary of the words. No way to answer &ldquo;which Outcome received zero effort
+              this week?&rdquo; — the data model doesn&rsquo;t carry that signal.
             </p>
           </article>
           <article className="flex flex-col rounded-xl border border-(--color-ribbon-link) bg-(--color-panel-bg) p-8 ring-1 ring-(--color-ribbon-link)/30">
             <header className="flex items-baseline justify-between">
               <h3 className="text-lg font-semibold text-(--color-hero-heading)">
-                Throughline &mdash; structured RCDO graph
+                What Throughline sees
               </h3>
               <span className="rounded-full bg-(--color-ribbon-low-bg) px-2.5 py-1 text-xs font-medium text-(--color-ribbon-low-fg)">
-                Structural
+                Structured RCDO graph
               </span>
             </header>
             <div className="mt-6 rounded-md border border-(--color-hero-border) bg-(--color-hero-bg) p-5">
               <RcdoTree />
             </div>
+            <pre className="mt-6 overflow-hidden rounded-md border border-(--color-hero-border) bg-(--color-shell-bg) p-5 text-sm leading-relaxed whitespace-pre-wrap text-(--color-hero-text)">
+              {`Headline: SMB work severely under-indexed
+(17% vs 40–55% target); retention outcomes
+over-indexed at 38% vs 5–15% target.
+
+Starved outcomes (2 weeks, zero commits):
+• Expand SDR-AE coverage
+• Tighten ICP qualification
+
+Long carry-forward: commit 01KQ6Q7R…
+carried 3 weeks — needs resolution.`}
+            </pre>
             <p className="mt-6 text-sm leading-relaxed text-(--color-hero-muted)">
-              Every commit is foreign-keyed to a Supporting Outcome. The AI sees the graph &mdash;
-              and so can answer: &ldquo;Outcome 3.2 received 47% of org effort this week. Outcome
-              3.1 received zero.&rdquo;
+              Every commit is FK-linked to a Supporting Outcome. That single structural property is
+              what turns a model summary into a manager-actionable digest. (Output above is from the
+              live demo this week.)
             </p>
           </article>
         </div>

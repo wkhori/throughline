@@ -4,7 +4,7 @@ import { Logo } from '../Logo';
 import { tokens, fontFamily } from '../tokens';
 
 /**
- * Scene 6 (22-25s, 90 frames): Soft off-white outro with logo and url.
+ * Scene 6 (22-25s, 90 frames): outro card — unified mark + tagline.
  */
 export const SceneOutro: React.FC = () => {
   const frame = useCurrentFrame();
@@ -13,7 +13,7 @@ export const SceneOutro: React.FC = () => {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
-  const urlOpacity = interpolate(frame, [12, 30], [0, 1], {
+  const taglineOpacity = interpolate(frame, [12, 30], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
@@ -33,14 +33,14 @@ export const SceneOutro: React.FC = () => {
       <Logo size={64} />
       <div
         style={{
-          opacity: urlOpacity,
+          opacity: taglineOpacity,
           fontSize: 18,
           fontWeight: 500,
           letterSpacing: '-0.005em',
           color: tokens.muted,
         }}
       >
-        throughline.app
+        Strategic alignment, by design.
       </div>
     </AbsoluteFill>
   );

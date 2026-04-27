@@ -2,6 +2,7 @@ package com.throughline.weeklycommit.web;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.throughline.weeklycommit.application.CurrentUserResolver;
+import com.throughline.weeklycommit.application.ai.ManagerDigestService;
 import com.throughline.weeklycommit.application.manager.ManagerService;
 import com.throughline.weeklycommit.web.dto.ManagerDtos;
 import com.throughline.weeklycommit.web.dto.WeekDtos;
@@ -31,10 +32,15 @@ import org.springframework.web.bind.annotation.RestController;
 public class ManagerController {
 
   private final ManagerService service;
+  private final ManagerDigestService digestService;
   private final CurrentUserResolver currentUser;
 
-  public ManagerController(ManagerService service, CurrentUserResolver currentUser) {
+  public ManagerController(
+      ManagerService service,
+      ManagerDigestService digestService,
+      CurrentUserResolver currentUser) {
     this.service = service;
+    this.digestService = digestService;
     this.currentUser = currentUser;
   }
 
@@ -61,6 +67,19 @@ public class ManagerController {
   @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
   public ResponseEntity<ManagerDtos.DigestRegenerateResponse> regenerateDigest() {
     return ResponseEntity.status(HttpStatus.ACCEPTED).body(service.regenerateDigest());
+  }
+
+  /**
+   * Manual Slack-dispatch hook. Re-sends the latest cached digest payload through the live
+   * channel so the caller can preview the Block Kit message without re-running the LLM. Routes
+   * via {@code ALIGNMENT_RISK} kind to dodge the {@code WEEKLY_DIGEST} dedup index — the message
+   * is clearly badged "Manual Slack preview" in the body.
+   */
+  @PostMapping("/digest/dispatch-slack")
+  @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
+  public ResponseEntity<Void> dispatchDigestToSlack() {
+    digestService.manualDispatchLatest(currentUser.requireCurrentUser());
+    return ResponseEntity.accepted().build();
   }
 
   @GetMapping("/alignment-risks")
