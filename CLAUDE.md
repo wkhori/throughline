@@ -151,8 +151,6 @@ Full prompt text, JSON schemas, and fallbacks: `docs/ai-copilot-spec.md`.
 ### Commits
 
 - Conventional-commit prefixes: `feat | fix | test | docs | refactor | chore | perf` with scope.
-- Never include `Co-Authored-By` lines.
-- Never include "Generated with Claude Code" in PR descriptions.
 
 ---
 
