@@ -87,6 +87,13 @@ public class AnthropicCostGuard {
     int hourCap = HOUR_CAPS.getOrDefault(kind, 60);
     int dayCap = DAY_CAPS.getOrDefault(kind, 200);
 
+    // System-driven calls (cron/scan jobs) bypass per-user caps but still respect the org-level
+    // hard cap. They pass a sentinel "system" user id (or null).
+    if (userId == null || "system".equals(userId)) {
+      enforceOrgHardCap(orgId, now, kind);
+      return;
+    }
+
     int hourCount = incrementAndReturn(userId, kind, now);
     if (hourCount > hourCap) {
       LOG.info(
