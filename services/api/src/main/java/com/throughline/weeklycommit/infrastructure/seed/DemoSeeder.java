@@ -224,26 +224,28 @@ public class DemoSeeder implements CommandLineRunner {
       }
     }
 
-    // Three named demo personas — used by `MockJwtDecoder` and the host persona switcher.
+    // Three named demo personas. The auth0_sub values come from the real Auth0 tenant when
+    // available (env vars AUTH0_SUB_{IC,MANAGER,ADMIN} written by scripts/auth0-provision.mjs);
+    // otherwise we fall back to synthetic `auth0|mock-*` subs so the dev/stub flow + CI keep
+    // working without needing an Auth0 tenant.
+    String adminSub = resolveSub("AUTH0_SUB_ADMIN", "auth0|mock-admin");
+    String managerSub = resolveSub("AUTH0_SUB_MANAGER", "auth0|mock-manager");
+    String icSub = resolveSub("AUTH0_SUB_IC", "auth0|mock-ic");
     User admin =
         userRepo.save(
             new User(
-                org.getId(),
-                "auth0|mock-admin",
-                "admin@demo.throughline.app",
-                "Demo Admin",
-                Role.ADMIN));
+                org.getId(), adminSub, "admin@demo.throughline.app", "Demo Admin", Role.ADMIN));
     User manager =
         userRepo.save(
             new User(
                 org.getId(),
-                "auth0|mock-manager",
+                managerSub,
                 "manager@demo.throughline.app",
                 "Demo Manager",
                 Role.MANAGER));
     User ic =
         userRepo.save(
-            new User(org.getId(), "auth0|mock-ic", "ic@demo.throughline.app", "Demo IC", Role.IC));
+            new User(org.getId(), icSub, "ic@demo.throughline.app", "Demo IC", Role.IC));
 
     // Seed-team for the three personas: place them on Growth Eng so demo logins land on a team
     // with realistic data.
@@ -402,6 +404,16 @@ public class DemoSeeder implements CommandLineRunner {
         director.getId(),
         8,
         seeded - 8);
+  }
+
+  /**
+   * Reads an auth0_sub override from {@link System#getenv(String)} (set by
+   * scripts/auth0-provision.mjs when the real Auth0 tenant is provisioned), falling back to the
+   * synthetic mock value used by {@code MockJwtDecoder} + the host persona switcher.
+   */
+  private static String resolveSub(String envVar, String fallback) {
+    String value = System.getenv(envVar);
+    return (value != null && !value.isBlank()) ? value : fallback;
   }
 
   private static BigDecimal bd(String s) {
