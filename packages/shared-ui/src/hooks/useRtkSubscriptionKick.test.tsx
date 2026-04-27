@@ -11,7 +11,7 @@ describe('useRtkSubscriptionKick', () => {
     vi.useRealTimers();
   });
 
-  it('schedules three staggered re-renders after mount', () => {
+  it('schedules five staggered re-renders covering fast and slow endpoints', () => {
     const renderSpy = vi.fn();
     const { rerender, unmount } = renderHook(() => {
       renderSpy();
@@ -32,9 +32,17 @@ describe('useRtkSubscriptionKick', () => {
     // 1500 ms total — third kick.
     expect(renderSpy).toHaveBeenCalledTimes(4);
 
+    act(() => vi.advanceTimersByTime(1_500));
+    // 3000 ms total — fourth kick (covers slow admin-side endpoints).
+    expect(renderSpy).toHaveBeenCalledTimes(5);
+
+    act(() => vi.advanceTimersByTime(2_000));
+    // 5000 ms total — fifth and final kick.
+    expect(renderSpy).toHaveBeenCalledTimes(6);
+
     // No further kicks past the configured schedule.
-    act(() => vi.advanceTimersByTime(5_000));
-    expect(renderSpy).toHaveBeenCalledTimes(4);
+    act(() => vi.advanceTimersByTime(10_000));
+    expect(renderSpy).toHaveBeenCalledTimes(6);
 
     rerender();
     unmount();
@@ -53,7 +61,7 @@ describe('useRtkSubscriptionKick', () => {
     // After unmount, advancing past every scheduled delay must not trigger
     // any further re-renders (would manifest as a React act() warning if the
     // setState ever fired on the unmounted instance).
-    act(() => vi.advanceTimersByTime(5_000));
+    act(() => vi.advanceTimersByTime(10_000));
     expect(renderSpy).toHaveBeenCalledTimes(1);
   });
 });

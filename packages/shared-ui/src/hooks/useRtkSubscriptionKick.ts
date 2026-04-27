@@ -11,7 +11,12 @@ import { useEffect, useState } from 'react';
  * auto-IC-login race). Cleanup tears every pending timeout down on unmount so
  * StrictMode double-mounts never set state on a dead instance.
  */
-const KICK_DELAYS_MS = [80, 600, 1500];
+// 80 ms covers fast cache-hit re-mounts (persona switches with warm cache).
+// 600 / 1500 ms cover the auto-IC-login race (~500 ms request).
+// 3000 / 5000 ms cover slower admin-side endpoints (e.g. /metrics/org takes
+// ~3 s to roll up org-wide percentile stats). After 5 s we stop kicking;
+// a fresher signal would mean the endpoint is genuinely down, not slow.
+const KICK_DELAYS_MS = [80, 600, 1500, 3000, 5000];
 
 export function useRtkSubscriptionKick(): void {
   const [, setTick] = useState(0);
