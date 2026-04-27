@@ -26,7 +26,11 @@ export function ManagerDashboard({ onSelectTeam }: ManagerDashboardProps) {
     onSelectTeam?.(teamId);
   };
 
-  if (rollup.isLoading) {
+  // Only block on the skeleton if we genuinely have no data yet. Once the
+  // cache holds a fulfilled response, render the dashboard even if RTK Query
+  // is mid-refetch — `isLoading` can stay sticky-true under StrictMode-driven
+  // re-subscriptions, which left the manager view permanently in skeleton.
+  if (rollup.isLoading && !rollup.data) {
     return (
       <section data-testid="manager-dashboard-loading" className="mx-auto max-w-6xl space-y-4 p-6">
         <div
@@ -41,7 +45,7 @@ export function ManagerDashboard({ onSelectTeam }: ManagerDashboardProps) {
     );
   }
 
-  if (rollup.error) {
+  if (rollup.error && !rollup.data) {
     return (
       <p data-testid="manager-dashboard-error" className="p-6 text-sm text-(--color-shell-error)">
         Could not load the manager dashboard.

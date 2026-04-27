@@ -9,7 +9,9 @@ import { ReconciledWeek } from '../reconciled/ReconciledWeek.js';
 export function WeekShell() {
   const { data, isLoading, error } = useGetCurrentWeekQuery();
 
-  if (isLoading) {
+  // Only block on the skeleton if we genuinely have no data yet. Same
+  // sticky-isLoading pattern as ManagerDashboard.
+  if (isLoading && !data) {
     return (
       <div data-testid="week-shell-loading" className="space-y-4 p-6">
         <div className="h-24 animate-pulse rounded-lg bg-(--color-skeleton-bg)" />
@@ -17,7 +19,7 @@ export function WeekShell() {
       </div>
     );
   }
-  if (error || !data) {
+  if (!data) {
     return (
       <p data-testid="week-shell-error" className="p-6 text-sm text-(--color-shell-error)">
         Could not load the current week.
