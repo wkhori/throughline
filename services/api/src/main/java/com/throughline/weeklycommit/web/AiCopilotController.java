@@ -5,8 +5,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.throughline.weeklycommit.application.CurrentUserResolver;
 import com.throughline.weeklycommit.application.ai.AiCopilotService;
+import com.throughline.weeklycommit.application.ai.PortfolioReviewService;
 import com.throughline.weeklycommit.domain.AIInsight;
 import com.throughline.weeklycommit.domain.User;
+import com.throughline.weeklycommit.domain.Week;
+import com.throughline.weeklycommit.domain.repo.WeekRepository;
+import com.throughline.weeklycommit.infrastructure.security.ManagerScope;
+import com.throughline.weeklycommit.web.error.NotFoundException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -14,6 +19,8 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,11 +40,60 @@ public class AiCopilotController {
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
   private final AiCopilotService aiService;
+  private final PortfolioReviewService portfolioReviewService;
+  private final WeekRepository weekRepository;
+  private final ManagerScope managerScope;
   private final CurrentUserResolver currentUser;
 
-  public AiCopilotController(AiCopilotService aiService, CurrentUserResolver currentUser) {
+  public AiCopilotController(
+      AiCopilotService aiService,
+      PortfolioReviewService portfolioReviewService,
+      WeekRepository weekRepository,
+      ManagerScope managerScope,
+      CurrentUserResolver currentUser) {
     this.aiService = aiService;
+    this.portfolioReviewService = portfolioReviewService;
+    this.weekRepository = weekRepository;
+    this.managerScope = managerScope;
     this.currentUser = currentUser;
+  }
+
+  /**
+   * P15: latest T3 portfolio review for a week. Scope-checked — caller must be the week's owner or
+   * a manager who can see them.
+   */
+  @org.springframework.web.bind.annotation.GetMapping("/portfolio-review/{weekId}")
+  public ResponseEntity<AIInsightDto> getPortfolioReview(
+      @org.springframework.web.bind.annotation.PathVariable String weekId) {
+    requireWeekScope(weekId);
+    return portfolioReviewService
+        .findLatestForWeek(weekId)
+        .map(i -> ResponseEntity.ok(AIInsightDto.from(i)))
+        .orElseGet(() -> ResponseEntity.status(HttpStatus.NO_CONTENT).build());
+  }
+
+  /** Synchronous retry — runs T3 (or fallback) and returns the persisted insight. */
+  @PostMapping("/portfolio-review/{weekId}")
+  public ResponseEntity<AIInsightDto> runPortfolioReview(
+      @org.springframework.web.bind.annotation.PathVariable String weekId) {
+    Week week = requireWeekScope(weekId);
+    User u = currentUser.requireCurrentUser();
+    AIInsight insight =
+        portfolioReviewService.runReview(week.getId(), week.getUserId(), week.getOrgId());
+    if (insight != null && !insight.getOrgId().equals(u.getOrgId())) {
+      throw new AccessDeniedException("cross-org access blocked");
+    }
+    return ResponseEntity.ok(AIInsightDto.from(insight));
+  }
+
+  private Week requireWeekScope(String weekId) {
+    Week week =
+        weekRepository.findById(weekId).orElseThrow(() -> new NotFoundException("Week", weekId));
+    var auth = SecurityContextHolder.getContext().getAuthentication();
+    if (!managerScope.canSee(week.getUserId(), auth)) {
+      throw new AccessDeniedException("not authorized to view this week's AI insight");
+    }
+    return week;
   }
 
   @PostMapping("/suggest-outcome")
