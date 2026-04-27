@@ -1,0 +1,46 @@
+{
+  "managerId": "01J0USER000000000000000900",
+  "managerName": "Jordan Kim",
+  "weekStart": "2026-04-20",
+  "reports": [
+    {
+      "userId": "01J0USER000000000000000001",
+      "displayName": "Sarah Mendez",
+      "lockedCount": 5,
+      "reconciledCount": 5,
+      "doneCount": 2,
+      "partialCount": 1,
+      "notDoneCount": 2,
+      "carryForwardCount": 1,
+      "avgDriftScore": 0.62,
+      "longCarryForwards": [
+        { "commitId": "01J0COMMIT0000000000000A", "weeks": 4, "commitText": "Refactor billing service test suite" }
+      ]
+    },
+    { "userId": "01J0USER000000000000000002", "displayName": "Priya Patel", "lockedCount": 5, "reconciledCount": 5, "doneCount": 4, "partialCount": 1, "notDoneCount": 0, "carryForwardCount": 0, "avgDriftScore": 0.18, "longCarryForwards": [] },
+    { "userId": "01J0USER000000000000000003", "displayName": "Marcus Lee", "lockedCount": 5, "reconciledCount": 5, "doneCount": 3, "partialCount": 1, "notDoneCount": 1, "carryForwardCount": 0, "avgDriftScore": 0.55, "longCarryForwards": [] },
+    { "userId": "01J0USER000000000000000004", "displayName": "Anika Banerjee", "lockedCount": 4, "reconciledCount": 4, "doneCount": 2, "partialCount": 1, "notDoneCount": 1, "carryForwardCount": 0, "avgDriftScore": 0.58, "longCarryForwards": [] },
+    { "userId": "01J0USER000000000000000005", "displayName": "Diego Alvarez", "lockedCount": 5, "reconciledCount": 5, "doneCount": 5, "partialCount": 0, "notDoneCount": 0, "carryForwardCount": 0, "avgDriftScore": 0.21, "longCarryForwards": [] },
+    { "userId": "01J0USER000000000000000006", "displayName": "Emma Park", "lockedCount": 4, "reconciledCount": 4, "doneCount": 3, "partialCount": 0, "notDoneCount": 1, "carryForwardCount": 1, "avgDriftScore": 0.34, "longCarryForwards": [{ "commitId": "01J0COMMIT0000000000000B", "weeks": 3, "commitText": "Owner-onboarding handoff to CS" }] },
+    { "userId": "01J0USER000000000000000007", "displayName": "Ravi Iyer", "lockedCount": 5, "reconciledCount": 5, "doneCount": 4, "partialCount": 1, "notDoneCount": 0, "carryForwardCount": 0, "avgDriftScore": 0.27, "longCarryForwards": [] },
+    { "userId": "01J0USER000000000000000008", "displayName": "Olivia Chen", "lockedCount": 5, "reconciledCount": 5, "doneCount": 4, "partialCount": 0, "notDoneCount": 1, "carryForwardCount": 0, "avgDriftScore": 0.31, "longCarryForwards": [] },
+    { "userId": "01J0USER000000000000000009", "displayName": "Tom Becker", "lockedCount": 5, "reconciledCount": 5, "doneCount": 3, "partialCount": 1, "notDoneCount": 1, "carryForwardCount": 0, "avgDriftScore": 0.42, "longCarryForwards": [] },
+    { "userId": "01J0USER000000000000000010", "displayName": "Hannah Kovács", "lockedCount": 4, "reconciledCount": 4, "doneCount": 3, "partialCount": 1, "notDoneCount": 0, "carryForwardCount": 0, "avgDriftScore": 0.29, "longCarryForwards": [] }
+  ],
+  "teamRollup": {
+    "outcomeShares": [
+      { "supportingOutcomeId": "01J0SO0000000000000000A", "title": "Reduce day-7 trial churn by 15%", "share": 0.62 },
+      { "supportingOutcomeId": "01J0SO0000000000000000B", "title": "Reduce p1 incident MTTR below 30 minutes", "share": 0.21 },
+      { "supportingOutcomeId": "01J0SO0000000000000000C", "title": "Self-serve onboarding NPS > 50", "share": 0.17 },
+      { "supportingOutcomeId": "01J0SO0000000000000000D", "title": "Land 5 new enterprise logos this quarter", "share": 0.0 }
+    ],
+    "starvedOutcomes": [
+      { "supportingOutcomeId": "01J0SO0000000000000000D", "title": "Land 5 new enterprise logos this quarter", "weeksStarved": 2, "expectedShare": 0.25 }
+    ],
+    "teamPrioritySignal": [
+      { "rallyCryId": "01J0RC0000000000000000A", "title": "Win the SMB segment", "expectedShare": 0.5 },
+      { "rallyCryId": "01J0RC0000000000000000B", "title": "Move upmarket", "expectedShare": 0.3 },
+      { "rallyCryId": "01J0RC0000000000000000C", "title": "Operate reliably at scale", "expectedShare": 0.2 }
+    ]
+  }
+}

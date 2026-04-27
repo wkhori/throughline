@@ -1,0 +1,7 @@
+[
+  { "path": ["alignmentHeadline"], "kind": "present" },
+  { "path": ["alignmentHeadline"], "kind": "maxLength", "arg": 160 },
+  { "path": ["slackMessage"], "kind": "present" },
+  { "path": ["slackMessage"], "kind": "maxLength", "arg": 900 },
+  { "path": ["slackMessage"], "kind": "contains", "arg": "<DASHBOARD_URL>" }
+]

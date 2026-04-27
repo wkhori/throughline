@@ -1,0 +1,48 @@
+{
+  "draftCommitText": "Ship the new onboarding email sequence to reduce day-7 churn",
+  "userId": "01J0USER000000000000000001",
+  "teamId": "01J0TEAM000000000000000001",
+  "candidates": [
+    {
+      "supportingOutcomeId": "01J0SOOOO000000000000000A",
+      "title": "Reduce day-7 trial churn by 15%",
+      "parentOutcomeTitle": "Activate trial users in their first week",
+      "parentDOTitle": "Increase trial-to-paid conversion",
+      "parentRallyCryTitle": "Win the SMB segment"
+    },
+    {
+      "supportingOutcomeId": "01J0SOOOO000000000000000B",
+      "title": "Cut p1 incident MTTR below 30 minutes",
+      "parentOutcomeTitle": "Operate at enterprise reliability bar",
+      "parentDOTitle": "Reduce production incident impact",
+      "parentRallyCryTitle": "Operate reliably at scale"
+    },
+    {
+      "supportingOutcomeId": "01J0SOOOO000000000000000C",
+      "title": "Self-serve onboarding NPS > 50",
+      "parentOutcomeTitle": "Make onboarding feel like a guided tour",
+      "parentDOTitle": "Improve activation experience",
+      "parentRallyCryTitle": "Win the SMB segment"
+    },
+    {
+      "supportingOutcomeId": "01J0SOOOO000000000000000D",
+      "title": "Improve marketing site bounce rate to under 35%",
+      "parentOutcomeTitle": "Convert top-of-funnel traffic",
+      "parentDOTitle": "Grow inbound pipeline",
+      "parentRallyCryTitle": "Win the SMB segment"
+    },
+    {
+      "supportingOutcomeId": "01J0SOOOO000000000000000E",
+      "title": "Land 5 new enterprise logos this quarter",
+      "parentOutcomeTitle": "Expand enterprise pipeline Q2",
+      "parentDOTitle": "Grow ARR from new enterprise accounts",
+      "parentRallyCryTitle": "Move upmarket"
+    }
+  ],
+  "recentUserCommits": [
+    {
+      "text": "Wrote spec for trial-week activation email cadence",
+      "supportingOutcomeId": "01J0SOOOO000000000000000A"
+    }
+  ]
+}

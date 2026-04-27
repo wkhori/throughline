@@ -23,7 +23,7 @@
     "dev:api": "cd services/api && ./gradlew bootRun",
     "db:up": "docker compose up -d postgres",
     "db:down": "docker compose down",
-    "evals": "node evals/runner.ts"
+    "evals": "node --experimental-strip-types --no-warnings evals/runner.ts"
   },
   "devDependencies": {
     "@badeball/cypress-cucumber-preprocessor": "^24.0.1",

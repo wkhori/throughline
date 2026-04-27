@@ -1,0 +1,5 @@
+[
+  { "path": ["headline"], "kind": "present" },
+  { "path": ["headline"], "kind": "maxLength", "arg": 200 },
+  { "path": ["findings"], "kind": "minLength", "arg": 1 }
+]
