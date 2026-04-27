@@ -6,6 +6,7 @@ import { Provider } from 'react-redux';
 import { ApiBaseUrlProvider } from '@throughline/shared-ui';
 import { WeeklyCommitApp } from './WeeklyCommitApp.js';
 import { buildRemoteStore } from './store.js';
+import '@throughline/shared-ui/styles/tokens.css';
 
 const store = buildRemoteStore();
 

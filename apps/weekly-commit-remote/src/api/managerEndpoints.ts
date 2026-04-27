@@ -27,6 +27,9 @@ export interface RibbonEntry {
   label: string;
   entityType: string;
   entityId: string;
+  /** Optional alignment_risk row id — present when ribbon row originates from a T6 risk so the FE
+   *  can call the ack endpoint. Phase-4 deterministic ribbons leave this undefined. */
+  alignmentRiskId?: string;
 }
 
 export interface RollupPayload {
@@ -61,9 +64,39 @@ export interface PageResponse<T> {
   size: number;
 }
 
+/** T5 manager digest payload — matches docs/ai-copilot-spec.md §T5 output schema. */
+export interface DigestPayload {
+  alignmentHeadline: string;
+  starvedOutcomes: Array<{ supportingOutcomeId: string; title?: string; reason?: string }>;
+  driftExceptions: Array<{ userId: string; displayName?: string; avgDriftScore?: number }>;
+  longCarryForwards: Array<{ commitId: string; weeks: number; commitText?: string }>;
+  drillDowns: Array<{ userId: string; displayName?: string; reason: string }>;
+  slackMessage: string;
+  reasoning?: string;
+  model?: string;
+}
+
+export type DigestState = 'AWAITING_AI' | 'OK' | 'FALLBACK';
+
 export interface DigestEnvelope {
-  digest: unknown | null;
-  state: string;
+  digest: DigestPayload | null;
+  state: DigestState;
+}
+
+export interface DigestRegenerateResponse {
+  digest: DigestPayload | null;
+  state: DigestState;
+  message: string;
+}
+
+export interface AlignmentRisk {
+  id: string;
+  rule: string;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | string;
+  entityType: string;
+  entityId: string;
+  weekStart: string;
+  createdAt: string;
 }
 
 export const managerApi = api.injectEndpoints({
@@ -86,15 +119,32 @@ export const managerApi = api.injectEndpoints({
     }),
     getCurrentDigest: build.query<DigestEnvelope, void>({
       query: () => ({ url: `/manager/digest/current` }),
-      providesTags: ['AIInsight'],
+      providesTags: [{ type: 'AIInsight', id: 'CURRENT_DIGEST' }],
     }),
-    regenerateDigest: build.mutation<DigestEnvelope, void>({
+    regenerateDigest: build.mutation<DigestRegenerateResponse, void>({
       query: () => ({ url: `/manager/digest/regenerate`, method: 'POST' }),
-      invalidatesTags: ['AIInsight'],
+      invalidatesTags: [
+        { type: 'AIInsight', id: 'CURRENT_DIGEST' },
+        { type: 'AIInsight', id: 'LIST' },
+      ],
     }),
-    getAlignmentRisks: build.query<unknown[], void>({
+    getAlignmentRisks: build.query<AlignmentRisk[], void>({
       query: () => ({ url: `/manager/alignment-risks` }),
-      providesTags: ['AlignmentRisk'],
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map((r) => ({ type: 'AlignmentRisk' as const, id: r.id })),
+              { type: 'AlignmentRisk' as const, id: 'LIST' },
+            ]
+          : [{ type: 'AlignmentRisk' as const, id: 'LIST' }],
+    }),
+    ackAlignmentRisk: build.mutation<void, string>({
+      query: (id) => ({ url: `/manager/alignment-risks/${id}/ack`, method: 'POST' }),
+      invalidatesTags: (_res, _err, id) => [
+        { type: 'AlignmentRisk', id },
+        { type: 'AlignmentRisk', id: 'LIST' },
+        { type: 'TeamRollup', id: 'PAGE' },
+      ],
     }),
   }),
 });
@@ -105,4 +155,5 @@ export const {
   useGetCurrentDigestQuery,
   useRegenerateDigestMutation,
   useGetAlignmentRisksQuery,
+  useAckAlignmentRiskMutation,
 } = managerApi;

@@ -1,0 +1,5 @@
+[
+  { "path": ["issues"], "kind": "minLength", "arg": 1 },
+  { "path": ["issues", 0, "kind"], "kind": "oneOf", "arg": ["vague", "unmeasurable"] },
+  { "path": ["severity"], "kind": "oneOf", "arg": ["medium", "high"] }
+]

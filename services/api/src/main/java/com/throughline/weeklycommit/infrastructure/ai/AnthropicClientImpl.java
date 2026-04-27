@@ -170,7 +170,7 @@ public class AnthropicClientImpl implements AnthropicClient {
         }
       }
     }
-    String contentJson = text.toString().trim();
+    String contentJson = stripMarkdownFences(text.toString().trim());
     if (contentJson.isEmpty() || (!contentJson.startsWith("{") && !contentJson.startsWith("["))) {
       throw new AnthropicInvalidJsonException(
           "Anthropic content was not a JSON object/array", contentJson);
@@ -184,6 +184,30 @@ public class AnthropicClientImpl implements AnthropicClient {
         latencyMs);
     return new AnthropicResponse(
         model, contentJson, tokensInput, tokensOutput, tokensCacheRead, latencyMs);
+  }
+
+  /**
+   * Some Anthropic responses wrap structured JSON output in markdown fences (```json … ```).
+   * Strip them before validating so the downstream parser sees raw JSON.
+   */
+  static String stripMarkdownFences(String s) {
+    if (s == null) return "";
+    String t = s.trim();
+    if (t.startsWith("```")) {
+      // remove leading ```lang\n
+      int firstNewline = t.indexOf('\n');
+      if (firstNewline > 0) {
+        t = t.substring(firstNewline + 1);
+      } else {
+        t = t.substring(3);
+      }
+      // remove trailing ```
+      if (t.endsWith("```")) {
+        t = t.substring(0, t.length() - 3);
+      }
+      t = t.trim();
+    }
+    return t;
   }
 
   private String modelId(AnthropicModel m) {

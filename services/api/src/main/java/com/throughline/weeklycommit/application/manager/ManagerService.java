@@ -16,6 +16,7 @@ import com.throughline.weeklycommit.domain.User;
 import com.throughline.weeklycommit.domain.Week;
 import com.throughline.weeklycommit.domain.repo.AlignmentRiskRepository;
 import com.throughline.weeklycommit.domain.repo.CommitRepository;
+import com.throughline.weeklycommit.domain.repo.NotificationEventRepository;
 import com.throughline.weeklycommit.domain.repo.OrgRepository;
 import com.throughline.weeklycommit.domain.repo.TeamRepository;
 import com.throughline.weeklycommit.domain.repo.TeamRollupCacheRepository;
@@ -61,6 +62,7 @@ public class ManagerService {
   private final ManagerDigestService digestService;
   private final AlignmentRiskRepository alignmentRiskRepo;
   private final CurrentUserResolver currentUser;
+  private final NotificationEventRepository notificationRepo;
 
   public ManagerService(
       TeamRollupCacheRepository cacheRepo,
@@ -75,7 +77,8 @@ public class ManagerService {
       Clock clock,
       ManagerDigestService digestService,
       AlignmentRiskRepository alignmentRiskRepo,
-      CurrentUserResolver currentUser) {
+      CurrentUserResolver currentUser,
+      NotificationEventRepository notificationRepo) {
     this.cacheRepo = cacheRepo;
     this.teamRepo = teamRepo;
     this.userRepo = userRepo;
@@ -89,6 +92,7 @@ public class ManagerService {
     this.digestService = digestService;
     this.alignmentRiskRepo = alignmentRiskRepo;
     this.currentUser = currentUser;
+    this.notificationRepo = notificationRepo;
   }
 
   /**
@@ -171,9 +175,22 @@ public class ManagerService {
             .toList());
   }
 
-  /** P17: latest digest for the calling manager (hero card). */
+  /**
+   * P17: latest digest for the calling manager (hero card). On first GET after delivery, stamps the
+   * matching {@code notification_event.viewed_at} so the {@code MetricsService} can compute
+   * `avgManagerDigestViewMinutesAfterDeliver` (P1).
+   */
+  @Transactional
   public ManagerDtos.DigestEnvelope currentDigest() {
     User caller = currentUser.requireCurrentUser();
+    notificationRepo
+        .findLatestSentDigest(caller.getId())
+        .filter(e -> e.getViewedAt() == null)
+        .ifPresent(
+            event -> {
+              event.setViewedAt(java.time.Instant.now(clock));
+              notificationRepo.save(event);
+            });
     return digestService
         .findLatestDigestForManager(caller.getId())
         .map(this::digestEnvelope)

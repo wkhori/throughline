@@ -243,12 +243,58 @@ async function ensureDemoUsers(password) {
   return subs;
 }
 
+// --- step 4: SPA application callback URLs (Phase 8 cutover, P37 swap path) -------------
+async function ensureSpaCallbackUrls() {
+  if (!env.VITE_AUTH0_CLIENT_ID) {
+    console.log('4. VITE_AUTH0_CLIENT_ID not in .env.local — skipping SPA callback patch.');
+    return;
+  }
+  const extraOrigins = (process.env.AUTH0_EXTRA_ORIGINS || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (extraOrigins.length === 0) {
+    console.log('4. AUTH0_EXTRA_ORIGINS env var unset — skipping SPA callback patch.');
+    return;
+  }
+  console.log(`4. Patching SPA app callbacks for ${extraOrigins.length} origin(s)…`);
+  const clientId = env.VITE_AUTH0_CLIENT_ID;
+  const client = await api(`/clients/${clientId}`);
+  const merge = (existing, additions) => {
+    const out = new Set(existing || []);
+    for (const a of additions) out.add(a);
+    return Array.from(out);
+  };
+  const callbackUrls = additionsFor(extraOrigins, ['', '/callback']);
+  const logoutUrls = additionsFor(extraOrigins, ['', '/logout']);
+  const next = {
+    callbacks: merge(client.callbacks, callbackUrls),
+    allowed_logout_urls: merge(client.allowed_logout_urls, logoutUrls),
+    web_origins: merge(client.web_origins, extraOrigins),
+    allowed_origins: merge(client.allowed_origins, extraOrigins),
+  };
+  await api(`/clients/${clientId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(next),
+  });
+  console.log(
+    `   ✓ SPA app patched (callbacks=${next.callbacks.length}, web_origins=${next.web_origins.length}).`,
+  );
+}
+
+function additionsFor(origins, suffixes) {
+  const out = [];
+  for (const o of origins) for (const s of suffixes) out.push(`${o}${s}`);
+  return out;
+}
+
 // --- main -----------------------------------------------------------------
 const password = resolveDemoPassword();
 
 await ensureApiScopes();
 await ensurePostLoginAction();
 const subs = await ensureDemoUsers(password);
+await ensureSpaCallbackUrls();
 
 persistEnv({
   DEMO_USERS_PASSWORD: password,

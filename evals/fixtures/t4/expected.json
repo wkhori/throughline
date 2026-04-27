@@ -1,0 +1,4 @@
+[
+  { "path": ["shipped"], "kind": "minLength", "arg": 1 },
+  { "path": ["slipped"], "kind": "minLength", "arg": 2 }
+]

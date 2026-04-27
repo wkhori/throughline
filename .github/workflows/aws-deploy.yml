@@ -1,0 +1,53 @@
+name: AWS deploy (workflow_dispatch placeholder)
+
+# Phase 8 — placeholder workflow targeting ECR + EKS + S3 + CloudFront. The work-sample
+# deploys to Railway; this workflow exists so the swap path is concrete: when the AWS swap
+# happens, fill in the secrets + role ARN and the same job can promote the same artifacts.
+#
+# DO NOT ENABLE on push or schedule. Trigger manually only.
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target AWS environment (dev / prod).
+        required: true
+        default: dev
+      image_tag:
+        description: ECR image tag to deploy.
+        required: true
+        default: latest
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: false  # Disabled until AWS account is provisioned. Flip to `true` and set secrets to enable.
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+      - name: Build + push API image
+        run: |
+          docker build -t weekly-commit-api -f services/api/Dockerfile services/api
+          docker tag weekly-commit-api:latest ${{ steps.login-ecr.outputs.registry }}/weekly-commit-api:${{ inputs.image_tag }}
+          docker push ${{ steps.login-ecr.outputs.registry }}/weekly-commit-api:${{ inputs.image_tag }}
+      - name: Build + sync host bundle to S3
+        run: |
+          yarn install --frozen-lockfile
+          yarn nx build host
+          aws s3 sync apps/host/dist s3://${{ secrets.HOST_BUCKET }} --delete
+          aws cloudfront create-invalidation --distribution-id ${{ secrets.HOST_DIST_ID }} --paths "/*"
+      - name: Helm upgrade weekly-commit-api
+        run: |
+          aws eks update-kubeconfig --name throughline-${{ inputs.environment }}
+          helm upgrade --install weekly-commit-api infra/helm/weekly-commit-api \
+            --set image.tag=${{ inputs.image_tag }} \
+            --set env.SPRING_PROFILES_ACTIVE=${{ inputs.environment }}

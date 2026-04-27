@@ -23,7 +23,7 @@
     "dev:api": "cd services/api && ./gradlew bootRun",
     "db:up": "docker compose up -d postgres",
     "db:down": "docker compose down",
-    "evals": "node evals/runner.ts"
+    "evals": "node --experimental-strip-types --no-warnings evals/runner.ts"
   },
   "devDependencies": {
     "@badeball/cypress-cucumber-preprocessor": "^24.0.1",
@@ -31,6 +31,7 @@
     "@nx/eslint": "20.3.0",
     "@nx/js": "20.3.0",
     "@nx/vite": "20.3.0",
+    "@tailwindcss/vite": "^4",
     "@types/node": "22.10.2",
     "@typescript-eslint/eslint-plugin": "8.18.0",
     "@typescript-eslint/parser": "8.18.0",
@@ -42,6 +43,7 @@
     "eslint-plugin-react-hooks": "5.1.0",
     "nx": "20.3.0",
     "prettier": "3.3.3",
+    "tailwindcss": "^4",
     "typescript": "5.7.2"
   },
   "packageManager": "yarn@1.22.22"

@@ -1,0 +1,143 @@
+{
+  "weekId": "01J0WEEK0000000000000001",
+  "userId": "01J0USER000000000000000001",
+  "userRole": "Senior Software Engineer",
+  "commits": [
+    {
+      "commitId": "01J0COMMIT00000000000001",
+      "text": "Refactor billing service test suite for reliability",
+      "supportingOutcomeId": "01J0SO0000000000000000001",
+      "supportingOutcomeTitle": "Reduce p1 incident MTTR below 30 minutes",
+      "category": "REACTIVE",
+      "priority": "MUST"
+    },
+    {
+      "commitId": "01J0COMMIT00000000000002",
+      "text": "Document the runbook for billing rollback procedure",
+      "supportingOutcomeId": "01J0SO0000000000000000001",
+      "supportingOutcomeTitle": "Reduce p1 incident MTTR below 30 minutes",
+      "category": "OPERATIONAL",
+      "priority": "SHOULD"
+    },
+    {
+      "commitId": "01J0COMMIT00000000000003",
+      "text": "Patch monitoring config for billing service",
+      "supportingOutcomeId": "01J0SO0000000000000000001",
+      "supportingOutcomeTitle": "Reduce p1 incident MTTR below 30 minutes",
+      "category": "OPERATIONAL",
+      "priority": "MUST"
+    },
+    {
+      "commitId": "01J0COMMIT00000000000004",
+      "text": "Add billing service alarm thresholds",
+      "supportingOutcomeId": "01J0SO0000000000000000001",
+      "supportingOutcomeTitle": "Reduce p1 incident MTTR below 30 minutes",
+      "category": "OPERATIONAL",
+      "priority": "MUST"
+    },
+    {
+      "commitId": "01J0COMMIT00000000000005",
+      "text": "Investigate billing service flake in CI",
+      "supportingOutcomeId": "01J0SO0000000000000000001",
+      "supportingOutcomeTitle": "Reduce p1 incident MTTR below 30 minutes",
+      "category": "REACTIVE",
+      "priority": "MUST"
+    },
+    {
+      "commitId": "01J0COMMIT00000000000006",
+      "text": "Update marketing site copy for SMB landing page",
+      "supportingOutcomeId": "01J0SO0000000000000000002",
+      "supportingOutcomeTitle": "Improve marketing site bounce rate to under 35%",
+      "category": "OPERATIONAL",
+      "priority": "SHOULD"
+    },
+    {
+      "commitId": "01J0COMMIT00000000000007",
+      "text": "Bump dependency versions in admin tool",
+      "supportingOutcomeId": "01J0SO0000000000000000003",
+      "supportingOutcomeTitle": "Self-serve onboarding NPS > 50",
+      "category": "OPERATIONAL",
+      "priority": "COULD"
+    }
+  ],
+  "rcdoSubtree": {
+    "rallyCries": [
+      {
+        "id": "01J0RC0000000000000000001",
+        "title": "Operate reliably at scale",
+        "definingObjectives": [
+          {
+            "id": "01J0DO0000000000000000001",
+            "title": "Reduce production incident impact",
+            "outcomes": [
+              {
+                "id": "01J0OUT0000000000000000001",
+                "title": "Operate at enterprise reliability bar",
+                "supportingOutcomes": [
+                  { "id": "01J0SO0000000000000000001", "title": "Reduce p1 incident MTTR below 30 minutes" }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "01J0RC0000000000000000002",
+        "title": "Win the SMB segment",
+        "definingObjectives": [
+          {
+            "id": "01J0DO0000000000000000002",
+            "title": "Grow inbound pipeline",
+            "outcomes": [
+              {
+                "id": "01J0OUT0000000000000000002",
+                "title": "Convert top-of-funnel traffic",
+                "supportingOutcomes": [
+                  { "id": "01J0SO0000000000000000002", "title": "Improve marketing site bounce rate to under 35%" }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "01J0DO0000000000000000003",
+            "title": "Improve activation experience",
+            "outcomes": [
+              {
+                "id": "01J0OUT0000000000000000003",
+                "title": "Make onboarding feel like a guided tour",
+                "supportingOutcomes": [
+                  { "id": "01J0SO0000000000000000003", "title": "Self-serve onboarding NPS > 50" }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "01J0RC0000000000000000003",
+        "title": "Move upmarket",
+        "definingObjectives": [
+          {
+            "id": "01J0DO0000000000000000004",
+            "title": "Grow ARR from new enterprise accounts",
+            "outcomes": [
+              {
+                "id": "01J0OUT0000000000000000004",
+                "title": "Expand enterprise pipeline Q2",
+                "supportingOutcomes": [
+                  { "id": "01J0SO0000000000000000004", "title": "Land 5 new enterprise logos this quarter" }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "teamPrioritySignal": [
+    { "rallyCryId": "01J0RC0000000000000000003", "expectedShare": 0.4 },
+    { "rallyCryId": "01J0RC0000000000000000002", "expectedShare": 0.4 },
+    { "rallyCryId": "01J0RC0000000000000000001", "expectedShare": 0.2 }
+  ],
+  "carryForwardStack": []
+}

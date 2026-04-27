@@ -1,0 +1,60 @@
+replicaCount: 2
+
+image:
+  repository: throughline/weekly-commit-api
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: true
+  className: alb
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+  host: api.throughline.example.com
+  path: /
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+
+env:
+  SPRING_PROFILES_ACTIVE: dev
+  ORG_TIMEZONE: America/New_York
+  NOTIFICATION_CHANNEL: slack
+
+# Wiring secret values — populated by external-secrets / SSM in the actual cluster. The
+# placeholder here documents the expected key names so the swap path is unambiguous.
+secrets:
+  AUTH0_ISSUER_URI: ""
+  AUTH0_AUDIENCE: ""
+  ANTHROPIC_API_KEY: ""
+  SLACK_WEBHOOK_URL: ""
+  SPRING_DATASOURCE_URL: ""
+  SPRING_DATASOURCE_USERNAME: ""
+  SPRING_DATASOURCE_PASSWORD: ""
+
+probes:
+  readiness:
+    path: /actuator/health/readiness
+    initialDelaySeconds: 20
+    periodSeconds: 15
+  liveness:
+    path: /actuator/health/liveness
+    initialDelaySeconds: 30
+    periodSeconds: 30

@@ -1,0 +1,15 @@
+{
+  "commitId": "01J0COMMIT00000000000000A",
+  "commitText": "Ship the new onboarding email sequence to reduce day-7 churn for trial users",
+  "linkedOutcome": {
+    "supportingOutcomeId": "01J0SOOOO000000000000000A",
+    "title": "Reduce day-7 trial churn by 15%",
+    "parentOutcomeTitle": "Activate trial users in their first week",
+    "parentDOTitle": "Increase trial-to-paid conversion",
+    "metricStatement": "day_7_churn_pct"
+  },
+  "alternativeOutcomes": [
+    { "supportingOutcomeId": "01J0SOOOO000000000000000C", "title": "Self-serve onboarding NPS > 50" },
+    { "supportingOutcomeId": "01J0SOOOO000000000000000D", "title": "Improve marketing site bounce rate to under 35%" }
+  ]
+}

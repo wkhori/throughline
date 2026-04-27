@@ -1,0 +1,42 @@
+{
+  "weekId": "01J0WEEK0000000000000001",
+  "userId": "01J0USER000000000000000001",
+  "commits": [
+    {
+      "commitId": "01J0COMMIT00000000000010",
+      "text": "Land trial-week activation email v1",
+      "supportingOutcomeId": "01J0SO0000000000000000A",
+      "parentOutcomeId": "01J0OUT000000000000000A",
+      "parentOutcomeTitle": "Activate trial users in their first week",
+      "category": "STRATEGIC",
+      "priority": "MUST",
+      "reconciliationOutcome": "DONE",
+      "note": "Shipped Tuesday; CTR 38% on the activation send.",
+      "priorCarryForwardWeeks": 0
+    },
+    {
+      "commitId": "01J0COMMIT00000000000011",
+      "text": "Refactor billing service test suite",
+      "supportingOutcomeId": "01J0SO0000000000000000B",
+      "parentOutcomeId": "01J0OUT000000000000000B",
+      "parentOutcomeTitle": "Operate at enterprise reliability bar",
+      "category": "OPERATIONAL",
+      "priority": "MUST",
+      "reconciliationOutcome": "NOT_DONE",
+      "note": "Blocked by upstream billing-vendor SDK change that hasn't shipped yet — they slipped their release.",
+      "priorCarryForwardWeeks": 2
+    },
+    {
+      "commitId": "01J0COMMIT00000000000012",
+      "text": "Run discovery on enterprise SSO flow",
+      "supportingOutcomeId": "01J0SO0000000000000000C",
+      "parentOutcomeId": "01J0OUT000000000000000C",
+      "parentOutcomeTitle": "Expand enterprise pipeline Q2",
+      "category": "STRATEGIC",
+      "priority": "SHOULD",
+      "reconciliationOutcome": "PARTIAL",
+      "note": "Spent two days mapping; turns out the work is bigger than I scoped — this needs to be split.",
+      "priorCarryForwardWeeks": 0
+    }
+  ]
+}

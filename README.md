@@ -83,9 +83,28 @@ flip green automatically. See [`docs/orchestration-plan.md`](./docs/orchestratio
 
 ## Deliverables
 
-1. Hosted demo URL (Railway).
-2. This repo.
+1. **Hosted demo URL (Railway):**
+   - Host SPA — https://host-production-963c.up.railway.app
+   - Weekly-commit remote — https://weekly-commit-remote-production.up.railway.app
+   - API — https://api-production-0faba.up.railway.app
+   - Demo accounts (Auth0 password grant or universal login):
+     - `ic@demo.throughline.app` / `manager@demo.throughline.app` / `admin@demo.throughline.app`
+     - Password: stored in `.env.local` as `DEMO_USERS_PASSWORD` (rotated; ask the maintainer).
+2. This repo: https://github.com/wkhori/throughline.
 3. [`CLAUDE.md`](./CLAUDE.md).
+
+### Submission checklist
+
+- [x] Hosted demo URL live (`/actuator/health/readiness` returns `UP`).
+- [x] Repo public on GitHub.
+- [x] `main` tagged `v0.1.0`.
+- [x] All seven AI touchpoints (T1–T7) verified live with real Anthropic models +
+      cost > 0 — see `evals/last-run.md` for the latest deterministic eval pass
+      and `ai_insight` table for the live demo replay.
+- [x] Slack digest delivered: `notification_event` rows in state `SENT` with
+      `kind = WEEKLY_DIGEST`.
+- [x] Production-target Terraform skeleton + Helm chart in `infra/` —
+      `terraform validate` and `helm lint` clean.
 
 ## Methodology + decisions
 

@@ -1,0 +1,6 @@
+[
+  { "path": ["supportingOutcomeId"], "kind": "exact", "arg": "01J0SOOOO000000000000000A" },
+  { "path": ["confidence"], "kind": "range", "arg": [0.7, 1.0] },
+  { "path": ["rationale"], "kind": "present" },
+  { "path": ["rationale"], "kind": "maxLength", "arg": 160 }
+]

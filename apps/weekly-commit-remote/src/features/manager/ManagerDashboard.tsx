@@ -1,8 +1,8 @@
 import {
-  useGetCurrentDigestQuery,
   useGetTeamRollupQuery,
   type RibbonEntry,
 } from '../../api/managerEndpoints.js';
+import { DigestHero } from './DigestHero.js';
 import { ExceptionRibbon } from './ExceptionRibbon.js';
 import { TeamMemberTable } from './TeamMemberTable.js';
 
@@ -11,14 +11,13 @@ interface ManagerDashboardProps {
 }
 
 // Phase-4 manager landing page. Four regions:
-// - Hero card region (placeholder until Phase 5c T5 wires the real digest).
+// - DigestHero (P40 closeout): consumes /manager/digest/current; AWAITING_AI / OK / FALLBACK.
 // - Starved-outcomes panel (deterministic, derived from rollup payload).
 // - Drift-exceptions panel (deterministic, derived from rollup payload).
-// - Exception ribbon (LONG_CARRY_FORWARD / PRIORITY_DRIFT / STARVED_OUTCOME).
+// - Exception ribbon (LONG_CARRY_FORWARD / PRIORITY_DRIFT / STARVED_OUTCOME) with Ack action.
 // Plus the dense team roster table beneath.
 export function ManagerDashboard({ onSelectTeam }: ManagerDashboardProps) {
   const rollup = useGetTeamRollupQuery({ page: 0, size: 50 });
-  const digest = useGetCurrentDigestQuery();
 
   if (rollup.isLoading) {
     return (
@@ -74,25 +73,9 @@ export function ManagerDashboard({ onSelectTeam }: ManagerDashboardProps) {
     weeks: v.weeks,
   }));
 
-  const digestPayload = digest.data?.digest ?? null;
-
   return (
     <section data-testid="manager-dashboard" className="space-y-6 p-6">
-      <header
-        data-testid="manager-digest-hero"
-        className="rounded-lg border border-(--hero-border) bg-(--hero-bg) p-5"
-      >
-        <h1 className="text-base font-semibold text-(--hero-heading)">Weekly digest</h1>
-        {digestPayload === null ? (
-          <p data-testid="manager-digest-placeholder" className="mt-2 text-sm text-(--hero-muted)">
-            Digest will appear here when AI lands. T5 wires in phase/4-ai.
-          </p>
-        ) : (
-          <pre className="mt-2 text-sm text-(--hero-text)">
-            {JSON.stringify(digestPayload, null, 2)}
-          </pre>
-        )}
-      </header>
+      <DigestHero />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <article
