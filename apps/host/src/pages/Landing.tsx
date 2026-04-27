@@ -39,7 +39,7 @@ const COPILOT: readonly CopilotTouch[] = [
   {
     id: 'T5',
     title: 'Weekly digest',
-    description: 'Pre-digested manager view delivered through Slack and Outlook.',
+    description: 'Pre-digested manager view delivered through Slack today; Outlook on the swap path.',
     stage: 'MANAGER',
   },
   {

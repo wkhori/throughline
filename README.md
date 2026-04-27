@@ -103,6 +103,20 @@ each surface is one click away. Demo personas are minted via
 that verifies them), so Auth0 credentials are not needed to walk through the
 demo.
 
+### Sample weekly digest in Slack
+
+The manager-facing weekly digest is the highest-leverage AI surface in the
+product. Sonnet writes it from the structured rollup of every direct report's
+locked-and-reconciled week; the manager sees it Friday afternoon and acts on
+it Monday morning. Below is the current week's digest delivered to the
+`#throughline-test` channel via the live Slack webhook.
+
+![Throughline weekly manager digest in Slack](./docs/assets/manager-digest-slack.png)
+
+The same payload powers the **Weekly digest** card on the manager dashboard;
+the **Send digest to Slack** button on that card re-dispatches the latest
+insight through the live channel without burning another LLM call.
+
 ## Methodology + decisions
 
 - [`CLAUDE.md`](./CLAUDE.md) — methodology, the Rule, manager-burden reframe.

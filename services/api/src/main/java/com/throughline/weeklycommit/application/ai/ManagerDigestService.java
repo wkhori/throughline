@@ -16,6 +16,7 @@ import com.throughline.weeklycommit.domain.Role;
 import com.throughline.weeklycommit.domain.TeamRollupCache;
 import com.throughline.weeklycommit.domain.User;
 import com.throughline.weeklycommit.domain.repo.AIInsightRepository;
+import com.throughline.weeklycommit.domain.repo.CommitRepository;
 import com.throughline.weeklycommit.domain.repo.OrgRepository;
 import com.throughline.weeklycommit.domain.repo.TeamRollupCacheRepository;
 import com.throughline.weeklycommit.domain.repo.UserRepository;
@@ -67,6 +68,7 @@ public class ManagerDigestService {
   private final UserRepository userRepository;
   private final OrgRepository orgRepository;
   private final TeamRollupCacheRepository rollupRepository;
+  private final CommitRepository commitRepository;
   private final NotificationDispatcher dispatcher;
   private final Clock clock;
 
@@ -79,6 +81,7 @@ public class ManagerDigestService {
       UserRepository userRepository,
       OrgRepository orgRepository,
       TeamRollupCacheRepository rollupRepository,
+      CommitRepository commitRepository,
       NotificationDispatcher dispatcher,
       Clock clock) {
     this.aiService = aiService;
@@ -86,6 +89,7 @@ public class ManagerDigestService {
     this.userRepository = userRepository;
     this.orgRepository = orgRepository;
     this.rollupRepository = rollupRepository;
+    this.commitRepository = commitRepository;
     this.dispatcher = dispatcher;
     this.clock = clock;
   }
@@ -190,15 +194,16 @@ public class ManagerDigestService {
     payload.put("managerId", manager.getId());
     payload.put("insightId", insight.getId());
     payload.put("manualDispatch", true);
+    // Routed through ALIGNMENT_RISK kind to bypass the WEEKLY_DIGEST dedup index, but the Slack
+    // header should read as a digest. SlackChannel honours displayKind when present.
+    payload.put("displayKind", "WEEKLY_DIGEST");
     JsonNode aiPayload = parse(insight.getPayloadJson());
     payload.set("aiPayload", aiPayload);
     String aiSlackMessage = aiPayload.path("slackMessage").asText("");
-    String headlinePrefix = "*Manual Slack preview* — manager dispatched the latest digest.\n\n";
+    String resolved = resolveCommitReferences(manager, aiSlackMessage);
     payload.put(
         "slackMessage",
-        aiSlackMessage.isBlank()
-            ? headlinePrefix + "No slackMessage on the latest insight."
-            : headlinePrefix + aiSlackMessage);
+        resolved.isBlank() ? "Latest digest could not be reformatted." : resolved);
     String payloadJson;
     try {
       payloadJson = MAPPER.writeValueAsString(payload);
@@ -211,6 +216,36 @@ public class ManagerDigestService {
         NotificationChannelKind.SLACK,
         manager.getId(),
         payloadJson);
+  }
+
+  /**
+   * Replace bare commit ULIDs in the AI-generated Slack message with a human-readable form:
+   * "<commit text> (#xxxxxxxx)". Sonnet sometimes drops the {@code commitText} field even though
+   * it has the ID, so we resolve from {@link CommitRepository} at dispatch time. Limit lookups so
+   * a malformed payload cannot fan out into thousands of queries.
+   */
+  private String resolveCommitReferences(User manager, String slackMessage) {
+    if (slackMessage == null || slackMessage.isBlank()) return "";
+    java.util.regex.Matcher m =
+        java.util.regex.Pattern.compile("\\b(01[0-9A-HJKMNP-TV-Z]{24})\\b").matcher(slackMessage);
+    java.util.LinkedHashSet<String> ids = new java.util.LinkedHashSet<>();
+    while (m.find() && ids.size() < 25) ids.add(m.group(1));
+    if (ids.isEmpty()) return slackMessage;
+    String result = slackMessage;
+    for (String id : ids) {
+      String replacement =
+          commitRepository
+              .findById(id)
+              .map(c -> "\"" + truncate(c.getText(), 80) + "\" (#" + id.substring(0, 8) + ")")
+              .orElse("#" + id.substring(0, 8));
+      result = result.replace(id, replacement);
+    }
+    return result;
+  }
+
+  private static String truncate(String s, int max) {
+    if (s == null) return "";
+    return s.length() <= max ? s : s.substring(0, max - 1) + "…";
   }
 
   private void dispatchSlack(User manager, AIInsight insight) {

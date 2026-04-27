@@ -132,7 +132,8 @@ public class SlackChannel implements NotificationChannel {
     root.put("text", deriveFallbackText(event, text));
     ArrayNode blocks = root.putArray("blocks");
 
-    String header = headerFor(event);
+    String displayKindOverride = payload.path("displayKind").asText("");
+    String header = displayKindOverride.isBlank() ? headerFor(event) : headerFor(displayKindOverride);
     if (header != null) {
       ObjectNode hb = blocks.addObject();
       hb.put("type", "header");
@@ -165,12 +166,17 @@ public class SlackChannel implements NotificationChannel {
   }
 
   private String headerFor(NotificationEvent event) {
-    return switch (event.getKind()) {
-      case WEEKLY_DIGEST -> "Weekly manager digest";
-      case ALIGNMENT_RISK -> "Alignment risk";
-      case LOCK_CONFIRM -> "Week locked";
-      case RECONCILE_REMINDER -> "Reconciliation reminder";
-      case RECONCILE_COMPLETE -> "Reconciliation submitted";
+    return headerFor(event.getKind().name());
+  }
+
+  private String headerFor(String kindName) {
+    return switch (kindName) {
+      case "WEEKLY_DIGEST" -> "Weekly manager digest";
+      case "ALIGNMENT_RISK" -> "Alignment risk";
+      case "LOCK_CONFIRM" -> "Week locked";
+      case "RECONCILE_REMINDER" -> "Reconciliation reminder";
+      case "RECONCILE_COMPLETE" -> "Reconciliation submitted";
+      default -> "Notification";
     };
   }
 

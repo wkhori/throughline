@@ -448,7 +448,7 @@ type Touchpoint = {
 
 const touchpoints: Touchpoint[] = [
   {
-    num: '01',
+    num: 'T1',
     title: 'Outcome suggestion',
     model: 'Haiku',
     state: 'DRAFT',
@@ -458,7 +458,7 @@ const touchpoints: Touchpoint[] = [
       'One retry then silent fail. No suggestion shown, no toast. Invalid JSON treated as null-match.',
   },
   {
-    num: '02',
+    num: 'T2',
     title: 'Drift warning',
     model: 'Haiku',
     state: 'DRAFT',
@@ -467,7 +467,7 @@ const touchpoints: Touchpoint[] = [
     fallback: 'Two retries with backoff then suppress the indicator. Logged to ai_failures.',
   },
   {
-    num: '03',
+    num: 'T3',
     title: 'Portfolio review',
     model: 'Sonnet',
     state: 'LOCKED',
@@ -477,7 +477,7 @@ const touchpoints: Touchpoint[] = [
       'Three retries then surface "review pending" with manual retry. Background job retries every 10 min for one hour. Lock proceeds either way.',
   },
   {
-    num: '04',
+    num: 'T4',
     title: 'Alignment delta',
     model: 'Sonnet',
     state: 'RECONCILED',
@@ -487,7 +487,7 @@ const touchpoints: Touchpoint[] = [
       'Three retries; on JSON failure a deterministic minimal delta (raw counts by Outcome) is computed server-side and tagged model: deterministic.',
   },
   {
-    num: '05',
+    num: 'T5',
     title: 'Manager weekly digest',
     model: 'Sonnet',
     state: 'MANAGER',
@@ -497,7 +497,7 @@ const touchpoints: Touchpoint[] = [
       'Five retries up to 120s. Manager DM "delayed, within 4h." Background retry every 30 min. Deterministic skeleton (counts only) on JSON failure.',
   },
   {
-    num: '06',
+    num: 'T6',
     title: 'Alignment-risk alert',
     model: 'Haiku',
     state: 'BACKGROUND',
@@ -507,7 +507,7 @@ const touchpoints: Touchpoint[] = [
       'Three retries then deterministic templated alert keyed by rule and severity rubric. Deduped against alignment_risk for 7 days unless severity escalates.',
   },
   {
-    num: '07',
+    num: 'T7',
     title: 'Commit quality lint',
     model: 'Haiku',
     state: 'DRAFT',
@@ -653,10 +653,10 @@ const decisionRows: DecisionRow[] = [
       'Not in the brief — the brief specifies a weekly-commit module, not an AI copilot. Added because the structured RCDO graph makes seven specific AI touchpoints valuable (outcome suggestion, drift, portfolio review, alignment delta, manager digest, alignment-risk alert, commit lint). Haiku for high-volume tasks, Sonnet for analytical work. Full prompts and schemas in docs/ai-copilot-spec.md.',
   },
   {
-    requirement: 'evalkit as the AI eval framework',
-    treatment: 'Additional',
+    requirement: '@wkhori/evalkit as the AI eval framework',
+    treatment: 'Substituted',
     rationale:
-      'Not in the brief. Added so each AI touchpoint has a deterministic eval gate before merge — temperature 0, N=3, ≥2/3 pass, per-touchpoint fixtures.',
+      'Not in the brief — added because the AI copilot needed deterministic eval gates. The published @wkhori/evalkit package was not yet stable at integration time, so we shipped an inline harness (evals/runner.ts) honouring the same contract: temperature 0, N=3, ≥2/3 pass, per-touchpoint fixtures. Swap path: replace evals/runner.ts with a thin import once the package locks.',
   },
   {
     requirement: 'Per-org Anthropic budget guard',
@@ -949,10 +949,10 @@ function AwsDiagramSvg() {
   const arrow = 'stroke-[oklch(0.78_0.04_230)] fill-none';
   return (
     <svg
-      viewBox="0 0 940 400"
+      viewBox="0 0 940 480"
       className="h-auto w-full"
       role="img"
-      aria-label="AWS production architecture: ALB to ECS Fargate (host, remote, api) to RDS Postgres, ElastiCache, EventBridge, plus outbound to Anthropic, Slack, Outlook Graph stub."
+      aria-label="AWS production architecture: CloudFront in front of S3 + ALB; ALB to EKS pods (host, remote, api); api to RDS Postgres, ElastiCache, EventBridge, SQS/SNS; outbound to Anthropic, Slack, Outlook Graph stub."
     >
       <defs>
         <marker
@@ -968,21 +968,33 @@ function AwsDiagramSvg() {
         </marker>
       </defs>
       <g>
+        <rect x="20" y="80" width="100" height="44" rx="6" className={node} />
+        <text x="70" y="107" textAnchor="middle" className={text}>
+          CloudFront
+        </text>
         <rect x="20" y="170" width="100" height="44" rx="6" className={node} />
         <text x="70" y="197" textAnchor="middle" className={text}>
+          S3 · static
+        </text>
+        <rect x="20" y="260" width="100" height="44" rx="6" className={node} />
+        <text x="70" y="287" textAnchor="middle" className={text}>
           ALB
         </text>
         <rect x="200" y="80" width="170" height="44" rx="6" className={node} />
         <text x="285" y="107" textAnchor="middle" className={text}>
-          Fargate · host
+          EKS · host
         </text>
         <rect x="200" y="170" width="170" height="44" rx="6" className={node} />
         <text x="285" y="197" textAnchor="middle" className={text}>
-          Fargate · remote
+          EKS · remote
         </text>
         <rect x="200" y="260" width="170" height="44" rx="6" className={node} />
         <text x="285" y="287" textAnchor="middle" className={text}>
-          Fargate · api
+          EKS · api
+        </text>
+        <rect x="200" y="350" width="170" height="44" rx="6" className={node} />
+        <text x="285" y="377" textAnchor="middle" className={text}>
+          SQS · SNS
         </text>
         <rect x="450" y="80" width="170" height="44" rx="6" className={node} />
         <text x="535" y="107" textAnchor="middle" className={text}>
@@ -1032,10 +1044,10 @@ function AwsDiagramSvg() {
         <line x1="370" y1="282" x2="698" y2="282" />
       </g>
       <text x="20" y="50" className={muted}>
-        Internet
+        Edge · static
       </text>
       <text x="200" y="50" className={muted}>
-        ECS · Fargate
+        EKS workloads
       </text>
       <text x="450" y="50" className={muted}>
         Stateful + scheduling
@@ -1043,8 +1055,10 @@ function AwsDiagramSvg() {
       <text x="700" y="50" className={muted}>
         Outbound integrations
       </text>
-      <text x="20" y="380" className={muted}>
-        Demo deploy: Railway. Swap path: terraform apply, ECR push, helm install.
+      <text x="20" y="450" className={muted}>
+        CloudFront fronts the host bundle and proxies S3 (remoteEntry, hero-video). SQS/SNS fans
+        out manager digest events to subscribers. Demo deploys to Railway; swap path: terraform
+        apply, ECR push, helm install.
       </text>
     </svg>
   );
@@ -1119,7 +1133,7 @@ function SectionTestEval() {
     {
       heading: 'AI evals',
       detail:
-        'evalkit. One fixture per T1–T7 scenario from docs/ai-copilot-spec.md. Temperature 0, N=3, ≥2/3 pass, deterministic assertions on the JSON schema.',
+        'Inline harness (evals/runner.ts) honouring the @wkhori/evalkit contract. One fixture per T1–T7 scenario from docs/ai-copilot-spec.md. Temperature 0, N=3, ≥2/3 pass, deterministic assertions on the JSON schema.',
       proof: 'evals/fixtures/*.json',
     },
   ];
