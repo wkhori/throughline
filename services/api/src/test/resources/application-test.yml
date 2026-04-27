@@ -1,6 +1,11 @@
 spring:
   flyway:
     enabled: true
+    # P34/P38: V4 (AI surface) and V5 (rollup cache) are introduced out of numeric order in
+    # `phase/3-manager` and `phase/4-ai`. Long-lived dev/test databases that already have V5
+    # applied need `out-of-order` to accept V4 retroactively. Production migrates from scratch
+    # and is unaffected.
+    out-of-order: true
   jpa:
     hibernate:
       ddl-auto: validate
