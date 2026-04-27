@@ -1,5 +1,5 @@
 import type { CommitDto, RcdoTreeDto, WeekDto } from '@throughline/shared-types';
-import { RcdoChip, resolveRcdoTrail } from '@throughline/shared-ui';
+import { RcdoChip, resolveRcdoTrail, useRtkSubscriptionKick } from '@throughline/shared-ui';
 import { useGetRcdoTreeQuery } from '../../api/rcdoEndpoints.js';
 import { AlignmentDeltaCard } from '../ai/AlignmentDeltaCard.js';
 
@@ -8,6 +8,7 @@ interface ReconciledWeekProps {
 }
 
 export function ReconciledWeek({ week }: ReconciledWeekProps) {
+  useRtkSubscriptionKick();
   const { data: rcdo } = useGetRcdoTreeQuery();
   const stats = computeStats(week.commits);
   return (

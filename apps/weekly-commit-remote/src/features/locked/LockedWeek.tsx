@@ -1,4 +1,5 @@
 import type { WeekDto } from '@throughline/shared-types';
+import { useRtkSubscriptionKick } from '@throughline/shared-ui';
 import { useGetRcdoTreeQuery } from '../../api/rcdoEndpoints.js';
 import { ChessMatrix } from '../draft/ChessMatrix.js';
 import { PortfolioReviewCard } from '../ai/PortfolioReviewCard.js';
@@ -8,6 +9,7 @@ interface LockedWeekProps {
 }
 
 export function LockedWeek({ week }: LockedWeekProps) {
+  useRtkSubscriptionKick();
   const { data: rcdo } = useGetRcdoTreeQuery();
   return (
     <section data-testid="locked-week" className="mx-auto max-w-6xl space-y-6 p-6">

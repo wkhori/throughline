@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useRtkSubscriptionKick } from '@throughline/shared-ui';
 import {
   useGetTeamRollupQuery,
   type RibbonEntry,
@@ -19,17 +20,9 @@ interface ManagerDashboardProps {
 // - Exception ribbon (LONG_CARRY_FORWARD / PRIORITY_DRIFT / STARVED_OUTCOME) with Ack action.
 // Plus the dense team roster table beneath.
 export function ManagerDashboard({ onSelectTeam }: ManagerDashboardProps) {
+  useRtkSubscriptionKick();
   const rollup = useGetTeamRollupQuery({ page: 0, size: 50 });
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
-  // RTK Query's notify-on-fulfill occasionally fails to wake React subscribers
-  // when the dashboard mounts as part of a persona switch (the cache fulfils
-  // but the hook's selector doesn't fire). Force one re-read 80ms after mount
-  // so the cached payload is picked up regardless of the StrictMode race.
-  const [, force] = useState(0);
-  useEffect(() => {
-    const t = setTimeout(() => force((x) => x + 1), 80);
-    return () => clearTimeout(t);
-  }, []);
   const handleSelectTeam = (teamId: string) => {
     setSelectedTeamId(teamId);
     onSelectTeam?.(teamId);

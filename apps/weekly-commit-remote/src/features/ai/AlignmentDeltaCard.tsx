@@ -1,3 +1,4 @@
+import { useRtkSubscriptionKick } from '@throughline/shared-ui';
 import { useGetAlignmentDeltaQuery } from '../../api/aiEndpoints.js';
 import type {
   AlignmentDeltaCarryForward,
@@ -12,8 +13,9 @@ import type {
  * the cron/retry will fill it in and RTK Query refetches via the AIInsight tag.
  */
 export function AlignmentDeltaCard({ weekId }: { weekId: string }) {
+  useRtkSubscriptionKick();
   const { data, isLoading } = useGetAlignmentDeltaQuery(weekId);
-  if (isLoading) {
+  if (isLoading && !data) {
     return (
       <div
         data-testid="alignment-delta-loading"

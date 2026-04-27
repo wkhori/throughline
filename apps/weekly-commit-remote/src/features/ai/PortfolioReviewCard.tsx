@@ -1,3 +1,4 @@
+import { useRtkSubscriptionKick } from '@throughline/shared-ui';
 import { useGetPortfolioReviewQuery, useRunPortfolioReviewMutation } from '../../api/aiEndpoints.js';
 import type { PortfolioReviewFinding, PortfolioReviewPayload } from '@throughline/shared-types';
 
@@ -13,10 +14,11 @@ const SEVERITY_BADGE: Record<string, string> = {
  * IC can resync rather than seeing a placeholder.
  */
 export function PortfolioReviewCard({ weekId }: { weekId: string }) {
+  useRtkSubscriptionKick();
   const { data, isLoading } = useGetPortfolioReviewQuery(weekId);
   const [run, runState] = useRunPortfolioReviewMutation();
 
-  if (isLoading) {
+  if (isLoading && !data) {
     return (
       <div
         data-testid="portfolio-review-loading"

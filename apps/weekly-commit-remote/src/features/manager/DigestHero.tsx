@@ -1,5 +1,9 @@
 import { useState, type ReactNode } from 'react';
-import { InsightDrillDown, type InsightDrillDownEntity } from '@throughline/shared-ui';
+import {
+  InsightDrillDown,
+  useRtkSubscriptionKick,
+  type InsightDrillDownEntity,
+} from '@throughline/shared-ui';
 import {
   useGetCurrentDigestQuery,
   useGetTeamMemberCurrentWeekQuery,
@@ -194,6 +198,7 @@ function chipsFor(payload: DigestPayload): InsightDrillDownEntity[] {
 }
 
 export function DigestHero(props: DigestHeroProps = {}) {
+  useRtkSubscriptionKick();
   const live = useGetCurrentDigestQuery(undefined, { skip: props.override === 'props' });
   const [regenerate, regen] = useRegenerateDigestMutation();
   const [dispatchSlack, dispatch] = useDispatchDigestToSlackMutation();

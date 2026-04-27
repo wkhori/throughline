@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useRtkSubscriptionKick } from '@throughline/shared-ui';
 import type { CommitDto, CreateCommitRequest, WeekDto } from '@throughline/shared-types';
 import { useGetRcdoTreeQuery } from '../../api/rcdoEndpoints.js';
 import { useCreateCommitMutation, useDeleteCommitMutation } from '../../api/commitsEndpoints.js';
@@ -16,6 +17,7 @@ const MAX_COMMITS = 7;
 // Phase-2 IC draft surface. Hosts the chess matrix + composer + lock dialog. All server
 // interactions go through RTK Query mutations with tag invalidation; no raw fetch anywhere.
 export function DraftWeek({ week }: DraftWeekProps) {
+  useRtkSubscriptionKick();
   const { data: rcdo } = useGetRcdoTreeQuery();
   const [createCommit, createState] = useCreateCommitMutation();
   const [deleteCommit] = useDeleteCommitMutation();

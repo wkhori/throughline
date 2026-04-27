@@ -1,3 +1,4 @@
+import { useRtkSubscriptionKick } from '@throughline/shared-ui';
 import { useGetOrgMetricsQuery } from '../../api/metricsEndpoints.js';
 
 // Phase 7 — read-only metrics surface for ADMIN. Renders the four impact metrics from PRD §10.5
@@ -6,9 +7,10 @@ import { useGetOrgMetricsQuery } from '../../api/metricsEndpoints.js';
 //
 // All metrics are reads — no editable controls. Backend enforces ADMIN scope via @PreAuthorize.
 export function AdminMetricsPanel() {
+  useRtkSubscriptionKick();
   const { data, isLoading, error } = useGetOrgMetricsQuery();
 
-  if (isLoading) {
+  if (isLoading && !data) {
     return (
       <section
         data-testid="metrics-loading"

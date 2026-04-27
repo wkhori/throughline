@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useRtkSubscriptionKick } from '@throughline/shared-ui';
 import {
   useCreateRallyCryMutation,
   useDeleteRallyCryMutation,
@@ -10,6 +11,7 @@ import type { RcdoTreeDto } from '@throughline/shared-types';
 // Supports the @phase-1 admin-rcdo Gherkin scenarios; Phase 2 extends
 // drag-reorder + nested DO/Outcome/SO inline forms.
 export function RcdoTreeEditor() {
+  useRtkSubscriptionKick();
   const { data, isLoading, error } = useGetRcdoTreeQuery();
   const [createRallyCry, createState] = useCreateRallyCryMutation();
   const [deleteRallyCry] = useDeleteRallyCryMutation();
