@@ -63,23 +63,23 @@ public class SecurityConfig {
     return src;
   }
 
-  /** Real Auth0 JWKS-backed decoder. Active only when {@code AUTH0_ISSUER_URI} is non-blank. */
+  /**
+   * JWT decoder. When {@code AUTH0_ISSUER_URI} is set, real Auth0 verification runs for any token
+   * that isn't one of the three demo persona tokens; mock persona tokens always go through the
+   * stub decoder so the deployed demo continues to work alongside real Auth0 logins. When
+   * {@code AUTH0_ISSUER_URI} is unset (continue-and-defer mode), only the stub decoder runs.
+   */
   @Bean
   @Profile("!test")
-  @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
-      name = "throughline.auth0.issuer-uri")
-  public JwtDecoder realJwtDecoder() {
-    NimbusJwtDecoder decoder = (NimbusJwtDecoder) JwtDecoders.fromIssuerLocation(issuerUri);
+  public JwtDecoder jwtDecoder() {
+    MockJwtDecoder mock = new MockJwtDecoder();
+    if (issuerUri == null || issuerUri.isBlank()) {
+      return mock;
+    }
+    NimbusJwtDecoder real = (NimbusJwtDecoder) JwtDecoders.fromIssuerLocation(issuerUri);
     OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(issuerUri);
     OAuth2TokenValidator<Jwt> withAudience = new AudienceValidator(audience);
-    decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(withIssuer, withAudience));
-    return decoder;
-  }
-
-  /** Stub decoder (continue-and-defer) — active when AUTH0_ISSUER_URI is unset (or in tests). */
-  @Bean
-  @org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean(JwtDecoder.class)
-  public JwtDecoder mockJwtDecoder() {
-    return new MockJwtDecoder();
+    real.setJwtValidator(new DelegatingOAuth2TokenValidator<>(withIssuer, withAudience));
+    return token -> MockJwtDecoder.isMockToken(token) ? mock.decode(token) : real.decode(token);
   }
 }

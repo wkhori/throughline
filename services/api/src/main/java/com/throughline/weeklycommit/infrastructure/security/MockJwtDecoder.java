@@ -18,6 +18,13 @@ public class MockJwtDecoder implements JwtDecoder {
 
   private static final String AUDIENCE = "https://api.throughline.app";
 
+  /** Whether the supplied token is one of the three demo persona stubs. */
+  public static boolean isMockToken(String token) {
+    return "mock.ic.token".equals(token)
+        || "mock.manager.token".equals(token)
+        || "mock.admin.token".equals(token);
+  }
+
   @Override
   public Jwt decode(String token) throws JwtException {
     PersonaSpec spec = personaFor(token);
