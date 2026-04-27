@@ -1,0 +1,65 @@
+# PRD Patches Applied (Loop 5 Gap Check)
+
+The Challenger pass surfaced 26 specific patches against `PRD.md`. This document is the canonical record of every patch, its severity, where it applies, and its status. Critical patches (10) are applied inline in `PRD.md` and reflected in this document. Important patches (12) are scoped for application during their relevant phase. Minor patches (4) are queued.
+
+The implementing agent must consult this document when starting any phase. If a patch is listed and not yet applied, apply it before writing the phase's first line of code.
+
+---
+
+## Critical (applied inline in PRD.md)
+
+| ID | Issue | Resolution | Where applied |
+|---|---|---|---|
+| P1 | Brief impact metrics (planning completion rate, reconciliation accuracy, manager turnaround, time-to-plan) not instrumented | Add `MetricsService` + `/api/v1/metrics/org` + `digest_viewed_at` capture + `metrics.feature` Phase 7 | New §10.5 |
+| P3 | `AIBudget` lacks audit columns despite global rule | Add audit columns to `ai_budget` migration; entity extends `AbstractAuditingEntity` | §3.3 V4, §3.1 |
+| P6 | Role hierarchy ambiguous — does MANAGER imply IC? | Add `RoleHierarchy` bean: `ADMIN > MANAGER > IC`; managers can lock their own week | §3.1, §13.3, Phase 1 |
+| P7 | `DemoSeeder` in Phase 7 but Phase 5 evals need seeded data | Move seeder to Phase 1; extend per phase (Phase 1 RCDO/users; Phase 2 locked weeks; Phase 3 reconciliations; Phase 5 alerts) | §12 Phase 1, Phase 5, Phase 7 |
+| P9 | Manager endpoints not scoped to direct reports | `@PreAuthorize("@managerScope.canSee(#userId, principal)")`; walks `User.managerId` chain; ADMIN bypass | §4.1, Phase 1, Phase 4 |
+| P12 | AI cost guard enforcement layer unspecified | Enforced server-side in `AnthropicClient.preflight()` with PESSIMISTIC_READ on `AIBudget`; per-user via Caffeine bucket | §6.3 |
+| P15 | AI insight endpoints not scope-checked | Apply `@managerScope.canSee(week.userId, principal)` to `/ai/portfolio-review/{weekId}` and `/ai/alignment-delta/{weekId}` | §4.1 |
+| P22 | MF singleton drift will surface late | `packages/shared-deps-versions.json` as single source for `requiredVersion`; Cypress federation smoke test | §7, Phase 0 |
+| P23 | Single-user runaway can exhaust org budget | Hard per-user-per-hour cap (T1 ≤ 30/hr, T2 ≤ 15/hr); UPDATE…RETURNING-then-check pattern | §6.3 |
+| P24 | Phase 5 bundles six AI surfaces — high slip risk | Split into 5a (Anthropic client + cost guard + T1/T2), 5b (T3/T4 + websocket + deterministic fallback), 5c (T5/T6 + cron + dedupe) | §12 |
+
+---
+
+## Important (apply when entering the relevant phase)
+
+| ID | Issue | Resolution | Phase |
+|---|---|---|---|
+| P2 | Perf gate has no harness | `services/api/src/test/.../perf/EndpointPerformanceTest.java` + Gradle `perfTest` task; assert p95 <200ms on 2000-row seed | Phase 2 + Phase 4 |
+| P4 | Team priority weight seed missing | Add team-weight seed to `R__seed_demo.sql`; RC-level granularity; weights sum to 1.0 with realistic skew | Phase 1 |
+| P5 | `dedupeKey` algorithm undefined | `dedupeKey = sha1(rule + ':' + entityType + ':' + entityId + ':' + severity + ':' + ISO_WEEK(weekStart))` | Phase 5c |
+| P8 | Concurrent lock race undefined | Lock idempotent on terminal LOCKED — replay returns 200 with prior `portfolioReview` snapshot; `OptimisticLockException` translated | Phase 2 |
+| P10 | Manager rollup cache materialization timing missing | `MaterializedRollupJob` `@Scheduled` 30min before Monday digest cron + on every `WeekReconciledEvent`; `team_rollup_cache` table | Phase 4 |
+| P11 | `priorCarryForwardWeeks` semantic for T4 ambiguous | At reconcile time = current commit's `carry_forward_weeks` BEFORE mutation | Phase 5b |
+| P13 | Cache-hit cost-accounting | On `inputHash` cache hit persist `AIInsight` with `cost_cents=0, model='cache:<original>'`; `AIBudget` increments only on real calls | Phase 5a |
+| P14 | `AlignmentRisk` acknowledge endpoint missing | `POST /api/v1/manager/alignment-risks/{id}/ack` + `AlignmentRiskService.acknowledge` + Cypress | Phase 5c |
+| P16 | WebSocket auth/scoping not specified | STOMP over SockJS; `ChannelInterceptor` validates Bearer JWT in CONNECT; subscription path filtered by `WeekSecurityFilter` | Phase 5b |
+| P18 | Reconcile window vs Friday digest mis-aligned | Add `Org.reconcileOpensDayOfWeek` (default FRIDAY) and `Org.reconcileOpensTime` (default 12:00); guard against next-occurrence | Phase 3 |
+| P20 | Digest idempotency relies on app logic only | Unique index `(recipient_id, kind, payload_json->>'weekStart')` partial WHERE kind='WEEKLY_DIGEST' AND state IN ('SENT','PENDING') | Phase 6 |
+| P25 | Phase 4 perf gate cannot pass without rollup | Phase 4 explicitly includes `MaterializedRollupJob` + V5 migration; perf test seeds + runs job before assertion | Phase 4 |
+| P26 | Slack webhook misconfig degrades silently → demo risk | Startup `HealthIndicator` posts heartbeat; `/actuator/health/readiness` DOWN if Slack unreachable AND channel=slack | Phase 8 |
+
+---
+
+## Minor (queued)
+
+| ID | Issue | Resolution | Priority |
+|---|---|---|---|
+| P17 | `/manager/digest/current` referenced as RTK endpoint but no UI consumer or Gherkin step | Hero card consumes `/manager/digest/current` (returns most recent T5 AIInsight or null); add Gherkin step | Phase 5c |
+| P19 | Week N+1 derivation across DST/year-boundary undefined | `current.weekStart.atZone(orgTz).plusDays(7).truncatedTo(DAY)` — never plusWeeks | Phase 3 |
+| P21 | RCDO admin component placement inconsistent | Move `RCDOTreeEditor` + `RCDONodeForm` to `packages/shared-ui/src/components/` for reuse | Phase 1 |
+
+---
+
+## Patch application protocol
+
+1. Critical patches: applied inline in PRD.md before any code is written. This document records what was applied.
+2. Important patches: each Phase begins with a checklist scan of patches tagged with that Phase. Apply before writing tests.
+3. Minor patches: apply opportunistically; defer if scope-pressured.
+4. New ambiguity discovered during build → add as a new patch (P27, P28…) here. Do not silently make decisions.
+
+---
+
+*End of patch document.*

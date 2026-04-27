@@ -1,0 +1,51 @@
+# Node
+node_modules/
+.pnp.*
+.yarn/cache
+.yarn/install-state.gz
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+*.tsbuildinfo
+
+# Test/coverage
+coverage/
+.nyc_output/
+cypress/screenshots/
+cypress/videos/
+cypress/downloads/
+
+# Nx
+.nx/cache/
+.nx/workspace-data/
+
+# Java / Gradle
+.gradle/
+services/api/build/
+services/api/bin/
+services/api/.gradle/
+services/api/out/
+*.class
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Misc
+tmp/
+.tmp/
