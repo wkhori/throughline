@@ -15,6 +15,7 @@ export function RcdoTreeEditor() {
   const [deleteRallyCry] = useDeleteRallyCryMutation();
   const [draftTitle, setDraftTitle] = useState('');
   const [conflictMessage, setConflictMessage] = useState<string | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<{ id: string; title: string } | null>(null);
 
   const handleCreate = async () => {
     setConflictMessage(null);
@@ -151,7 +152,7 @@ export function RcdoTreeEditor() {
                     type="button"
                     onClick={(e) => {
                       e.preventDefault();
-                      void handleArchive(rc.id);
+                      setArchiveTarget({ id: rc.id, title: rc.title });
                     }}
                     data-testid={`archive-rc-${rc.id}`}
                     className="ml-auto rounded-md border border-(--color-panel-border) bg-transparent px-3 py-1 text-xs font-medium text-(--color-panel-cell) hover:bg-(--color-skeleton-bg)"
@@ -194,6 +195,60 @@ export function RcdoTreeEditor() {
           ))}
         </ul>
       )}
+
+      {archiveTarget ? (
+        <>
+          <div
+            data-testid="archive-rc-backdrop"
+            aria-hidden="true"
+            onClick={() => setArchiveTarget(null)}
+            className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm"
+          />
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="archive-rc-title"
+            data-testid="archive-rc-dialog"
+            className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border border-(--color-panel-border) bg-(--color-panel-bg) p-5 shadow-2xl"
+          >
+            <h3
+              id="archive-rc-title"
+              className="text-sm font-semibold text-(--color-panel-heading)"
+            >
+              Archive this Rally Cry?
+            </h3>
+            <p className="mt-1.5 text-xs text-(--color-panel-muted)">
+              "{archiveTarget.title}"
+              <br />
+              The Rally Cry and every Defining Objective, Outcome, and Supporting Outcome under it
+              will be hidden from new commits. The backend will reject this if there are still
+              active children — archive those first.
+            </p>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                data-testid="archive-rc-cancel"
+                onClick={() => setArchiveTarget(null)}
+                className="rounded-md border border-(--color-panel-border) bg-transparent px-3 py-1.5 text-xs font-medium text-(--color-panel-cell) transition-colors hover:bg-(--color-skeleton-bg)"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                data-testid="archive-rc-confirm"
+                onClick={async () => {
+                  const target = archiveTarget;
+                  setArchiveTarget(null);
+                  await handleArchive(target.id);
+                }}
+                className="rounded-md bg-(--color-shell-error) px-3 py-1.5 text-xs font-medium text-white transition-opacity hover:opacity-90"
+              >
+                Archive Rally Cry
+              </button>
+            </div>
+          </div>
+        </>
+      ) : null}
     </section>
   );
 }

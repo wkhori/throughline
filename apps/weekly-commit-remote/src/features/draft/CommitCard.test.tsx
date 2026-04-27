@@ -78,12 +78,26 @@ describe('CommitCard', () => {
     expect(screen.getByTestId('commit-no-so')).toBeInTheDocument();
   });
 
-  it('shows an explicit remove button in DRAFT and invokes onEdit when clicked', async () => {
+  it('shows an explicit remove button that opens a confirmation dialog before deleting', async () => {
     const user = userEvent.setup();
     const onEdit = vi.fn();
     render(<CommitCard commit={baseCommit} rcdo={tree} weekState="DRAFT" onEdit={onEdit} />);
     await user.click(screen.getByTestId('commit-remove'));
+    // The mutation must NOT have fired yet — the dialog needs explicit confirm.
+    expect(onEdit).not.toHaveBeenCalled();
+    expect(screen.getByTestId('commit-remove-dialog')).toBeInTheDocument();
+    await user.click(screen.getByTestId('commit-remove-confirm'));
     expect(onEdit).toHaveBeenCalledWith(baseCommit);
+  });
+
+  it('cancel in the confirmation dialog leaves the commit intact', async () => {
+    const user = userEvent.setup();
+    const onEdit = vi.fn();
+    render(<CommitCard commit={baseCommit} rcdo={tree} weekState="DRAFT" onEdit={onEdit} />);
+    await user.click(screen.getByTestId('commit-remove'));
+    await user.click(screen.getByTestId('commit-remove-cancel'));
+    expect(onEdit).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('commit-remove-dialog')).not.toBeInTheDocument();
   });
 
   it('is read-only in LOCKED state — no remove button rendered', () => {

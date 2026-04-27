@@ -208,7 +208,9 @@ function SelectField({ id, label, value, onChange, options, testId }: SelectFiel
         className="w-full rounded-md border border-(--color-panel-border) bg-(--color-shell-bg) px-3 py-2 text-sm text-(--color-shell-text)"
         data-testid={testId}
       >
-        <option value="">Select…</option>
+        <option value="" disabled>
+          Select…
+        </option>
         {options.map((o) => (
           <option key={o.value} value={o.value}>
             {o.label}

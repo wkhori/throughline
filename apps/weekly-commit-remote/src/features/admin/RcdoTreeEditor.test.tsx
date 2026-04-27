@@ -94,24 +94,49 @@ describe('RcdoTreeEditor', () => {
     });
   });
 
-  it('archive button triggers DELETE and reports 409 conflict', async () => {
+  it('archive button opens a confirmation dialog and triggers DELETE only on confirm (409 conflict path)', async () => {
     const user = userEvent.setup();
+    let deleteCalls = 0;
     server.use(
       http.get('http://localhost:8080/api/v1/rcdo/tree', () =>
         HttpResponse.json(treeWithOneRC),
       ),
-      http.delete('http://localhost:8080/api/v1/admin/rally-cries/:id', () =>
-        HttpResponse.json({ status: 409 }, { status: 409 }),
-      ),
+      http.delete('http://localhost:8080/api/v1/admin/rally-cries/:id', () => {
+        deleteCalls += 1;
+        return HttpResponse.json({ status: 409 }, { status: 409 });
+      }),
     );
     renderWithProviders(<RcdoTreeEditor />, 'ADMIN');
     const archiveBtn = await screen.findByTestId('archive-rc-01RCID000000000000000000AA');
     await user.click(archiveBtn);
+    // Dialog open, no DELETE yet
+    expect(screen.getByTestId('archive-rc-dialog')).toBeInTheDocument();
+    expect(deleteCalls).toBe(0);
+    await user.click(screen.getByTestId('archive-rc-confirm'));
+    await waitFor(() => expect(deleteCalls).toBe(1));
     await waitFor(() => {
-      expect(screen.getByTestId('rcdo-error')).toHaveTextContent(
-        /active Defining Objectives/,
-      );
+      expect(screen.getByTestId('rcdo-error')).toHaveTextContent(/active Defining Objectives/);
     });
+  });
+
+  it('archive cancel button leaves the Rally Cry intact', async () => {
+    const user = userEvent.setup();
+    let deleteCalls = 0;
+    server.use(
+      http.get('http://localhost:8080/api/v1/rcdo/tree', () =>
+        HttpResponse.json(treeWithOneRC),
+      ),
+      http.delete('http://localhost:8080/api/v1/admin/rally-cries/:id', () => {
+        deleteCalls += 1;
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    renderWithProviders(<RcdoTreeEditor />, 'ADMIN');
+    const archiveBtn = await screen.findByTestId('archive-rc-01RCID000000000000000000AA');
+    await user.click(archiveBtn);
+    await user.click(screen.getByTestId('archive-rc-cancel'));
+    expect(screen.queryByTestId('archive-rc-dialog')).not.toBeInTheDocument();
+    expect(deleteCalls).toBe(0);
   });
 
   it('renders an error state when the tree query fails', async () => {

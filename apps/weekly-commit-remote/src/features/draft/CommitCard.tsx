@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type {
   CommitDto,
   DriftCheckLinkedOutcome,
@@ -25,6 +25,7 @@ export function CommitCard({ commit, rcdo, weekState, onEdit }: CommitCardProps)
     () => buildAlternatives(rcdo, commit.supportingOutcomeId),
     [rcdo, commit.supportingOutcomeId],
   );
+  const [confirming, setConfirming] = useState(false);
   const className =
     'rounded-md border border-(--color-commit-border) bg-(--color-commit-bg) p-3';
   return (
@@ -43,7 +44,7 @@ export function CommitCard({ commit, rcdo, weekState, onEdit }: CommitCardProps)
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              onEdit?.(commit);
+              setConfirming(true);
             }}
             className="-mr-1 -mt-1 shrink-0 rounded-md p-1 text-(--color-commit-muted) transition-colors hover:bg-(--color-skeleton-bg) hover:text-(--color-shell-error)"
           >
@@ -92,6 +93,56 @@ export function CommitCard({ commit, rcdo, weekState, onEdit }: CommitCardProps)
           linkedOutcome={linkedOutcome}
           alternativeOutcomes={alternatives}
         />
+      ) : null}
+      {confirming ? (
+        <>
+          <div
+            data-testid="commit-remove-backdrop"
+            aria-hidden="true"
+            onClick={() => setConfirming(false)}
+            className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm"
+          />
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="commit-remove-title"
+            data-testid="commit-remove-dialog"
+            className="fixed left-1/2 top-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-lg border border-(--color-panel-border) bg-(--color-panel-bg) p-5 shadow-2xl"
+          >
+            <h3
+              id="commit-remove-title"
+              className="text-sm font-semibold text-(--color-panel-heading)"
+            >
+              Remove this commit?
+            </h3>
+            <p className="mt-1.5 text-xs text-(--color-panel-muted)">
+              "{commit.text.length > 80 ? `${commit.text.slice(0, 80)}…` : commit.text}"
+              <br />
+              This cannot be undone — the commit and any AI insights linked to it will be deleted.
+            </p>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                data-testid="commit-remove-cancel"
+                onClick={() => setConfirming(false)}
+                className="rounded-md border border-(--color-panel-border) bg-transparent px-3 py-1.5 text-xs font-medium text-(--color-panel-cell) transition-colors hover:bg-(--color-skeleton-bg)"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                data-testid="commit-remove-confirm"
+                onClick={() => {
+                  setConfirming(false);
+                  onEdit?.(commit);
+                }}
+                className="rounded-md bg-(--color-shell-error) px-3 py-1.5 text-xs font-medium text-white transition-opacity hover:opacity-90"
+              >
+                Remove commit
+              </button>
+            </div>
+          </div>
+        </>
       ) : null}
     </article>
   );
