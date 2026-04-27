@@ -9,9 +9,14 @@ const WeekShell = lazy(() =>
   import('./features/draft/WeekShell.js').then((m) => ({ default: m.WeekShell })),
 );
 
+const ManagerDashboard = lazy(() =>
+  import('./features/manager/ManagerDashboard.js').then((m) => ({ default: m.ManagerDashboard })),
+);
+
 export function WeeklyCommitApp(): ReactNode {
   const me = useSelector(selectMe);
   const isAdmin = useSelector(selectHasRole('ADMIN'));
+  const isManager = useSelector(selectHasRole('MANAGER'));
 
   if (!me) {
     return (
@@ -24,6 +29,20 @@ export function WeeklyCommitApp(): ReactNode {
 
   if (isAdmin) {
     return <RcdoTreeEditor />;
+  }
+
+  if (isManager) {
+    return (
+      <Suspense
+        fallback={
+          <p data-testid="manager-shell-fallback" style={style.muted}>
+            Loading manager dashboard…
+          </p>
+        }
+      >
+        <ManagerDashboard />
+      </Suspense>
+    );
   }
 
   return (

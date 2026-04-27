@@ -18,6 +18,8 @@ public class TestDatabaseCleaner {
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void clean() {
     // Self-FK on commit.parent_commit_id and app_user.manager_id need to be nulled before delete.
+    // V5: clear the manager rollup cache before tearing down team rows.
+    em.createNativeQuery("DELETE FROM team_rollup_cache").executeUpdate();
     em.createNativeQuery("UPDATE \"commit\" SET parent_commit_id = NULL").executeUpdate();
     em.createNativeQuery("DELETE FROM \"commit\"").executeUpdate();
     em.createNativeQuery("DELETE FROM week").executeUpdate();

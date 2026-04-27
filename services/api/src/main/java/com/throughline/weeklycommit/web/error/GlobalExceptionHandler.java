@@ -1,5 +1,6 @@
 package com.throughline.weeklycommit.web.error;
 
+import com.throughline.weeklycommit.application.manager.ManagerService;
 import jakarta.validation.ConstraintViolationException;
 import java.util.List;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -66,5 +67,14 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(ValidationException.class)
   public ResponseEntity<ProblemDetail> validation(ValidationException ex) {
     return ResponseEntity.badRequest().body(ProblemDetails.validation(ex.errors()));
+  }
+
+  /** P10: stale {@code team_rollup_cache} → 503 so the dashboard can retry/back-off. */
+  @ExceptionHandler(ManagerService.StaleCacheException.class)
+  public ResponseEntity<ProblemDetail> staleCache(ManagerService.StaleCacheException ex) {
+    return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+        .body(
+            ProblemDetails.forStatus(
+                HttpStatus.SERVICE_UNAVAILABLE, "ROLLUP_RECOMPUTING", ex.getMessage()));
   }
 }
