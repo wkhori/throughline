@@ -7,6 +7,28 @@
   </head>
   <body>
     <div id="root"></div>
+    <pre id="__diag" style="position:fixed;top:0;left:0;right:0;max-height:50vh;overflow:auto;background:#fee;color:#900;padding:8px;font:11px monospace;white-space:pre-wrap;z-index:99999;display:none"></pre>
+    <script>
+      (function(){
+        var box = document.getElementById('__diag');
+        function paint(label, payload){
+          box.style.display='block';
+          box.textContent += '['+label+'] '+payload+'\n';
+        }
+        window.addEventListener('error', function(e){
+          paint('ERROR', (e.message||'')+' @ '+(e.filename||'')+':'+e.lineno+':'+e.colno+'\n'+(e.error&&e.error.stack||''));
+        });
+        window.addEventListener('unhandledrejection', function(e){
+          var r = e.reason; paint('UNHANDLED', (r&&r.stack)||String(r));
+        });
+        setTimeout(function(){
+          var root = document.getElementById('root');
+          if (!root || root.childElementCount === 0) {
+            paint('NO_RENDER', 'After 4s, #root still empty. scripts='+Array.from(document.scripts).map(function(s){return s.src.split('/').pop()}).join(','));
+          }
+        }, 4000);
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
