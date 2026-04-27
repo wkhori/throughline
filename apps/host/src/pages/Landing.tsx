@@ -258,9 +258,8 @@ Long carry-forward: commit 01KQ6Q7R…
 carried 3 weeks — needs resolution.`}
             </pre>
             <p className="mt-6 text-sm leading-relaxed text-(--color-hero-muted)">
-              Every commit is FK-linked to a Supporting Outcome. That single structural property is
-              what turns a model summary into a manager-actionable digest. (Output above is from the
-              live demo this week.)
+              Every commit is foreign-keyed to a Supporting Outcome. That single structural property
+              is what turns a model summary into a manager-actionable digest.
             </p>
           </article>
         </div>

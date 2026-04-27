@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react';
+import { Nav } from '../components/Nav.js';
+import { Footer } from '../components/Footer.js';
 
 /**
  * /architecture — the long-form architecture page. Each section is the
@@ -9,7 +11,7 @@ import type { ReactNode } from 'react';
 export function Architecture() {
   return (
     <div className="min-h-screen bg-(--color-shell-bg) text-(--color-shell-text)">
-      <PageHeader />
+      <Nav />
       <main className="mx-auto max-w-4xl px-6 py-20 sm:px-8">
         <PageIntro />
         <Section1Methodology />
@@ -24,50 +26,12 @@ export function Architecture() {
         <SectionTestEval />
         <Section11Stack />
       </main>
-      <PageFooter />
+      <Footer />
     </div>
   );
 }
 
 export default Architecture;
-
-// ---------- Chrome ----------
-
-function PageHeader() {
-  return (
-    <header className="sticky top-0 z-10 border-b border-(--color-panel-border) bg-(--color-shell-bg)/80 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4 sm:px-8">
-        <a
-          href="/"
-          className="text-sm font-semibold tracking-tight text-(--color-shell-text) hover:text-(--color-ribbon-link)"
-        >
-          Throughline
-        </a>
-        <nav className="flex items-center gap-6 text-sm text-(--color-shell-muted)">
-          <a href="/" className="hover:text-(--color-shell-text)">
-            Overview
-          </a>
-          <a href="/architecture" className="text-(--color-shell-text)">
-            Architecture
-          </a>
-        </nav>
-      </div>
-    </header>
-  );
-}
-
-function PageFooter() {
-  return (
-    <footer className="border-t border-(--color-panel-border) bg-(--color-ribbon-bg)">
-      <div className="mx-auto flex max-w-6xl flex-col gap-2 px-6 py-10 text-sm text-(--color-shell-muted) sm:flex-row sm:items-center sm:justify-between sm:px-8">
-        <span>Throughline · Weekly Commit Module</span>
-        <a href="/" className="hover:text-(--color-shell-text)">
-          Back to overview
-        </a>
-      </div>
-    </footer>
-  );
-}
 
 // ---------- Section primitives ----------
 
@@ -556,15 +520,19 @@ const touchpoints: Touchpoint[] = [
 function Section5Copilot() {
   return (
     <SectionBlock>
-      <SectionHeading index="05" title="AI copilot — T1 through T7" />
+      <SectionHeading index="05" title="AI copilot — seven hands-on stages" />
       <Prose>
         <p>
-          T1 through T7 are our internal labels for the seven AI touchpoints in the weekly
-          lifecycle. Naming is ours, not industry-standard. Haiku handles high-volume cheap
-          classification (T1, T2, T6, T7); Sonnet handles the analytical work (T3, T4, T5) where
-          the model reasons over multi-commit structure to produce the artefact a manager
-          actually reads. Full prompts, schemas, per-call cost, retry policy, and eval scenarios
-          live in{' '}
+          The Throughline copilot guides ICs and managers through seven stages of the weekly
+          lifecycle — from the first commit draft to the manager review on Monday morning. Each
+          stage runs against the structured RCDO graph rather than free text, which is what makes
+          the output meaningfully different from a model that has only the words to work with.
+        </p>
+        <p className="text-sm text-(--color-shell-muted)">
+          Implementation note: each stage is internally numbered T1 through T7. Haiku handles
+          high-volume classification; Sonnet handles the analytical work that produces the
+          artefact a manager actually reads. Full prompts, schemas, per-call cost, retry policy,
+          and eval scenarios live in{' '}
           <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
             docs/ai-copilot-spec.md
           </code>
@@ -614,7 +582,7 @@ function CopilotCard({ tp }: { tp: Touchpoint }) {
 
 type DecisionRow = {
   requirement: string;
-  treatment: 'Implemented' | 'Substituted' | 'Out of scope';
+  treatment: 'Implemented' | 'Substituted' | 'Out of scope' | 'Additional';
   rationale: string;
 };
 
@@ -680,9 +648,21 @@ const decisionRows: DecisionRow[] = [
   },
   {
     requirement: 'evalkit as the AI eval framework',
-    treatment: 'Implemented',
+    treatment: 'Additional',
     rationale:
-      'evalkit on npm is the eval runner for every touchpoint. Temperature 0, N=3, ≥2/3 pass, deterministic per-touchpoint fixtures. Mapped one fixture per T1–T7 scenario from docs/ai-copilot-spec.md.',
+      'Not in the brief. Added so each AI touchpoint has a deterministic eval gate before merge — temperature 0, N=3, ≥2/3 pass, per-touchpoint fixtures. Mapped one fixture per T1–T7 scenario from docs/ai-copilot-spec.md.',
+  },
+  {
+    requirement: 'Per-org Anthropic budget guard',
+    treatment: 'Additional',
+    rationale:
+      'Not in the brief. AnthropicClient.preflight() takes a PESSIMISTIC_READ on the AIBudget row before each call so a runaway prompt cannot exceed the per-org cap. Projected at $0.26 per employee per month at 175-IC scale.',
+  },
+  {
+    requirement: 'Manual Slack-dispatch button on the manager view',
+    treatment: 'Additional',
+    rationale:
+      'Not in the brief. POST /api/v1/manager/digest/dispatch-slack lets a manager re-send the latest digest through the live channel without burning another LLM call. Useful for previewing the template and for ops re-triggering after a transient channel failure.',
   },
 ];
 
@@ -754,6 +734,13 @@ function TreatmentTag({ treatment }: { treatment: DecisionRow['treatment'] }) {
     return (
       <span className="rounded-full bg-(--color-ribbon-low-bg) px-2 py-0.5 text-xs font-medium text-(--color-ribbon-low-fg)">
         Implemented
+      </span>
+    );
+  }
+  if (treatment === 'Additional') {
+    return (
+      <span className="rounded-full bg-[oklch(0.93_0.08_150)] px-2 py-0.5 text-xs font-medium text-[oklch(0.32_0.13_150)]">
+        Additional
       </span>
     );
   }
