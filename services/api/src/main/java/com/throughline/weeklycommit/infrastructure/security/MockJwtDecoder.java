@@ -8,11 +8,12 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtException;
 
 /**
- * Continue-and-defer rule (orchestration §pre-flight): when {@code AUTH0_ISSUER_URI} is unset, this
- * decoder is wired in place of the real Auth0 JWKS decoder. It accepts three deterministic
- * synthetic tokens — {@code mock.ic.token}, {@code mock.manager.token}, {@code mock.admin.token} —
- * that mirror the demo personas in {@code apps/host/src/auth.ts}. Real Auth0 takes over
- * automatically once the issuer URI lands in {@code .env.local}.
+ * <strong>Dev/test fallback only — not wired in production.</strong> When neither {@code
+ * AUTH0_ISSUER_URI} nor {@code throughline.demo.jwt-secret} is configured, {@link SecurityConfig}
+ * falls back to this decoder so local dev keeps working with the literal {@code mock.ic.token}
+ * strings checked into {@code apps/host/src/auth.ts}. In production, the deployed pipeline is
+ * Auth0 (real users) plus {@link DemoJwtDecoder} (demo personas via {@code
+ * /api/v1/auth/demo-login}); MockJwtDecoder is never instantiated.
  */
 public class MockJwtDecoder implements JwtDecoder {
 

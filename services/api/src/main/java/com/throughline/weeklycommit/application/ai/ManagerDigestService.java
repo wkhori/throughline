@@ -12,9 +12,11 @@ import com.throughline.weeklycommit.domain.NotificationChannelKind;
 import com.throughline.weeklycommit.domain.NotificationKind;
 import com.throughline.weeklycommit.domain.Org;
 import com.throughline.weeklycommit.domain.Role;
+import com.throughline.weeklycommit.domain.TeamRollupCache;
 import com.throughline.weeklycommit.domain.User;
 import com.throughline.weeklycommit.domain.repo.AIInsightRepository;
 import com.throughline.weeklycommit.domain.repo.OrgRepository;
+import com.throughline.weeklycommit.domain.repo.TeamRollupCacheRepository;
 import com.throughline.weeklycommit.domain.repo.UserRepository;
 import com.throughline.weeklycommit.infrastructure.ai.AnthropicException;
 import com.throughline.weeklycommit.infrastructure.ai.AnthropicInvalidJsonException;
@@ -63,6 +65,7 @@ public class ManagerDigestService {
   private final AIInsightRepository insightRepository;
   private final UserRepository userRepository;
   private final OrgRepository orgRepository;
+  private final TeamRollupCacheRepository rollupRepository;
   private final NotificationDispatcher dispatcher;
   private final Clock clock;
 
@@ -74,12 +77,14 @@ public class ManagerDigestService {
       AIInsightRepository insightRepository,
       UserRepository userRepository,
       OrgRepository orgRepository,
+      TeamRollupCacheRepository rollupRepository,
       NotificationDispatcher dispatcher,
       Clock clock) {
     this.aiService = aiService;
     this.insightRepository = insightRepository;
     this.userRepository = userRepository;
     this.orgRepository = orgRepository;
+    this.rollupRepository = rollupRepository;
     this.dispatcher = dispatcher;
     this.clock = clock;
   }
@@ -216,23 +221,53 @@ public class ManagerDigestService {
         .with(TemporalAdjusters.previousOrSame(startDay));
   }
 
+  /**
+   * Builds the Sonnet user prompt. For each direct report we attach the latest TeamRollupCache row
+   * (their team, current week — falling back to most recent prior week if the current week hasn't
+   * been materialised yet). The cached payload already contains the structural signals Sonnet
+   * needs to generate the narrative — outcome shares, starved outcomes, priority drift, ribbon
+   * exceptions — none of which 15Five can produce because their data model is unstructured text.
+   */
   private String serializeInput(User manager) {
     ObjectNode root = MAPPER.createObjectNode();
     root.put("managerId", manager.getId());
     root.put("orgId", manager.getOrgId());
-    root.put("weekStart", currentWeekStart(manager).toString());
-    // The full per-report rollup would be computed from team_rollup_cache here. Keeping the prompt
-    // input minimal for the demo so the deterministic + LLM paths share shape.
+    LocalDate weekStart = currentWeekStart(manager);
+    root.put("weekStart", weekStart.toString());
+
     ArrayNode reports = root.putArray("reports");
     var directs =
         userRepository.findAll().stream()
             .filter(u -> manager.getId().equals(u.getManagerId()))
             .toList();
+
+    // Group reports by teamId so we hit the rollup cache once per team, not once per report.
+    java.util.Map<String, java.util.List<User>> byTeam = new java.util.LinkedHashMap<>();
     for (User d : directs) {
-      ObjectNode r = reports.addObject();
-      r.put("userId", d.getId());
-      r.put("displayName", d.getDisplayName());
-      r.put("email", d.getEmail());
+      String teamId = d.getTeamId();
+      if (teamId == null) continue;
+      byTeam.computeIfAbsent(teamId, k -> new java.util.ArrayList<>()).add(d);
+    }
+
+    for (var entry : byTeam.entrySet()) {
+      String teamId = entry.getKey();
+      java.util.List<User> teamMembers = entry.getValue();
+      Optional<TeamRollupCache> cache =
+          rollupRepository.findByIdTeamIdAndIdWeekStart(teamId, weekStart);
+      ObjectNode teamNode = reports.addObject();
+      teamNode.put("teamId", teamId);
+      ArrayNode memberArr = teamNode.putArray("members");
+      for (User d : teamMembers) {
+        ObjectNode m = memberArr.addObject();
+        m.put("userId", d.getId());
+        m.put("displayName", d.getDisplayName());
+        m.put("email", d.getEmail());
+      }
+      if (cache.isPresent()) {
+        teamNode.set("rollup", parse(cache.get().getPayloadJson()));
+      } else {
+        teamNode.put("rollup", "missing — team_rollup_cache not yet materialised for this week");
+      }
     }
     try {
       return MAPPER.writeValueAsString(root);
