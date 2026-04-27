@@ -1,11 +1,12 @@
 # Environment Credential Status
 
-> **Status as of `phase/4-ai` entry: all credentials resolved. No active deferrals.**
+> **Status as of `v0.1.0` (Phase 8 deploy): all credentials resolved. Live demo on Railway.**
 
 This file used to track stub/real status under the orchestration-plan
 Continue-and-Defer rule. Every external credential is now in `.env.local`
-(gitignored), and the corresponding real provider is the runtime default.
-The file is retained as an audit log + onboarding reference, not as a gate.
+(gitignored) and on the matching Railway service, and the corresponding real
+provider is the runtime default. The file is retained as an audit log +
+onboarding reference, not as a gate.
 
 ## Active deferrals
 
@@ -18,6 +19,7 @@ _None._
 | `AUTH0_ISSUER_URI` / `AUTH0_AUDIENCE` / `VITE_AUTH0_*` | between `phase/3-manager` and `phase/4-ai` | Real Auth0 JWKS-backed `JwtDecoder`; tenant `thoughline.us.auth0.com`; SPA app + API + post-login Action + 3 demo users provisioned via `scripts/auth0-provision.mjs` (P37). |
 | `ANTHROPIC_API_KEY` | between `phase/3-manager` and `phase/4-ai` | Real `AnthropicClient` (`@ConditionalOnProperty(name="anthropic.api-key")`) ships in `phase/4-ai`. `StubAnthropicClient` becomes the test-time fallback only. |
 | `SLACK_WEBHOOK_URL` (with `NOTIFICATION_CHANNEL=slack`) | between `phase/3-manager` and `phase/4-ai` | `SlackChannel` posts Block Kit to the configured private channel; `LogChannel` becomes the test-time fallback only. Webhook scoped to a single private channel at install time (Slack enforces channel binding at the webhook URL level). |
+| Railway services (`api`, `host`, `weekly-commit-remote`, `Postgres`) | `phase/5-deploy` | Live URLs in `README.md`. Each service holds its own copy of the relevant `.env.local` keys via `railway variable set`. Auth0 SPA app patched with the Railway host origin via `AUTH0_EXTRA_ORIGINS=… node scripts/auth0-provision.mjs`. Auth0 RBAC enabled on the API resource-server (`enforce_policies=true`, `token_dialect=access_token_authz`); IC/MANAGER/ADMIN permissions assigned to the demo users so password-realm tokens carry the `permissions` claim. |
 
 ## Test discipline
 
