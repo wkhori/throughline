@@ -121,13 +121,18 @@ public class AiCopilotService {
     Optional<AIInsight> cached = cache.findFresh(kind, inputHash);
     if (cached.isPresent()) {
       AIInsight prior = cached.get();
+      // Strip any prior "cache:" prefix so the column stays under varchar(80) when cache hits
+      // chain (every reuse adds the prefix once and only once).
+      String priorModel = prior.getModel();
+      String originalModel =
+          priorModel.startsWith("cache:") ? priorModel.substring("cache:".length()) : priorModel;
       AIInsight hit =
           new AIInsight(
               orgId,
               kind,
               entityType,
               entityId,
-              "cache:" + prior.getModel(),
+              "cache:" + originalModel,
               prior.getPayloadJson(),
               inputHash);
       hit.setLatencyMs(0);
