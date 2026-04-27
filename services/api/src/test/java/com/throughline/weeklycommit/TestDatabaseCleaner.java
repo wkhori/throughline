@@ -17,6 +17,10 @@ public class TestDatabaseCleaner {
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void clean() {
+    // Self-FK on commit.parent_commit_id and app_user.manager_id need to be nulled before delete.
+    em.createNativeQuery("UPDATE \"commit\" SET parent_commit_id = NULL").executeUpdate();
+    em.createNativeQuery("DELETE FROM \"commit\"").executeUpdate();
+    em.createNativeQuery("DELETE FROM week").executeUpdate();
     em.createNativeQuery("UPDATE app_user SET manager_id = NULL").executeUpdate();
     em.createNativeQuery("UPDATE team SET manager_id = NULL").executeUpdate();
     em.createNativeQuery("DELETE FROM team_priority_weight").executeUpdate();

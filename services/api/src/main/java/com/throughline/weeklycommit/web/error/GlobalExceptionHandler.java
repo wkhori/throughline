@@ -62,4 +62,9 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(HttpStatus.NOT_FOUND)
         .body(ProblemDetails.forStatus(HttpStatus.NOT_FOUND, "NOT_FOUND", ex.getMessage()));
   }
+
+  @ExceptionHandler(ValidationException.class)
+  public ResponseEntity<ProblemDetail> validation(ValidationException ex) {
+    return ResponseEntity.badRequest().body(ProblemDetails.validation(ex.errors()));
+  }
 }

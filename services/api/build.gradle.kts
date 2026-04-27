@@ -57,8 +57,32 @@ dependencies {
 
 tasks.withType<Test> {
     useJUnitPlatform()
-    finalizedBy(tasks.jacocoTestReport)
     systemProperty("spring.profiles.active", "test")
+}
+
+// Default `test` task excludes the perf tag; perf runs explicitly via the `perfTest` task below
+// so CI doesn't pay the latency assertion cost on every PR.
+tasks.test {
+    useJUnitPlatform {
+        excludeTags("perf")
+    }
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+// P2 / P32 — Phase-2 perf harness. Asserts p95 <200ms on hot read paths against the
+// long-running Postgres in docker-compose (or the GitHub Actions services container in CI).
+// Initially the harness scaffold targets `/api/v1/me`; the assertion swaps to `/api/v1/weeks/current`
+// once that endpoint lands in `phase/2-lifecycle`.
+tasks.register<Test>("perfTest") {
+    description = "Runs latency perf assertions tagged @Tag(\"perf\")."
+    group = "verification"
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+    useJUnitPlatform {
+        includeTags("perf")
+    }
+    systemProperty("spring.profiles.active", "test")
+    shouldRunAfter(tasks.test)
 }
 
 jacoco {

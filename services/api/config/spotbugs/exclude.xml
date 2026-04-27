@@ -4,6 +4,8 @@
   EI / EI2 (may expose internal representation). DTOs in this module are
   serialized to JSON and never mutated; the warning is a false positive
   documented at https://github.com/spotbugs/spotbugs/issues/2444.
+  Spring controllers and services likewise hold injected singleton beans;
+  the constructor-stores-bean warning is a known false positive for DI.
 -->
 <FindBugsFilter
     xmlns="https://github.com/spotbugs/filter/3.0.0"
@@ -14,7 +16,15 @@
     <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
   </Match>
   <Match>
+    <Class name="~com\.throughline\.weeklycommit\.web\..+" />
+    <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
+  </Match>
+  <Match>
     <Class name="~com\.throughline\.weeklycommit\.web\.AuthController\$MeDto" />
+    <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
+  </Match>
+  <Match>
+    <Class name="~com\.throughline\.weeklycommit\.application\..+" />
     <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
   </Match>
 </FindBugsFilter>

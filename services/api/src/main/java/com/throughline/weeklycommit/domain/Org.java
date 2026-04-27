@@ -4,6 +4,8 @@ import com.throughline.weeklycommit.infrastructure.persistence.AbstractAuditingE
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import java.time.DayOfWeek;
+import java.time.LocalTime;
 
 @Entity
 @Table(name = "org")
@@ -17,6 +19,13 @@ public class Org extends AbstractAuditingEntity {
 
   @Column(name = "week_start_day", nullable = false, length = 10)
   private String weekStartDay = "MONDAY";
+
+  // P18: when the reconcile window opens for ICs in this org. Default Friday 12:00 in org TZ.
+  @Column(name = "reconcile_opens_day_of_week", nullable = false, length = 10)
+  private String reconcileOpensDayOfWeek = "FRIDAY";
+
+  @Column(name = "reconcile_opens_time", nullable = false)
+  private LocalTime reconcileOpensTime = LocalTime.of(12, 0);
 
   protected Org() {}
 
@@ -46,5 +55,25 @@ public class Org extends AbstractAuditingEntity {
 
   public void setWeekStartDay(String weekStartDay) {
     this.weekStartDay = weekStartDay;
+  }
+
+  public DayOfWeek getReconcileOpensDayOfWeek() {
+    return DayOfWeek.valueOf(reconcileOpensDayOfWeek);
+  }
+
+  public LocalTime getReconcileOpensTime() {
+    return reconcileOpensTime;
+  }
+
+  public void setReconcileOpensDayOfWeek(DayOfWeek d) {
+    this.reconcileOpensDayOfWeek = d.name();
+  }
+
+  public void setReconcileOpensTime(LocalTime t) {
+    this.reconcileOpensTime = t;
+  }
+
+  public DayOfWeek getWeekStartDayOfWeek() {
+    return DayOfWeek.valueOf(weekStartDay);
   }
 }

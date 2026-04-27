@@ -4,3 +4,4 @@
 export * from './common.js';
 export * from './rcdo.js';
 export * from './user.js';
+export * from './week.js';

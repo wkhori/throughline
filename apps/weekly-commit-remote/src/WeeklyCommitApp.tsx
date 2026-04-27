@@ -1,10 +1,14 @@
-import type { ReactNode } from 'react';
+import { lazy, Suspense, type ReactNode } from 'react';
 import { useSelector } from 'react-redux';
 import { selectHasRole, selectMe } from '@throughline/shared-ui';
 import { RcdoTreeEditor } from './features/admin/RcdoTreeEditor.js';
 
-// Phase 1 surface: ADMIN sees the RCDO authoring tree; IC/MANAGER see a
-// placeholder until Phase 2 wires the DraftWeek surface.
+// PRD §7 sub-second initial render gate — heavy IC surfaces lazy-load so the host shell ships
+// only the auth + role-routing on first paint.
+const WeekShell = lazy(() =>
+  import('./features/draft/WeekShell.js').then((m) => ({ default: m.WeekShell })),
+);
+
 export function WeeklyCommitApp(): ReactNode {
   const me = useSelector(selectMe);
   const isAdmin = useSelector(selectHasRole('ADMIN'));
@@ -23,13 +27,15 @@ export function WeeklyCommitApp(): ReactNode {
   }
 
   return (
-    <section style={style.gate} data-testid="placeholder">
-      <h2 style={style.h2}>Weekly Commit (placeholder)</h2>
-      <p style={style.muted}>
-        Signed in as <strong>{me.displayName}</strong> ({me.role}). The Phase-2 DraftWeek
-        surface mounts here.
-      </p>
-    </section>
+    <Suspense
+      fallback={
+        <p data-testid="week-shell-fallback" style={style.muted}>
+          Loading week…
+        </p>
+      }
+    >
+      <WeekShell />
+    </Suspense>
   );
 }
 

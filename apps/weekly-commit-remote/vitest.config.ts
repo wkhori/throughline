@@ -21,6 +21,8 @@ export default defineConfig({
         // RTK Query endpoint files re-export auto-generated hooks; behavior is
         // covered by the component tests that consume the hooks.
         'src/api/rcdoEndpoints.ts',
+        'src/api/weeksEndpoints.ts',
+        'src/api/commitsEndpoints.ts',
       ],
       thresholds: { lines: 80, functions: 80, branches: 80, statements: 80 },
     },
