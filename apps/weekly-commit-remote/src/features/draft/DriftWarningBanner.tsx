@@ -55,14 +55,14 @@ export function DriftWarningBanner({
     <div
       role="alert"
       data-testid="drift-warning-banner"
-      className="mt-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-2 text-xs"
+      className="mt-2 rounded-md border border-(--color-ribbon-medium-bg) bg-(--color-ribbon-medium-bg) p-3 text-xs"
     >
-      <p className="font-medium text-amber-700 dark:text-amber-400">
+      <p className="font-medium text-(--color-ribbon-medium-fg)">
         Drift detected (<span data-testid="drift-score">{payload.driftScore.toFixed(2)}</span>) —{' '}
         {payload.alignmentVerdict}
       </p>
       {payload.fixSuggestion ? (
-        <p data-testid="drift-fix" className="mt-1 text-amber-700/80 dark:text-amber-400/80">
+        <p data-testid="drift-fix" className="mt-1 text-(--color-ribbon-medium-fg) opacity-80">
           {payload.fixSuggestion}
         </p>
       ) : null}
@@ -70,7 +70,7 @@ export function DriftWarningBanner({
         type="button"
         data-testid="drift-dismiss"
         onClick={() => setDismissed(true)}
-        className="mt-1 text-[11px] text-amber-700/80 hover:text-amber-700"
+        className="mt-1.5 text-[11px] font-medium text-(--color-ribbon-medium-fg) underline opacity-80 hover:opacity-100"
       >
         Dismiss
       </button>

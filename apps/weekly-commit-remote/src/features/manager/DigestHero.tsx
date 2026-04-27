@@ -36,14 +36,14 @@ function UserDetail({ userId }: { userId: string }) {
   const week = useGetTeamMemberCurrentWeekQuery(userId);
   if (week.isLoading) {
     return (
-      <p data-testid="digest-detail-loading" className="text-(--commit-muted)">
+      <p data-testid="digest-detail-loading" className="text-(--color-commit-muted)">
         Loading week…
       </p>
     );
   }
   if (week.error || !week.data) {
     return (
-      <p data-testid="digest-detail-error" className="text-(--shell-error)">
+      <p data-testid="digest-detail-error" className="text-(--color-shell-error)">
         Could not load week for this user.
       </p>
     );
@@ -51,16 +51,16 @@ function UserDetail({ userId }: { userId: string }) {
   return (
     <dl data-testid="digest-detail-week" className="space-y-1 text-xs">
       <div className="flex justify-between">
-        <dt className="text-(--commit-muted)">Week</dt>
-        <dd className="text-(--commit-text)">{week.data.weekStart}</dd>
+        <dt className="text-(--color-commit-muted)">Week</dt>
+        <dd className="text-(--color-commit-text)">{week.data.weekStart}</dd>
       </div>
       <div className="flex justify-between">
-        <dt className="text-(--commit-muted)">State</dt>
-        <dd className="text-(--commit-text)">{week.data.state}</dd>
+        <dt className="text-(--color-commit-muted)">State</dt>
+        <dd className="text-(--color-commit-text)">{week.data.state}</dd>
       </div>
       <div className="flex justify-between">
-        <dt className="text-(--commit-muted)">Commits</dt>
-        <dd className="text-(--commit-text)">{week.data.commits.length}</dd>
+        <dt className="text-(--color-commit-muted)">Commits</dt>
+        <dd className="text-(--color-commit-text)">{week.data.commits.length}</dd>
       </div>
     </dl>
   );
@@ -127,34 +127,34 @@ export function DigestHero(props: DigestHeroProps = {}) {
     <header
       data-testid="manager-digest-hero"
       data-variant={variant}
-      className="space-y-3 rounded-lg border border-(--hero-border) bg-(--hero-bg) p-5"
+      className="space-y-4 rounded-lg border border-(--color-hero-border) bg-(--color-hero-bg) p-6"
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-(--hero-muted)">
+          <p className="text-xs font-medium uppercase tracking-wide text-(--color-hero-muted)">
             Weekly digest
           </p>
           <h1
             data-testid="digest-headline"
-            className="mt-1 text-base font-semibold leading-snug text-(--hero-heading)"
+            className="mt-1 text-base font-semibold leading-snug text-(--color-hero-heading)"
           >
             {headline}
           </h1>
         </div>
         <span
           data-testid="digest-state-badge"
-          className="rounded-sm bg-(--badge-bg) px-1.5 py-0.5 text-xs font-medium text-(--badge-fg)"
+          className="rounded-sm bg-(--color-badge-bg) px-1.5 py-0.5 text-xs font-medium text-(--color-badge-fg)"
         >
           {variant}
         </span>
       </div>
 
       {isLoading ? (
-        <p data-testid="digest-loading" className="text-sm text-(--hero-muted)">
+        <p data-testid="digest-loading" className="text-sm text-(--color-hero-muted)">
           Loading digest…
         </p>
       ) : variant === 'AWAITING_AI' ? (
-        <div data-testid="digest-awaiting" className="space-y-2 text-sm text-(--hero-muted)">
+        <div data-testid="digest-awaiting" className="space-y-3 text-sm text-(--color-hero-muted)">
           <p>
             No T5 insight yet. The Friday cron will fire automatically — or generate one now to
             preview the digest your team will see in Slack.
@@ -164,29 +164,29 @@ export function DigestHero(props: DigestHeroProps = {}) {
             data-testid="digest-regenerate"
             disabled={regen.isLoading}
             onClick={() => regenerate()}
-            className="inline-flex items-center rounded-md border border-(--hero-border) bg-(--hero-bg) px-2.5 py-1 text-xs font-medium text-(--hero-heading) hover:bg-(--badge-bg) disabled:opacity-50"
+            className="inline-flex items-center rounded-md border border-(--color-hero-border) bg-(--color-shell-bg) px-3 py-1.5 text-xs font-medium text-(--color-hero-heading) hover:bg-(--color-skeleton-bg) disabled:opacity-50"
           >
             {regen.isLoading ? 'Generating…' : 'Generate digest now'}
           </button>
           {regen.isError ? (
-            <p data-testid="digest-regenerate-error" className="text-xs text-(--shell-error)">
+            <p data-testid="digest-regenerate-error" className="text-xs text-(--color-shell-error)">
               Could not generate the digest — try again in a few minutes.
             </p>
           ) : null}
         </div>
       ) : variant === 'FALLBACK' ? (
-        <div data-testid="digest-fallback" className="space-y-2 text-sm text-(--hero-text)">
-          <p className="rounded-sm bg-(--badge-bg) px-2 py-1 text-xs text-(--badge-fg)">
+        <div data-testid="digest-fallback" className="space-y-2 text-sm text-(--color-hero-text)">
+          <p className="rounded-sm bg-(--color-badge-bg) px-2 py-1 text-xs text-(--color-badge-fg)">
             Anthropic offline — showing deterministic skeleton. Re-run after the API recovers.
           </p>
           {envelope?.digest?.slackMessage ? (
-            <pre className="whitespace-pre-wrap text-xs text-(--hero-muted)">
+            <pre className="whitespace-pre-wrap text-xs text-(--color-hero-muted)">
               {envelope.digest.slackMessage}
             </pre>
           ) : null}
         </div>
       ) : (
-        <div data-testid="digest-ok" className="space-y-3 text-sm text-(--hero-text)">
+        <div data-testid="digest-ok" className="space-y-3 text-sm text-(--color-hero-text)">
           {envelope?.digest ? (
             <>
               <DigestSection
@@ -248,15 +248,15 @@ function DigestSection({
 }) {
   if (count === 0 && entities.length === 0) {
     return (
-      <div data-testid={`digest-section-${title}`} className="text-xs text-(--hero-muted)">
-        <span className="font-medium text-(--hero-heading)">{title}:</span> none this week.
+      <div data-testid={`digest-section-${title}`} className="text-xs text-(--color-hero-muted)">
+        <span className="font-medium text-(--color-hero-heading)">{title}:</span> none this week.
       </div>
     );
   }
   return (
     <div data-testid={`digest-section-${title}`}>
-      <p className="text-xs font-medium text-(--hero-heading)">
-        {title} <span className="text-(--hero-muted)">({count})</span>
+      <p className="text-xs font-medium text-(--color-hero-heading)">
+        {title} <span className="text-(--color-hero-muted)">({count})</span>
       </p>
       <div className="mt-1 flex flex-wrap items-center gap-x-1 gap-y-1 text-xs">
         <InsightDrillDown entities={entities} renderDetail={defaultDetail} />

@@ -33,6 +33,9 @@ public class SecurityConfig {
   @Value("${throughline.cors.allowed-origins}")
   private String allowedOrigins;
 
+  @Value("${throughline.demo.jwt-secret:}")
+  private String demoSecret;
+
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http.csrf(AbstractHttpConfigurer::disable)
@@ -41,7 +44,11 @@ public class SecurityConfig {
         .authorizeHttpRequests(
             auth ->
                 auth.requestMatchers(
-                        "/actuator/health/**", "/actuator/info", "/error", "/v3/api-docs/**")
+                        "/actuator/health/**",
+                        "/actuator/info",
+                        "/error",
+                        "/v3/api-docs/**",
+                        "/api/v1/auth/demo-login")
                     .permitAll()
                     .anyRequest()
                     .authenticated())
@@ -64,22 +71,57 @@ public class SecurityConfig {
   }
 
   /**
-   * JWT decoder. When {@code AUTH0_ISSUER_URI} is set, real Auth0 verification runs for any token
-   * that isn't one of the three demo persona tokens; mock persona tokens always go through the
-   * stub decoder so the deployed demo continues to work alongside real Auth0 logins. When
-   * {@code AUTH0_ISSUER_URI} is unset (continue-and-defer mode), only the stub decoder runs.
+   * Production-grade JWT decoder.
+   *
+   * <p>Routes by issuer claim:
+   *
+   * <ul>
+   *   <li>Tokens minted by {@link DemoTokenIssuer} (issuer={@code throughline-demo}) are verified
+   *       by the symmetric {@link DemoJwtDecoder}. These come from the {@code
+   *       /api/v1/auth/demo-login} endpoint and represent the three demo personas.
+   *   <li>All other tokens are verified by the Auth0 JWKS-backed {@link NimbusJwtDecoder}.
+   * </ul>
+   *
+   * <p>{@link MockJwtDecoder} (the literal-string token decoder) is reserved for the {@code dev}
+   * profile and tests only; it is NOT wired in production. The active profile in production is
+   * {@code dev} only because the Spring Boot config still names it that — see {@code
+   * application.yml}; despite the name, this decoder is the prod path because both demo personas
+   * and Auth0 logins flow through it.
    */
   @Bean
   @Profile("!test")
   public JwtDecoder jwtDecoder() {
-    MockJwtDecoder mock = new MockJwtDecoder();
-    if (issuerUri == null || issuerUri.isBlank()) {
-      return mock;
+    JwtDecoder demoDecoder =
+        (demoSecret == null || demoSecret.isBlank())
+            ? null
+            : new DemoJwtDecoder(demoSecret, audience);
+
+    JwtDecoder realDecoder = null;
+    if (issuerUri != null && !issuerUri.isBlank()) {
+      NimbusJwtDecoder nimbus = (NimbusJwtDecoder) JwtDecoders.fromIssuerLocation(issuerUri);
+      OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(issuerUri);
+      OAuth2TokenValidator<Jwt> withAudience = new AudienceValidator(audience);
+      nimbus.setJwtValidator(new DelegatingOAuth2TokenValidator<>(withIssuer, withAudience));
+      realDecoder = nimbus;
     }
-    NimbusJwtDecoder real = (NimbusJwtDecoder) JwtDecoders.fromIssuerLocation(issuerUri);
-    OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(issuerUri);
-    OAuth2TokenValidator<Jwt> withAudience = new AudienceValidator(audience);
-    real.setJwtValidator(new DelegatingOAuth2TokenValidator<>(withIssuer, withAudience));
-    return token -> MockJwtDecoder.isMockToken(token) ? mock.decode(token) : real.decode(token);
+
+    if (demoDecoder == null && realDecoder == null) {
+      // Continue-and-defer fallback: no Auth0 issuer configured AND no demo secret. Use the stub
+      // decoder so local dev keeps working with the literal mock.* token strings.
+      return new MockJwtDecoder();
+    }
+
+    final JwtDecoder fDemo = demoDecoder;
+    final JwtDecoder fReal = realDecoder;
+    return token -> {
+      if (fDemo != null && DemoJwtDecoder.looksLikeDemoToken(token)) {
+        return fDemo.decode(token);
+      }
+      if (fReal != null) {
+        return fReal.decode(token);
+      }
+      throw new org.springframework.security.oauth2.jwt.JwtException(
+          "No issuer matched the token (no AUTH0_ISSUER_URI and not a Throughline demo token).");
+    };
   }
 }

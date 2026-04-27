@@ -4,6 +4,7 @@ import {
   useDeleteRallyCryMutation,
   useGetRcdoTreeQuery,
 } from '../../api/rcdoEndpoints.js';
+import type { RcdoTreeDto } from '@throughline/shared-types';
 
 // Phase 1 RCDO admin: Linear-style outline tree editor with delete-guards.
 // Supports the @phase-1 admin-rcdo Gherkin scenarios; Phase 2 extends
@@ -52,65 +53,121 @@ export function RcdoTreeEditor() {
     }
   };
 
-  if (isLoading) return <p style={style.muted}>Loading RCDO tree…</p>;
-  if (error) return <p style={style.error}>Failed to load RCDO tree.</p>;
+  if (isLoading) {
+    return (
+      <p className="mx-auto max-w-6xl p-6 text-sm text-(--color-shell-muted)">Loading RCDO tree…</p>
+    );
+  }
+  if (error) {
+    return (
+      <p className="mx-auto max-w-6xl p-6 text-sm text-(--color-shell-error)">
+        Failed to load RCDO tree.
+      </p>
+    );
+  }
 
-  const tree = data ?? { rallyCries: [] };
+  const tree: RcdoTreeDto = data ?? { rallyCries: [] };
 
   return (
-    <section style={style.root} data-testid="rcdo-tree-editor">
-      <header style={style.header}>
-        <h1 style={style.h1}>RCDO Authoring</h1>
-        <p style={style.muted}>Rally Cry → Defining Objective → Outcome → Supporting Outcome.</p>
+    <section className="mx-auto max-w-6xl space-y-6 p-6" data-testid="rcdo-tree-editor">
+      <header>
+        <h1 className="text-xl font-semibold text-(--color-shell-text)">RCDO Authoring</h1>
+        <p className="mt-1 text-sm text-(--color-shell-muted)">
+          Rally Cry → Defining Objective → Outcome → Supporting Outcome.
+        </p>
       </header>
 
-      <div style={style.composer}>
+      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-(--color-panel-border) bg-(--color-panel-bg) p-4">
         <input
           type="text"
           placeholder="New Rally Cry title (min 5 chars)"
           value={draftTitle}
           onChange={(e) => setDraftTitle(e.target.value)}
-          style={style.input}
           aria-label="New Rally Cry title"
           data-testid="new-rally-cry-input"
+          className="grow rounded-md border border-(--color-panel-border) bg-(--color-shell-bg) px-3 py-2 text-sm text-(--color-shell-text) placeholder:text-(--color-shell-muted)"
         />
         <button
           type="button"
           onClick={handleCreate}
           disabled={createState.isLoading}
-          style={style.primaryBtn}
           data-testid="create-rally-cry"
+          className="rounded-md bg-(--color-shell-text) px-4 py-2 text-sm font-medium text-(--color-shell-bg) hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {createState.isLoading ? 'Creating…' : 'Add Rally Cry'}
         </button>
       </div>
       {conflictMessage && (
-        <p style={style.error} role="alert" data-testid="rcdo-error">
+        <p
+          role="alert"
+          data-testid="rcdo-error"
+          className="rounded-md border border-(--color-ribbon-high-bg) bg-(--color-ribbon-high-bg) px-3 py-2 text-xs text-(--color-ribbon-high-fg)"
+        >
           {conflictMessage}
         </p>
       )}
 
       {tree.rallyCries.length === 0 ? (
-        <p style={style.muted} data-testid="rcdo-empty">
+        <p
+          data-testid="rcdo-empty"
+          className="rounded-md border border-dashed border-(--color-panel-border) bg-(--color-panel-bg) p-6 text-center text-sm text-(--color-panel-muted)"
+        >
           No Rally Cries yet. Author your first one above.
         </p>
       ) : (
-        <ul style={style.tree} data-testid="rcdo-tree-list">
+        <ul
+          data-testid="rcdo-tree-list"
+          className="divide-y divide-(--color-panel-border) overflow-hidden rounded-lg border border-(--color-panel-border) bg-(--color-panel-bg)"
+        >
           {tree.rallyCries.map((rc) => (
-            <li key={rc.id} style={style.rcRow}>
-              <span style={style.rcTitle}>{rc.title}</span>
-              <span style={style.muted}>
-                {rc.definingObjectives.length} Defining Objective
-                {rc.definingObjectives.length === 1 ? '' : 's'}
-              </span>
-              <button
-                type="button"
-                onClick={() => handleArchive(rc.id)}
-                style={style.ghostBtn}
-                data-testid={`archive-rc-${rc.id}`}
-              >
-                Archive
-              </button>
+            <li key={rc.id} className="space-y-2 px-5 py-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-base font-semibold text-(--color-panel-heading)">
+                  {rc.title}
+                </span>
+                <span className="text-xs text-(--color-panel-muted)">
+                  {rc.definingObjectives.length} Defining Objective
+                  {rc.definingObjectives.length === 1 ? '' : 's'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleArchive(rc.id)}
+                  data-testid={`archive-rc-${rc.id}`}
+                  className="ml-auto rounded-md border border-(--color-panel-border) bg-transparent px-3 py-1 text-xs font-medium text-(--color-panel-cell) hover:bg-(--color-skeleton-bg)"
+                >
+                  Archive
+                </button>
+              </div>
+              {rc.definingObjectives.length > 0 && (
+                <ul className="space-y-1.5 border-l border-(--color-panel-border) pl-4">
+                  {rc.definingObjectives.map((defo) => (
+                    <li key={defo.id} className="space-y-1.5">
+                      <p className="text-sm text-(--color-panel-cell)">{defo.title}</p>
+                      {defo.outcomes.length > 0 && (
+                        <ul className="space-y-1 border-l border-(--color-panel-border) pl-4">
+                          {defo.outcomes.map((o) => (
+                            <li key={o.id} className="space-y-1">
+                              <p className="text-xs text-(--color-panel-muted)">{o.title}</p>
+                              {o.supportingOutcomes.length > 0 && (
+                                <ul className="space-y-1 border-l border-dashed border-(--color-panel-border) pl-4">
+                                  {o.supportingOutcomes.map((so) => (
+                                    <li
+                                      key={so.id}
+                                      className="text-[11px] text-(--color-panel-muted)"
+                                    >
+                                      {so.title}
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </li>
           ))}
         </ul>
@@ -118,46 +175,3 @@ export function RcdoTreeEditor() {
     </section>
   );
 }
-
-const style: Record<string, React.CSSProperties> = {
-  root: { padding: 32, fontFamily: 'system-ui, sans-serif', maxWidth: 960, margin: '0 auto' },
-  header: { marginBottom: 16 },
-  h1: { fontSize: 22, margin: 0 },
-  muted: { color: '#6b7280', fontSize: 13 },
-  error: { color: '#b91c1c', fontSize: 13 },
-  composer: { display: 'flex', gap: 8, alignItems: 'center', margin: '12px 0' },
-  input: {
-    flex: 1,
-    border: '1px solid #d1d5db',
-    borderRadius: 6,
-    padding: '8px 10px',
-    fontSize: 14,
-  },
-  primaryBtn: {
-    background: '#0f172a',
-    color: '#fff',
-    border: 'none',
-    borderRadius: 6,
-    padding: '8px 14px',
-    cursor: 'pointer',
-    fontSize: 14,
-  },
-  ghostBtn: {
-    background: 'transparent',
-    color: '#374151',
-    border: '1px solid #d1d5db',
-    borderRadius: 6,
-    padding: '4px 10px',
-    cursor: 'pointer',
-    fontSize: 12,
-  },
-  tree: { listStyle: 'none', padding: 0, margin: 0, borderTop: '1px solid #e5e7eb' },
-  rcRow: {
-    display: 'flex',
-    gap: 12,
-    alignItems: 'center',
-    padding: '12px 4px',
-    borderBottom: '1px solid #e5e7eb',
-  },
-  rcTitle: { fontSize: 15, fontWeight: 500, flex: 1 },
-};

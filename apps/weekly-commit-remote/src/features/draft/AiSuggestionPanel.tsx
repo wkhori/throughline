@@ -56,7 +56,10 @@ export function AiSuggestionPanel({
   if (dismissed || isError) return null;
   if (isLoading) {
     return (
-      <p data-testid="ai-suggestion-loading" className="mt-2 text-xs italic text-(--commit-muted)">
+      <p
+        data-testid="ai-suggestion-loading"
+        className="mt-2 text-xs italic text-(--color-commit-muted)"
+      >
         Looking for a likely outcome…
       </p>
     );
@@ -69,21 +72,21 @@ export function AiSuggestionPanel({
     <aside
       role="status"
       data-testid="ai-suggestion-panel"
-      className="mt-2 rounded-md border border-(--commit-border) bg-(--commit-bg) p-2 text-xs"
+      className="mt-2 rounded-md border border-(--color-commit-border) bg-(--color-commit-bg) p-3 text-xs"
     >
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="font-medium text-(--commit-text)">
+          <p className="font-medium text-(--color-commit-text)">
             Likely outcome: <span data-testid="ai-suggestion-title">{candidate.title}</span>
           </p>
-          <p className="mt-0.5 text-(--commit-muted)">{payload.rationale}</p>
+          <p className="mt-0.5 text-(--color-commit-muted)">{payload.rationale}</p>
         </div>
         <div className="flex items-center gap-1">
           <button
             type="button"
             data-testid="ai-suggestion-accept"
             onClick={() => onAccept?.(candidate.supportingOutcomeId)}
-            className="rounded border border-(--commit-border) px-2 py-0.5 text-xs hover:border-(--commit-border-hover)"
+            className="rounded-md border border-(--color-commit-border) bg-(--color-shell-bg) px-2 py-0.5 text-xs font-medium text-(--color-commit-text) hover:border-(--color-ribbon-link)"
           >
             Use this
           </button>
@@ -91,7 +94,7 @@ export function AiSuggestionPanel({
             type="button"
             data-testid="ai-suggestion-dismiss"
             onClick={() => setDismissed(true)}
-            className="text-(--commit-muted) hover:text-(--commit-text)"
+            className="text-(--color-commit-muted) hover:text-(--color-commit-text)"
             aria-label="Dismiss suggestion"
           >
             ×

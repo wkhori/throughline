@@ -88,3 +88,58 @@ body {
   outline-offset: 2px;
   border-radius: 4px;
 }
+
+/* Persona switcher (demo bar) — dark surface above the app, restrained. */
+.persona-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: oklch(0.18 0.015 250);
+  color: oklch(0.92 0.005 250);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  border-bottom: 1px solid oklch(0.28 0.015 250);
+}
+.persona-bar-label {
+  opacity: 0.65;
+  margin-right: 8px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-size: 11px;
+}
+.persona-btn,
+.persona-btn-ghost {
+  font-family: inherit;
+  font-size: 13px;
+  border-radius: 5px;
+  padding: 5px 11px;
+  cursor: pointer;
+  transition: background 160ms var(--ease-snap), border-color 160ms var(--ease-snap);
+}
+.persona-btn {
+  background: oklch(0.28 0.015 250);
+  color: oklch(0.95 0.005 250);
+  border: 1px solid oklch(0.36 0.015 250);
+}
+.persona-btn:hover:not(:disabled) {
+  background: oklch(0.34 0.018 250);
+  border-color: oklch(0.45 0.018 250);
+}
+.persona-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.persona-btn-ghost {
+  background: transparent;
+  color: oklch(0.78 0.01 250);
+  border: 1px solid oklch(0.32 0.015 250);
+  margin-left: auto;
+}
+.persona-btn-ghost:hover {
+  background: oklch(0.24 0.015 250);
+}
+.persona-error {
+  color: oklch(0.78 0.13 25);
+  margin-left: 12px;
+}

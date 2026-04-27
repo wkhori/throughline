@@ -51,6 +51,11 @@ throughline:
   auth0:
     audience: ${AUTH0_AUDIENCE:https://api.throughline.app}
     issuer-uri: ${AUTH0_ISSUER_URI:}
+  # Symmetric secret used by /api/v1/auth/demo-login to sign demo persona JWTs (HS256).
+  # Must be ≥32 chars in production. When unset (local dev), the endpoint returns 503 and the
+  # PersonaSwitcher falls back to the legacy literal mock.* tokens accepted by MockJwtDecoder.
+  demo:
+    jwt-secret: ${THROUGHLINE_DEMO_JWT_SECRET:}
   org:
     timezone: ${ORG_TIMEZONE:America/New_York}
 

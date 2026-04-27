@@ -5,3 +5,4 @@ export * from './store/createBaseApi.js';
 export * from './hooks/useAuthToken.js';
 export * from './hooks/useApiBaseUrl.js';
 export * from './components/InsightDrillDown/InsightDrillDown.js';
+export * from './components/Logo/Logo.js';

@@ -1,7 +1,4 @@
-import {
-  useGetTeamRollupQuery,
-  type RibbonEntry,
-} from '../../api/managerEndpoints.js';
+import { useGetTeamRollupQuery, type RibbonEntry } from '../../api/managerEndpoints.js';
 import { DigestHero } from './DigestHero.js';
 import { ExceptionRibbon } from './ExceptionRibbon.js';
 import { TeamMemberTable } from './TeamMemberTable.js';
@@ -21,14 +18,14 @@ export function ManagerDashboard({ onSelectTeam }: ManagerDashboardProps) {
 
   if (rollup.isLoading) {
     return (
-      <section data-testid="manager-dashboard-loading" className="space-y-4 p-6">
+      <section data-testid="manager-dashboard-loading" className="mx-auto max-w-6xl space-y-4 p-6">
         <div
           data-testid="manager-skeleton-hero"
-          className="h-32 animate-pulse rounded-md bg-(--skeleton-bg)"
+          className="h-32 animate-pulse rounded-lg bg-(--color-skeleton-bg)"
         />
         <div
           data-testid="manager-skeleton-table"
-          className="h-64 animate-pulse rounded-md bg-(--skeleton-bg)"
+          className="h-64 animate-pulse rounded-lg bg-(--color-skeleton-bg)"
         />
       </section>
     );
@@ -36,7 +33,7 @@ export function ManagerDashboard({ onSelectTeam }: ManagerDashboardProps) {
 
   if (rollup.error) {
     return (
-      <p data-testid="manager-dashboard-error" className="p-6 text-sm text-(--shell-error)">
+      <p data-testid="manager-dashboard-error" className="p-6 text-sm text-(--color-shell-error)">
         Could not load the manager dashboard.
       </p>
     );
@@ -74,29 +71,29 @@ export function ManagerDashboard({ onSelectTeam }: ManagerDashboardProps) {
   }));
 
   return (
-    <section data-testid="manager-dashboard" className="space-y-6 p-6">
+    <section data-testid="manager-dashboard" className="mx-auto max-w-6xl space-y-8 p-6">
       <DigestHero />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <article
           data-testid="starved-outcomes-panel"
-          className="space-y-2 rounded-md border border-(--panel-border) bg-(--panel-bg) p-4"
+          className="space-y-3 rounded-lg border border-(--color-panel-border) bg-(--color-panel-bg) p-5"
         >
-          <h2 className="text-sm font-semibold text-(--panel-heading)">Starved outcomes</h2>
+          <h2 className="text-sm font-semibold text-(--color-panel-heading)">Starved outcomes</h2>
           {starvedList.length === 0 ? (
-            <p className="text-xs text-(--panel-muted)">No starved outcomes detected.</p>
+            <p className="text-xs text-(--color-panel-muted)">No starved outcomes detected.</p>
           ) : (
-            <ul className="space-y-1 text-sm">
+            <ul className="space-y-2 text-sm">
               {starvedList.map((s) => (
                 <li
                   key={s.outcomeId}
                   data-testid="starved-outcome-row"
-                  className="flex items-center justify-between text-(--panel-cell)"
+                  className="flex items-center justify-between gap-3 text-(--color-panel-cell)"
                 >
-                  <span>{s.title}</span>
+                  <span className="truncate">{s.title}</span>
                   <span
                     data-testid="starved-outcome-badge"
-                    className="rounded-sm bg-(--badge-bg) px-1.5 py-0.5 text-xs text-(--badge-fg)"
+                    className="shrink-0 rounded-sm bg-(--color-ribbon-medium-bg) px-1.5 py-0.5 text-xs font-medium text-(--color-ribbon-medium-fg)"
                   >
                     starved {s.weeks} weeks
                   </span>
@@ -108,22 +105,24 @@ export function ManagerDashboard({ onSelectTeam }: ManagerDashboardProps) {
 
         <article
           data-testid="drift-exceptions-panel"
-          className="space-y-2 rounded-md border border-(--panel-border) bg-(--panel-bg) p-4"
+          className="space-y-3 rounded-lg border border-(--color-panel-border) bg-(--color-panel-bg) p-5"
         >
-          <h2 className="text-sm font-semibold text-(--panel-heading)">Priority drift</h2>
+          <h2 className="text-sm font-semibold text-(--color-panel-heading)">Priority drift</h2>
           {driftEntries.length === 0 ? (
-            <p className="text-xs text-(--panel-muted)">All teams within their priority bands.</p>
+            <p className="text-xs text-(--color-panel-muted)">
+              All teams within their priority bands.
+            </p>
           ) : (
-            <ul className="space-y-1 text-sm">
+            <ul className="space-y-2 text-sm">
               {driftEntries.map((d, i) => (
                 <li
                   key={`${d.team}-${d.title}-${i}`}
                   data-testid="drift-exception-row"
-                  className="text-(--panel-cell)"
+                  className="text-(--color-panel-cell)"
                 >
-                  <span className="font-medium">{d.team}</span> · {d.title} — observed{' '}
-                  {(d.observed * 100).toFixed(0)}% (expected {(d.low * 100).toFixed(0)}–
-                  {(d.high * 100).toFixed(0)}%)
+                  <span className="font-medium text-(--color-panel-heading)">{d.team}</span> ·{' '}
+                  {d.title} — observed {(d.observed * 100).toFixed(0)}% (expected{' '}
+                  {(d.low * 100).toFixed(0)}–{(d.high * 100).toFixed(0)}%)
                 </li>
               ))}
             </ul>

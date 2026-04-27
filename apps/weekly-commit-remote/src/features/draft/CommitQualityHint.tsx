@@ -59,7 +59,7 @@ export function CommitQualityHint({
     <p
       role="note"
       data-testid="quality-hint"
-      className="mt-1 flex items-start gap-2 text-xs text-(--commit-muted)"
+      className="mt-1 flex items-start gap-2 text-xs text-(--color-commit-muted)"
     >
       <span aria-hidden>•</span>
       <span className="flex-1">
@@ -68,7 +68,7 @@ export function CommitQualityHint({
           type="button"
           data-testid="quality-hint-dismiss"
           onClick={() => setDismissed(true)}
-          className="underline hover:text-(--commit-text)"
+          className="underline hover:text-(--color-commit-text)"
         >
           dismiss
         </button>

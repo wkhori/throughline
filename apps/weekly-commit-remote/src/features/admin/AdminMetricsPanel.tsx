@@ -10,14 +10,23 @@ export function AdminMetricsPanel() {
 
   if (isLoading) {
     return (
-      <p data-testid="metrics-loading" className="p-4 text-sm text-(--panel-muted)">
-        Loading metrics…
-      </p>
+      <section
+        data-testid="metrics-loading"
+        aria-label="Loading org metrics"
+        className="mx-auto grid max-w-6xl grid-cols-1 gap-4 p-6 sm:grid-cols-2 lg:grid-cols-3"
+      >
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div
+            key={i}
+            className="h-24 animate-pulse rounded-lg border border-(--color-panel-border) bg-(--color-skeleton-bg)"
+          />
+        ))}
+      </section>
     );
   }
   if (error || !data) {
     return (
-      <p data-testid="metrics-error" className="p-4 text-sm text-(--shell-error)">
+      <p data-testid="metrics-error" className="p-6 text-sm text-(--color-shell-error)">
         Could not load org metrics.
       </p>
     );
@@ -60,19 +69,21 @@ export function AdminMetricsPanel() {
     <section
       data-testid="admin-metrics-panel"
       aria-label="Org metrics"
-      className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3"
+      className="mx-auto grid max-w-6xl grid-cols-1 gap-4 p-6 sm:grid-cols-2 lg:grid-cols-3"
     >
       {cards.map((card) => (
         <article
           key={card.id}
           data-testid={`metric-card-${card.id}`}
-          className="rounded-md border border-(--panel-border) bg-(--panel-bg) p-3"
+          className="rounded-lg border border-(--color-panel-border) bg-(--color-panel-bg) p-5"
         >
-          <p className="text-xs font-medium uppercase tracking-wide text-(--panel-muted)">
+          <p className="text-xs font-medium uppercase tracking-wide text-(--color-panel-muted)">
             {card.label}
           </p>
-          <p className="mt-1 text-xl font-semibold text-(--panel-heading)">{card.value}</p>
-          <p className="mt-1 text-xs text-(--panel-muted)">{card.help}</p>
+          <p className="mt-2 text-2xl font-semibold tabular-nums text-(--color-panel-heading)">
+            {card.value}
+          </p>
+          <p className="mt-2 text-xs leading-relaxed text-(--color-panel-muted)">{card.help}</p>
         </article>
       ))}
     </section>

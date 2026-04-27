@@ -1,0 +1,22 @@
+{
+  "name": "marketing-video",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/marketing-video/src",
+  "projectType": "application",
+  "targets": {
+    "render": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "yarn render",
+        "cwd": "apps/marketing-video"
+      }
+    },
+    "studio": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "yarn studio",
+        "cwd": "apps/marketing-video"
+      }
+    }
+  }
+}

@@ -1,6 +1,7 @@
 import { lazy, Suspense, type ReactNode } from 'react';
 import { useSelector } from 'react-redux';
 import { selectHasRole, selectMe } from '@throughline/shared-ui';
+import type { MeDto } from '@throughline/shared-types';
 import { AdminMetricsPanel } from './features/admin/AdminMetricsPanel.js';
 import { RcdoTreeEditor } from './features/admin/RcdoTreeEditor.js';
 
@@ -21,16 +22,24 @@ export function WeeklyCommitApp(): ReactNode {
 
   if (!me) {
     return (
-      <section style={style.gate} data-testid="signed-out">
-        <h2 style={style.h2}>Sign in to continue</h2>
-        <p style={style.muted}>Pick a demo persona above (stub mode) or sign in via Auth0.</p>
-      </section>
+      <main className="grid min-h-[60vh] place-items-center bg-(--color-shell-bg) p-8">
+        <section
+          data-testid="signed-out"
+          className="w-full max-w-md rounded-lg border border-(--color-panel-border) bg-(--color-panel-bg) p-8 text-center shadow-sm"
+        >
+          <h2 className="text-lg font-semibold text-(--color-shell-text)">Sign in to continue</h2>
+          <p className="mt-2 text-sm text-(--color-shell-muted)">
+            Pick a demo persona above (stub mode) or sign in via Auth0.
+          </p>
+        </section>
+      </main>
     );
   }
 
   if (isAdmin) {
     return (
-      <div data-testid="admin-shell">
+      <div data-testid="admin-shell" className="bg-(--color-shell-bg)">
+        <RoleHeader me={me} role="ADMIN" />
         <AdminMetricsPanel />
         <RcdoTreeEditor />
       </div>
@@ -39,35 +48,64 @@ export function WeeklyCommitApp(): ReactNode {
 
   if (isManager) {
     return (
-      <Suspense
-        fallback={
-          <p data-testid="manager-shell-fallback" style={style.muted}>
-            Loading manager dashboard…
-          </p>
-        }
-      >
-        <ManagerDashboard />
-      </Suspense>
+      <div className="bg-(--color-shell-bg)">
+        <RoleHeader me={me} role="MANAGER" />
+        <Suspense
+          fallback={
+            <p
+              data-testid="manager-shell-fallback"
+              className="p-6 text-sm text-(--color-shell-muted)"
+            >
+              Loading manager dashboard…
+            </p>
+          }
+        >
+          <ManagerDashboard />
+        </Suspense>
+      </div>
     );
   }
 
   return (
-    <Suspense
-      fallback={
-        <p data-testid="week-shell-fallback" style={style.muted}>
-          Loading week…
-        </p>
-      }
-    >
-      <WeekShell />
-    </Suspense>
+    <div className="bg-(--color-shell-bg)">
+      <RoleHeader me={me} role="IC" />
+      <Suspense
+        fallback={
+          <p data-testid="week-shell-fallback" className="p-6 text-sm text-(--color-shell-muted)">
+            Loading week…
+          </p>
+        }
+      >
+        <WeekShell />
+      </Suspense>
+    </div>
   );
 }
 
-const style: Record<string, React.CSSProperties> = {
-  gate: { padding: 32, fontFamily: 'system-ui, sans-serif', color: '#374151' },
-  h2: { margin: 0, fontSize: 18 },
-  muted: { color: '#6b7280', fontSize: 13, marginTop: 8 },
-};
+interface RoleHeaderProps {
+  me: MeDto;
+  role: 'IC' | 'MANAGER' | 'ADMIN';
+}
+
+// Slim shell bar under the persona switcher. Shows current role + identity at top-right so the
+// reviewer can tell at a glance which persona's view is being rendered.
+function RoleHeader({ me, role }: RoleHeaderProps): ReactNode {
+  return (
+    <header
+      data-testid="role-header"
+      className="flex items-center justify-between border-b border-(--color-panel-border) bg-(--color-panel-bg) px-6 py-2.5 text-xs text-(--color-shell-muted)"
+    >
+      <span className="font-semibold uppercase tracking-wide text-(--color-shell-text)">
+        Throughline · Weekly Commit
+      </span>
+      <span className="flex items-center gap-2">
+        <span className="rounded-sm bg-(--color-badge-bg) px-1.5 py-0.5 font-medium text-(--color-badge-fg)">
+          {role}
+        </span>
+        <span className="text-(--color-shell-muted)">{me.email}</span>
+      </span>
+    </header>
+  );
+}
 
 export default WeeklyCommitApp;
