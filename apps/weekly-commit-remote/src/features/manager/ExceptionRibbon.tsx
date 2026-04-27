@@ -1,8 +1,5 @@
 import { useState } from 'react';
-import {
-  useAckAlignmentRiskMutation,
-  type RibbonEntry,
-} from '../../api/managerEndpoints.js';
+import { useAckAlignmentRiskMutation, type RibbonEntry } from '../../api/managerEndpoints.js';
 
 interface ExceptionRibbonProps {
   items: RibbonEntry[];
@@ -10,9 +7,9 @@ interface ExceptionRibbonProps {
 }
 
 const SEVERITY_CLASS: Record<string, string> = {
-  HIGH: 'bg-(--ribbon-high-bg) text-(--ribbon-high-fg)',
-  MEDIUM: 'bg-(--ribbon-medium-bg) text-(--ribbon-medium-fg)',
-  LOW: 'bg-(--ribbon-low-bg) text-(--ribbon-low-fg)',
+  HIGH: 'bg-(--color-ribbon-high-bg) text-(--color-ribbon-high-fg)',
+  MEDIUM: 'bg-(--color-ribbon-medium-bg) text-(--color-ribbon-medium-fg)',
+  LOW: 'bg-(--color-ribbon-low-bg) text-(--color-ribbon-low-fg)',
 };
 
 export function ExceptionRibbon({ items, onDrillDown }: ExceptionRibbonProps) {
@@ -39,11 +36,11 @@ export function ExceptionRibbon({ items, onDrillDown }: ExceptionRibbonProps) {
   };
 
   return (
-    <section data-testid="exception-ribbon" aria-label="Exception ribbon" className="space-y-2">
-      <h2 className="text-xs font-semibold uppercase tracking-wide text-(--ribbon-heading)">
+    <section data-testid="exception-ribbon" aria-label="Exception ribbon" className="space-y-3">
+      <h2 className="text-xs font-semibold uppercase tracking-wide text-(--color-ribbon-heading)">
         Exceptions worth your attention
       </h2>
-      <ul className="space-y-1">
+      <ul className="space-y-2">
         {items.map((entry, idx) => {
           const riskId = entry.alignmentRiskId;
           const ackError = riskId ? errorIds[riskId] : undefined;
@@ -52,24 +49,24 @@ export function ExceptionRibbon({ items, onDrillDown }: ExceptionRibbonProps) {
             <li
               key={`${entry.kind}-${entry.entityId}-${idx}`}
               data-testid="ribbon-item"
-              className="flex flex-col gap-1 rounded-md border border-(--ribbon-border) bg-(--ribbon-bg) px-3 py-2 text-sm"
+              className="flex flex-col gap-1.5 rounded-md border border-(--color-ribbon-border) bg-(--color-ribbon-bg) px-4 py-3 text-sm"
             >
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <span
-                  className={`inline-flex items-center rounded-sm px-1.5 py-0.5 text-xs font-medium ${
+                  className={`inline-flex items-center rounded-sm px-2 py-0.5 text-xs font-semibold uppercase tracking-wide ${
                     SEVERITY_CLASS[entry.severity] ?? ''
                   }`}
                   data-testid="ribbon-severity"
                 >
                   {entry.severity}
                 </span>
-                <span className="grow text-(--ribbon-label)">{entry.label}</span>
+                <span className="grow text-(--color-ribbon-label)">{entry.label}</span>
                 {onDrillDown ? (
                   <button
                     type="button"
                     onClick={() => onDrillDown(entry)}
                     data-testid="ribbon-drilldown"
-                    className="text-xs text-(--ribbon-link) hover:underline"
+                    className="text-xs font-medium text-(--color-ribbon-link) hover:underline"
                   >
                     Drill in →
                   </button>
@@ -81,7 +78,7 @@ export function ExceptionRibbon({ items, onDrillDown }: ExceptionRibbonProps) {
                     disabled={ackInFlight}
                     data-testid="ribbon-ack"
                     aria-label="Acknowledge alignment risk"
-                    className="text-xs text-(--ribbon-link) hover:underline disabled:opacity-50"
+                    className="text-xs font-medium text-(--color-ribbon-link) hover:underline disabled:opacity-50"
                   >
                     {ackInFlight ? 'Acking…' : 'Ack'}
                   </button>
@@ -91,7 +88,7 @@ export function ExceptionRibbon({ items, onDrillDown }: ExceptionRibbonProps) {
                 <p
                   data-testid="ribbon-ack-error"
                   role="alert"
-                  className="text-xs text-(--shell-error)"
+                  className="text-xs text-(--color-shell-error)"
                 >
                   {ackError}
                 </p>

@@ -60,12 +60,12 @@ export function CommitForm({
     <form
       onSubmit={handle}
       data-testid="commit-form"
-      className="space-y-3 rounded-md border border-(--form-border) bg-(--form-bg) p-4"
+      className="space-y-4 rounded-lg border border-(--color-panel-border) bg-(--color-panel-bg) p-5"
     >
       <div>
         <label
           htmlFor="commit-text"
-          className="mb-1 block text-xs font-semibold uppercase text-(--form-label)"
+          className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-(--color-shell-muted)"
         >
           Commit
         </label>
@@ -76,14 +76,14 @@ export function CommitForm({
           maxLength={280}
           placeholder="A specific, ship-able commitment for the week"
           onChange={(e) => setText(e.target.value)}
-          className="w-full rounded-md border border-(--form-input-border) bg-(--form-input-bg) px-3 py-2 text-sm"
+          className="w-full rounded-md border border-(--color-panel-border) bg-(--color-shell-bg) px-3 py-2 text-sm text-(--color-shell-text) placeholder:text-(--color-shell-muted) focus:outline-none"
           data-testid="commit-text-input"
         />
-        <p className="mt-1 text-xs text-(--form-help)" data-testid="commit-text-counter">
+        <p className="mt-1.5 text-xs text-(--color-shell-muted)" data-testid="commit-text-counter">
           {text.length}/280
         </p>
       </div>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <SelectField
           id="commit-so"
           label="Supporting Outcome"
@@ -118,7 +118,11 @@ export function CommitForm({
         />
       </div>
       {serverError && (
-        <p role="alert" className="text-xs text-(--form-error)" data-testid="commit-form-error">
+        <p
+          role="alert"
+          className="text-xs text-(--color-shell-error)"
+          data-testid="commit-form-error"
+        >
           {serverError}
         </p>
       )}
@@ -127,7 +131,7 @@ export function CommitForm({
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-md border border-(--form-input-border) px-3 py-1 text-xs"
+            className="rounded-md border border-(--color-panel-border) bg-transparent px-3 py-1.5 text-xs font-medium text-(--color-panel-cell) hover:bg-(--color-skeleton-bg)"
           >
             Cancel
           </button>
@@ -136,7 +140,7 @@ export function CommitForm({
           type="submit"
           disabled={disabled}
           data-testid="commit-form-submit"
-          className="rounded-md bg-(--form-primary-bg) px-3 py-1 text-xs font-medium text-(--form-primary-fg) disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-md bg-(--color-shell-text) px-3 py-1.5 text-xs font-medium text-(--color-shell-bg) transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {submitting ? 'Saving…' : initial ? 'Update' : 'Add commit'}
         </button>
@@ -164,7 +168,7 @@ function SelectField({ id, label, value, onChange, options, testId }: SelectFiel
     <div>
       <label
         htmlFor={id}
-        className="mb-1 block text-xs font-semibold uppercase text-(--form-label)"
+        className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-(--color-shell-muted)"
       >
         {label}
       </label>
@@ -172,7 +176,7 @@ function SelectField({ id, label, value, onChange, options, testId }: SelectFiel
         id={id}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-md border border-(--form-input-border) bg-(--form-input-bg) px-3 py-2 text-sm"
+        className="w-full rounded-md border border-(--color-panel-border) bg-(--color-shell-bg) px-3 py-2 text-sm text-(--color-shell-text)"
         data-testid={testId}
       >
         <option value="">Select…</option>

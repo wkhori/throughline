@@ -50,14 +50,14 @@ export function ChessMatrix({ commits, rcdo, weekState, onEditCommit }: ChessMat
       aria-label="Commit chess matrix: category by priority"
       data-testid="chess-matrix"
       onKeyDown={onKey}
-      className="grid grid-cols-[120px_repeat(3,1fr)] gap-2 text-sm"
+      className="grid grid-cols-[140px_repeat(3,1fr)] gap-3 text-sm"
     >
       <div />
       {PRIORITIES.map((p) => (
         <div
           key={p}
           role="columnheader"
-          className="text-[11px] font-semibold uppercase tracking-wide text-(--matrix-header)"
+          className="text-[11px] font-semibold uppercase tracking-wide text-(--color-panel-muted)"
         >
           {p}
         </div>
@@ -107,7 +107,7 @@ function RowFragment({
     <>
       <div
         role="rowheader"
-        className="text-[11px] font-semibold uppercase tracking-wide text-(--matrix-header)"
+        className="flex items-center text-[11px] font-semibold uppercase tracking-wide text-(--color-panel-muted)"
       >
         {category}
       </div>
@@ -127,12 +127,12 @@ function RowFragment({
             }}
             onFocus={() => setFocused({ r: row, c })}
             className={
-              'min-h-24 rounded-md border bg-(--matrix-cell-bg) p-2 ' +
-              (isFocused ? 'border-(--matrix-cell-focus)' : 'border-(--matrix-cell-border)')
+              'min-h-28 rounded-md border bg-(--color-panel-bg) p-3 transition-colors ' +
+              (isFocused ? 'border-(--color-ribbon-link)' : 'border-(--color-panel-border)')
             }
           >
             {inCell.length === 0 ? (
-              <p className="text-xs text-(--matrix-cell-empty)" aria-hidden>
+              <p className="text-xs text-(--color-shell-muted)" aria-hidden>
                 —
               </p>
             ) : (

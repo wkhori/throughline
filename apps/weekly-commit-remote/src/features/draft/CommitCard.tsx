@@ -13,8 +13,8 @@ export function CommitCard({ commit, rcdo, weekState, onEdit }: CommitCardProps)
   const breadcrumb = findSoBreadcrumb(rcdo, commit.supportingOutcomeId);
   const interactive = weekState === 'DRAFT' && !!onEdit;
   const className = interactive
-    ? 'cursor-pointer rounded-md border border-(--commit-border) bg-(--commit-bg) p-3 hover:border-(--commit-border-hover)'
-    : 'rounded-md border border-(--commit-border) bg-(--commit-bg) p-3';
+    ? 'cursor-pointer rounded-md border border-(--color-commit-border) bg-(--color-commit-bg) p-3 transition-colors hover:border-(--color-ribbon-link)'
+    : 'rounded-md border border-(--color-commit-border) bg-(--color-commit-bg) p-3';
   return (
     <article
       data-testid="commit-card"
@@ -34,19 +34,29 @@ export function CommitCard({ commit, rcdo, weekState, onEdit }: CommitCardProps)
       }
       className={className}
     >
-      <p className="text-sm font-medium text-(--commit-text)">{commit.text}</p>
+      <p className="text-sm font-medium text-(--color-commit-text)">{commit.text}</p>
       {breadcrumb ? (
-        <p className="mt-1 text-xs text-(--commit-muted)" data-testid="commit-breadcrumb">
+        <p className="mt-1 text-xs text-(--color-commit-muted)" data-testid="commit-breadcrumb">
           {breadcrumb}
         </p>
       ) : (
-        <p className="mt-1 text-xs italic text-(--commit-warn)" data-testid="commit-no-so">
+        <p className="mt-1 text-xs italic text-(--color-shell-error)" data-testid="commit-no-so">
           No Supporting Outcome — required to lock
         </p>
       )}
-      <div className="mt-2 flex gap-2 text-[11px] uppercase tracking-wide text-(--commit-muted)">
-        <span data-testid="commit-category">{commit.category}</span>
-        <span data-testid="commit-priority">{commit.priority}</span>
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        <span
+          data-testid="commit-category"
+          className="rounded-sm bg-(--color-badge-bg) px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-(--color-badge-fg)"
+        >
+          {commit.category}
+        </span>
+        <span
+          data-testid="commit-priority"
+          className="rounded-sm bg-(--color-badge-bg) px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-(--color-badge-fg)"
+        >
+          {commit.priority}
+        </span>
       </div>
     </article>
   );

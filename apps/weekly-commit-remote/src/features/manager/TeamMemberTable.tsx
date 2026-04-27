@@ -11,55 +11,60 @@ interface TeamMemberTableProps {
 export function TeamMemberTable({ rows, onSelectTeam }: TeamMemberTableProps) {
   if (rows.length === 0) {
     return (
-      <p data-testid="team-member-table-empty" className="text-sm text-(--table-empty)">
+      <p
+        data-testid="team-member-table-empty"
+        className="rounded-md border border-dashed border-(--color-panel-border) bg-(--color-panel-bg) p-4 text-sm text-(--color-panel-muted)"
+      >
         No teammates in scope
       </p>
     );
   }
   return (
-    <table data-testid="team-member-table" className="w-full text-sm">
-      <thead>
-        <tr className="border-b border-(--table-border) text-left text-xs uppercase tracking-wide text-(--table-head)">
-          <th scope="col" className="py-2 pr-3">
-            Team
-          </th>
-          <th scope="col" className="py-2 pr-3">
-            Members
-          </th>
-          <th scope="col" className="py-2 pr-3">
-            Done
-          </th>
-          <th scope="col" className="py-2 pr-3">
-            Partial
-          </th>
-          <th scope="col" className="py-2 pr-3">
-            Not done
-          </th>
-          <th scope="col" className="py-2 pr-3">
-            Carry-forward
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((row) => {
-          const p = row.payload;
-          return (
-            <tr
-              key={row.teamId}
-              data-testid="team-member-row"
-              onClick={() => onSelectTeam?.(row.teamId)}
-              className="cursor-pointer border-b border-(--table-row-border) hover:bg-(--table-row-hover)"
-            >
-              <td className="py-2 pr-3 font-medium text-(--table-cell)">{p.teamName}</td>
-              <td className="py-2 pr-3 text-(--table-cell-muted)">{p.memberCount}</td>
-              <td className="py-2 pr-3 text-(--table-cell)">{p.doneCount}</td>
-              <td className="py-2 pr-3 text-(--table-cell)">{p.partialCount}</td>
-              <td className="py-2 pr-3 text-(--table-cell)">{p.notDoneCount}</td>
-              <td className="py-2 pr-3 text-(--table-cell)">{p.carryForwardCount}</td>
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
+    <div className="overflow-hidden rounded-lg border border-(--color-panel-border) bg-(--color-panel-bg)">
+      <table data-testid="team-member-table" className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-(--color-panel-border) text-left text-[11px] font-semibold uppercase tracking-wide text-(--color-panel-muted)">
+            <th scope="col" className="px-4 py-3">
+              Team
+            </th>
+            <th scope="col" className="px-4 py-3">
+              Members
+            </th>
+            <th scope="col" className="px-4 py-3">
+              Done
+            </th>
+            <th scope="col" className="px-4 py-3">
+              Partial
+            </th>
+            <th scope="col" className="px-4 py-3">
+              Not done
+            </th>
+            <th scope="col" className="px-4 py-3">
+              Carry-forward
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => {
+            const p = row.payload;
+            return (
+              <tr
+                key={row.teamId}
+                data-testid="team-member-row"
+                onClick={() => onSelectTeam?.(row.teamId)}
+                className="cursor-pointer border-b border-(--color-panel-border) transition-colors last:border-0 hover:bg-(--color-skeleton-bg)"
+              >
+                <td className="px-4 py-3 font-medium text-(--color-panel-heading)">{p.teamName}</td>
+                <td className="px-4 py-3 text-(--color-panel-muted)">{p.memberCount}</td>
+                <td className="px-4 py-3 text-(--color-panel-cell)">{p.doneCount}</td>
+                <td className="px-4 py-3 text-(--color-panel-cell)">{p.partialCount}</td>
+                <td className="px-4 py-3 text-(--color-panel-cell)">{p.notDoneCount}</td>
+                <td className="px-4 py-3 text-(--color-panel-cell)">{p.carryForwardCount}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 }
