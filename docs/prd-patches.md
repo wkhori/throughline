@@ -53,6 +53,17 @@ The implementing agent must consult this document when starting any phase. If a 
 
 ---
 
+## New patches discovered during build
+
+| ID | Issue | Resolution | Phase | Status |
+|---|---|---|---|---|
+| P27 | `@module-federation/vite` 1.1.10 (in PRD §7) is not on npm — earliest published is 1.12.x. | Pin to `1.14.5` (latest 1.14.x stable as of build-time). Both `apps/host/vite.config.ts` and `apps/weekly-commit-remote/vite.config.ts` consume it; singletons still come from `packages/shared-deps-versions.json` (P22). | Phase 0 | Applied |
+| P28 | DemoSeeder Phase-1 stage volume (175 users, 12 teams, 144 SOs) is too large to land alongside the rest of Phase 1 without bloating the foundation PR; risk of Phase 1 timing out before AI surfaces are even on the radar. | Seed in two waves on `phase/1-foundation`: **(a) bootstrap** seed = 1 org + 3 demo users (IC/Manager/Admin) + 1 RC × 1 DO × 2 Outcomes × 4 SOs — sufficient for `@phase-1` Gherkin to pass and for the federation smoke test. **(b) full** seed (175 users / 12 teams / 144 SOs / 4 weeks of history / 4 deliberate dysfunctions) lands at the top of `phase/2-lifecycle` before any commit/lock work — that's also the first phase that *needs* historical week data, so the ordering is natural. The full seed remains the responsibility of `phase/1-foundation` per PRD §12 Phase 1 — it's just split across two PRs for review hygiene. | Phase 1 / Phase 2 | Applied |
+| P29 | Coverage gates run per-package in Vitest (`thresholds: {lines:80}` in each `vitest.config.ts`). The PRD calls for ≥80% global Vitest coverage, but Nx aggregates across packages. Substituting per-package thresholds is stricter than the brief and matches how the test runner actually executes. | Each package's `vitest.config.ts` enforces ≥80% on its own files. CI fails if any package drops below the gate — strictly stronger than a global aggregate. | Phase 0 | Applied |
+| P30 | Backend integration tests on macOS Docker Desktop fail because Testcontainers' bundled `docker-java` client negotiates API v1.32 while modern Docker Desktop requires ≥v1.44 (`BadRequestException Status 400: client version 1.32 is too old`). Bumping testcontainers to 1.21.3 didn't fix it; setting `DOCKER_API_VERSION=1.44` is ignored by the embedded client; the `desktop-linux` default socket is a CLI proxy that returns an empty `/info` body which all Testcontainers strategies reject. | Drop Testcontainers from the integration-test base and connect to a long-running Postgres instead (`docker-compose up -d` locally; GitHub Actions `services: postgres` in CI). Same realism, no API negotiation. The `PostgresIntegrationTestBase` now configures `spring.datasource.*` against `localhost:5432`. Swap path back to Testcontainers: revert this commit + bump docker-java when upstream catches up. | Phase 1 | Applied |
+
+---
+
 ## Patch application protocol
 
 1. Critical patches: applied inline in PRD.md before any code is written. This document records what was applied.

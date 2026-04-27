@@ -1,0 +1,8 @@
+spring:
+  jpa:
+    show-sql: false
+
+throughline:
+  seed:
+    # CommandLineRunner DemoSeeder activates only on this profile (Phase 1 stage).
+    enabled: true

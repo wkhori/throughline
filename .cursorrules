@@ -1,0 +1,5 @@
+Read CLAUDE.md before any work in this repo. CLAUDE.md is the canonical
+operating manual; it defines the methodology (the Rule, manager-burden
+reframe, RCDO-graph differentiation), the lifecycle, the AI surface, and
+required reading. Never deviate from a decision without updating
+docs/architecture-decisions.md first.

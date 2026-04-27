@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "exactOptionalPropertyTypes": false,
+    "useDefineForClassFields": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "@throughline/shared-ui": ["packages/shared-ui/src/index.ts"],
+      "@throughline/shared-ui/*": ["packages/shared-ui/src/*"],
+      "@throughline/shared-types": ["packages/shared-types/src/index.ts"],
+      "@throughline/shared-types/*": ["packages/shared-types/src/*"]
+    }
+  },
+  "exclude": ["node_modules", "dist", "build", "**/dist/**", "**/build/**"]
+}

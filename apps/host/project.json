@@ -1,0 +1,13 @@
+{
+  "name": "host",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/host/src",
+  "projectType": "application",
+  "targets": {
+    "lint": { "executor": "nx:run-commands", "options": { "command": "eslint .", "cwd": "apps/host" } },
+    "type-check": { "executor": "nx:run-commands", "options": { "command": "tsc --noEmit", "cwd": "apps/host" } },
+    "test": { "executor": "nx:run-commands", "options": { "command": "vitest run --coverage", "cwd": "apps/host" } },
+    "build": { "executor": "nx:run-commands", "options": { "command": "tsc --noEmit && vite build", "cwd": "apps/host" } },
+    "dev": { "executor": "nx:run-commands", "options": { "command": "vite --port 5173", "cwd": "apps/host" } }
+  }
+}

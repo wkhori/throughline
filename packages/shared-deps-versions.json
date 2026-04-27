@@ -1,0 +1,11 @@
+{
+  "_purpose": "Single source of truth for Module Federation singleton versions (P22). Both apps/host and apps/weekly-commit-remote MUST consume requiredVersion from this file. Cypress federation smoke test reads this to assert version parity.",
+  "react": "18.3.1",
+  "react-dom": "18.3.1",
+  "react-router-dom": "6.28.0",
+  "@reduxjs/toolkit": "2.5.0",
+  "react-redux": "9.2.0",
+  "@auth0/auth0-react": "2.2.4",
+  "@throughline/shared-ui": "0.1.0",
+  "@throughline/shared-types": "0.1.0"
+}

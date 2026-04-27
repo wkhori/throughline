@@ -1,0 +1,12 @@
+{
+  "name": "shared-types",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/shared-types/src",
+  "projectType": "library",
+  "targets": {
+    "lint": { "executor": "nx:run-commands", "options": { "command": "eslint .", "cwd": "packages/shared-types" } },
+    "type-check": { "executor": "nx:run-commands", "options": { "command": "tsc --noEmit", "cwd": "packages/shared-types" } },
+    "test": { "executor": "nx:run-commands", "options": { "command": "echo 'no tests for shared-types' && exit 0" } },
+    "build": { "executor": "nx:run-commands", "options": { "command": "tsc --noEmit", "cwd": "packages/shared-types" } }
+  }
+}
