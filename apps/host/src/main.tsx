@@ -4,6 +4,7 @@ import { Provider } from 'react-redux';
 import { ApiBaseUrlProvider } from '@throughline/shared-ui';
 import { App } from './App.js';
 import { store } from './store.js';
+import '@throughline/shared-ui/styles/tokens.css';
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080';
 

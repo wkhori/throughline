@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import { federation } from '@module-federation/vite';
 import sharedDeps from '../../packages/shared-deps-versions.json';
 
@@ -12,6 +13,7 @@ const requiredVersion = (name: keyof typeof sharedDeps): string => {
 export default defineConfig({
   plugins: [
     react(),
+    tailwindcss(),
     federation({
       name: 'weeklyCommit',
       filename: 'remoteEntry.js',

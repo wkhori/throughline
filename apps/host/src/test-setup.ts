@@ -8,3 +8,19 @@ import { vi } from 'vitest';
 vi.stubEnv('VITE_AUTH0_DOMAIN', '');
 vi.stubEnv('VITE_AUTH0_CLIENT_ID', '');
 vi.stubEnv('VITE_AUTH0_AUDIENCE', '');
+
+// jsdom is missing ResizeObserver; cmdk + a few flowbite primitives need it.
+class ResizeObserverPolyfill {
+  observe(): void {}
+  unobserve(): void {}
+  disconnect(): void {}
+}
+const g = globalThis as unknown as { ResizeObserver?: unknown };
+g.ResizeObserver = g.ResizeObserver ?? ResizeObserverPolyfill;
+
+// jsdom doesn't implement scrollIntoView; cmdk autoscrolls the active item on mount.
+const elementProto = (globalThis as unknown as { Element?: { prototype: Record<string, unknown> } })
+  .Element?.prototype;
+if (elementProto && !elementProto.scrollIntoView) {
+  elementProto.scrollIntoView = () => {};
+}
