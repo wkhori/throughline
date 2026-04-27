@@ -34,9 +34,33 @@ public class NotificationDispatcher {
     this.repo = repo;
   }
 
-  /** Save a fresh PENDING event then dispatch it on the configured channel. */
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  /**
+   * Save a fresh PENDING event then dispatch it on the configured channel.
+   *
+   * <p>For WEEKLY_DIGEST kinds we probe the partial unique index ({@code findActiveDigestFor})
+   * up front — a duplicate persists as SKIPPED_DUPLICATE in a fresh transaction. For other kinds
+   * (LOCK_CONFIRM / RECONCILE_COMPLETE / RECONCILE_REMINDER / ALIGNMENT_RISK) the index does not
+   * apply and we always insert.
+   */
   public NotificationEvent dispatch(
+      String orgId,
+      NotificationKind kind,
+      NotificationChannelKind channelKind,
+      String recipientId,
+      String payloadJson) {
+    if (kind == NotificationKind.WEEKLY_DIGEST) {
+      String weekStart = extractWeekStart(payloadJson);
+      if (weekStart != null && repo.findActiveDigestFor(recipientId, kind, weekStart) != null) {
+        LOG.info("notification_skipped_duplicate kind={} recipientId={}", kind, recipientId);
+        return persistSkippedDuplicate(orgId, kind, channelKind, recipientId, payloadJson);
+      }
+    }
+    return persistAndSend(orgId, kind, channelKind, recipientId, payloadJson);
+  }
+
+  /** Persists the PENDING row + invokes the channel. Index races are caught and translated. */
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public NotificationEvent persistAndSend(
       String orgId,
       NotificationKind kind,
       NotificationChannelKind channelKind,
@@ -44,15 +68,41 @@ public class NotificationDispatcher {
       String payloadJson) {
     NotificationEvent event;
     try {
-      event = repo.save(new NotificationEvent(orgId, kind, channelKind, recipientId, payloadJson));
+      event =
+          repo.saveAndFlush(
+              new NotificationEvent(orgId, kind, channelKind, recipientId, payloadJson));
     } catch (DataIntegrityViolationException dup) {
-      LOG.info("notification_skipped_duplicate kind={} recipientId={}", kind, recipientId);
-      NotificationEvent skipped =
-          new NotificationEvent(orgId, kind, channelKind, recipientId, payloadJson);
-      skipped.setState(NotificationState.SKIPPED_DUPLICATE);
-      return repo.save(skipped);
+      // Race lost — fall through to skipped persist on the caller side.
+      throw dup;
     }
     channel.send(event);
     return event;
+  }
+
+  /** Persists the SKIPPED_DUPLICATE audit row in a fresh transaction. */
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public NotificationEvent persistSkippedDuplicate(
+      String orgId,
+      NotificationKind kind,
+      NotificationChannelKind channelKind,
+      String recipientId,
+      String payloadJson) {
+    NotificationEvent skipped =
+        new NotificationEvent(orgId, kind, channelKind, recipientId, payloadJson);
+    skipped.setState(NotificationState.SKIPPED_DUPLICATE);
+    return repo.save(skipped);
+  }
+
+  /** Pull the weekStart out of the payload JSON without paying for a full Jackson tree. */
+  private String extractWeekStart(String payloadJson) {
+    int idx = payloadJson.indexOf("\"weekStart\"");
+    if (idx < 0) return null;
+    int colon = payloadJson.indexOf(':', idx);
+    if (colon < 0) return null;
+    int firstQuote = payloadJson.indexOf('"', colon);
+    if (firstQuote < 0) return null;
+    int secondQuote = payloadJson.indexOf('"', firstQuote + 1);
+    if (secondQuote < 0) return null;
+    return payloadJson.substring(firstQuote + 1, secondQuote);
   }
 }

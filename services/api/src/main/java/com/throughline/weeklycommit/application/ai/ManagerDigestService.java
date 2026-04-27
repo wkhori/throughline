@@ -186,8 +186,12 @@ public class ManagerDigestService {
         payloadJson);
   }
 
-  /** Friday 16:00 manager-tz cron (PRD §6 / §8.3 — using org timezone for now). */
-  @Scheduled(cron = "0 0 16 ? * FRI")
+  /**
+   * Monday 09:00 cron — PRD §12 Phase 6. Spec docs/ai-copilot-spec.md §T5 originally said Friday
+   * 16:00; PRD/Phase 6 plan reset it to Monday 09:00 so the digest lands at the start of the
+   * manager's planning week (after all reports' Friday reconciliations).
+   */
+  @Scheduled(cron = "0 0 9 ? * MON")
   @Transactional
   public void weeklyDigestCron() {
     var managers =
