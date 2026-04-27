@@ -37,6 +37,8 @@ export default [
         clearInterval: 'readonly',
         HTMLInputElement: 'readonly',
         HTMLElement: 'readonly',
+        HTMLButtonElement: 'readonly',
+        KeyboardEvent: 'readonly',
         AbortController: 'readonly',
         URL: 'readonly',
         URLSearchParams: 'readonly',
