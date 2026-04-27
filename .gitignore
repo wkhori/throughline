@@ -59,3 +59,9 @@ packages/shared-types/src/*.d.ts
 packages/shared-types/src/*.d.ts.map
 packages/shared-ui/src/**/*.d.ts
 packages/shared-ui/src/**/*.d.ts.map
+
+# Terraform local state + downloaded providers
+infra/terraform/**/.terraform/
+infra/terraform/**/.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup

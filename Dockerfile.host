@@ -1,0 +1,28 @@
+# Build context: repo root (yarn workspaces + nx require shared package access).
+# --- build stage ---
+FROM node:22-alpine AS builder
+WORKDIR /workspace
+COPY package.json yarn.lock nx.json tsconfig.base.json prettier.config.js eslint.config.js ./
+COPY apps/host apps/host
+COPY apps/weekly-commit-remote apps/weekly-commit-remote
+COPY packages packages
+RUN corepack enable && yarn install --frozen-lockfile --ignore-scripts
+ARG VITE_API_BASE_URL
+ARG VITE_AUTH0_DOMAIN
+ARG VITE_AUTH0_CLIENT_ID
+ARG VITE_AUTH0_AUDIENCE
+ARG VITE_WEEKLY_COMMIT_REMOTE_URL
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ENV VITE_AUTH0_DOMAIN=$VITE_AUTH0_DOMAIN
+ENV VITE_AUTH0_CLIENT_ID=$VITE_AUTH0_CLIENT_ID
+ENV VITE_AUTH0_AUDIENCE=$VITE_AUTH0_AUDIENCE
+ENV VITE_WEEKLY_COMMIT_REMOTE_URL=$VITE_WEEKLY_COMMIT_REMOTE_URL
+RUN yarn nx build host
+
+# --- runtime stage ---
+FROM nginx:1.27-alpine AS runtime
+COPY apps/host/nginx.conf /etc/nginx/templates/default.conf.template
+COPY --from=builder /workspace/apps/host/dist /usr/share/nginx/html
+ENV PORT=8080
+EXPOSE 8080
+CMD ["nginx", "-g", "daemon off;"]
