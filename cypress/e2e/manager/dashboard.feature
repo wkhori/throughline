@@ -92,3 +92,32 @@ Feature: Manager dashboard
     And the slackMessage contains "<DASHBOARD_URL>"
     And the slackMessage uses Slack mrkdwn (bullets `•`, `*bold*`, no `**bold**`)
     And the AIInsight row's model is "claude-sonnet-4-6"
+
+  @stub @phase-5 @ai-t5 @drilldown
+  Scenario: Drift-exception chip opens a drawer with the rally-cry detail
+    # Locks in the production-shape T5 payload: drift entries are per rally cry
+    # (rallyCryId/rallyCryTitle/observedShare/expectedRange/direction), not per user.
+    # Every chip must carry a unique entityId and the drawer must render the
+    # observed-vs-expected text — this is the regression caught on 2026-04-27 where
+    # every drift drawer collapsed to "Could not load week for this user".
+    Given the AI provider is configured (stub mode)
+    And a T5_DIGEST AIInsight has been written for me with one driftException for rally cry "Win the SMB segment" with direction "UNDER", observed "16.7%", expected "40–55%"
+    When I open "/manager"
+    And I click the "Drift exceptions" chip for "Win the SMB segment"
+    Then a drill-down drawer opens with header "Win the SMB segment"
+    And the drawer body contains "16.7%"
+    And the drawer body contains "40–55%"
+    And the drawer body contains "UNDER"
+
+  @stub @phase-5 @ai-t5 @drilldown
+  Scenario: Recommended 1:1 chip with no userId opens an inline-reason drawer
+    # The live AI emits drillDowns with userId=null + a free-text reason. The drawer
+    # must render the reason inline rather than firing the user-week endpoint with
+    # an empty id.
+    Given the AI provider is configured (stub mode)
+    And a T5_DIGEST AIInsight has been written for me with one recommendedDrillDown { userId: null, displayName: "DRI for Win the SMB segment", reason: "SMB rally cry is at 17% vs a 40–55% target" }
+    When I open "/manager"
+    And I click the "Recommended 1:1s" chip for "DRI for Win the SMB segment"
+    Then a drill-down drawer opens with header "DRI for Win the SMB segment"
+    And the drawer body contains "SMB rally cry is at 17% vs a 40–55% target"
+    And no GET request is fired against "/api/v1/manager/team//week/current"
