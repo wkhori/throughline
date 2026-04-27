@@ -75,34 +75,49 @@ function defaultDetail(entity: InsightDrillDownEntity): ReactNode {
   );
 }
 
+function shortId(id: string | null | undefined): string {
+  return typeof id === 'string' && id.length > 0 ? id.slice(0, 8) : '—';
+}
+
+// Sonnet's JSON shape varies — sometimes `outcomeId`/`outcomeTitle`, sometimes
+// `supportingOutcomeId`/`title`. Coerce defensively so a missing field never
+// crashes the dashboard.
 function chipsFor(payload: DigestPayload): InsightDrillDownEntity[] {
   const out: InsightDrillDownEntity[] = [];
   for (const s of payload.starvedOutcomes ?? []) {
-    out.push({
-      entityType: 'supporting_outcome',
-      entityId: s.supportingOutcomeId,
-      label: s.title ?? `outcome ${s.supportingOutcomeId.slice(0, 8)}`,
-    });
+    const id =
+      s.supportingOutcomeId ??
+      (s as unknown as { outcomeId?: string }).outcomeId ??
+      '';
+    const title =
+      s.title ??
+      (s as unknown as { outcomeTitle?: string }).outcomeTitle ??
+      `outcome ${shortId(id)}`;
+    out.push({ entityType: 'supporting_outcome', entityId: id, label: title });
   }
   for (const d of payload.driftExceptions ?? []) {
+    const id = d.userId ?? '';
     out.push({
       entityType: 'user',
-      entityId: d.userId,
-      label: d.displayName ?? `user ${d.userId.slice(0, 8)}`,
+      entityId: id,
+      label: d.displayName ?? `user ${shortId(id)}`,
     });
   }
   for (const c of payload.longCarryForwards ?? []) {
+    const id = c.commitId ?? '';
+    const weeks = c.weeks ?? 0;
     out.push({
       entityType: 'commit',
-      entityId: c.commitId,
-      label: `${c.weeks}w · ${c.commitText ?? c.commitId.slice(0, 8)}`,
+      entityId: id,
+      label: `${weeks}w · ${c.commitText ?? shortId(id)}`,
     });
   }
   for (const u of payload.drillDowns ?? []) {
+    const id = u.userId ?? '';
     out.push({
       entityType: 'user',
-      entityId: u.userId,
-      label: u.displayName ?? `1:1 ${u.userId.slice(0, 8)}`,
+      entityId: id,
+      label: u.displayName ?? `1:1 ${shortId(id)}`,
     });
   }
   return out;
