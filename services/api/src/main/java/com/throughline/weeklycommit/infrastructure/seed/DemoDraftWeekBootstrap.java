@@ -82,8 +82,14 @@ public class DemoDraftWeekBootstrap implements CommandLineRunner {
         skippedAlreadyDraft++;
         continue;
       }
-      if (week.getReconciledAt() == null
-          || !week.getReconciledAt().equals(seederReconciledAt)) {
+      boolean isSeederPattern =
+          week.getReconciledAt() != null && week.getReconciledAt().equals(seederReconciledAt);
+      // The persona-switcher demo accounts (ic@demo, manager@demo, …) are minted by the
+      // auth0-provision script with a provisioning-time reconciledAt — they don't match the
+      // seeder pattern but they're still demo state. Always rewind those.
+      boolean isDemoPersona =
+          user.getEmail() != null && user.getEmail().endsWith("@demo.throughline.app");
+      if (!isSeederPattern && !isDemoPersona) {
         // Real demo activity — never undo it.
         skippedNotSeeded++;
         continue;
