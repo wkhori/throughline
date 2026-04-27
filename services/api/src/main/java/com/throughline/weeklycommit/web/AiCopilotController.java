@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.throughline.weeklycommit.application.CurrentUserResolver;
 import com.throughline.weeklycommit.application.ai.AiCopilotService;
+import com.throughline.weeklycommit.application.ai.AlignmentDeltaService;
 import com.throughline.weeklycommit.application.ai.PortfolioReviewService;
 import com.throughline.weeklycommit.domain.AIInsight;
 import com.throughline.weeklycommit.domain.User;
@@ -41,6 +42,7 @@ public class AiCopilotController {
 
   private final AiCopilotService aiService;
   private final PortfolioReviewService portfolioReviewService;
+  private final AlignmentDeltaService alignmentDeltaService;
   private final WeekRepository weekRepository;
   private final ManagerScope managerScope;
   private final CurrentUserResolver currentUser;
@@ -48,11 +50,13 @@ public class AiCopilotController {
   public AiCopilotController(
       AiCopilotService aiService,
       PortfolioReviewService portfolioReviewService,
+      AlignmentDeltaService alignmentDeltaService,
       WeekRepository weekRepository,
       ManagerScope managerScope,
       CurrentUserResolver currentUser) {
     this.aiService = aiService;
     this.portfolioReviewService = portfolioReviewService;
+    this.alignmentDeltaService = alignmentDeltaService;
     this.weekRepository = weekRepository;
     this.managerScope = managerScope;
     this.currentUser = currentUser;
@@ -83,6 +87,27 @@ public class AiCopilotController {
     if (insight != null && !insight.getOrgId().equals(u.getOrgId())) {
       throw new AccessDeniedException("cross-org access blocked");
     }
+    return ResponseEntity.ok(AIInsightDto.from(insight));
+  }
+
+  /** P15: latest T4 alignment delta for a reconciled week. Same scope rule as T3. */
+  @org.springframework.web.bind.annotation.GetMapping("/alignment-delta/{weekId}")
+  public ResponseEntity<AIInsightDto> getAlignmentDelta(
+      @org.springframework.web.bind.annotation.PathVariable String weekId) {
+    requireWeekScope(weekId);
+    return alignmentDeltaService
+        .findLatestForWeek(weekId)
+        .map(i -> ResponseEntity.ok(AIInsightDto.from(i)))
+        .orElseGet(() -> ResponseEntity.status(HttpStatus.NO_CONTENT).build());
+  }
+
+  /** Synchronous retry of T4 — used by the FE retry button when the AFTER_COMMIT consumer fails. */
+  @PostMapping("/alignment-delta/{weekId}")
+  public ResponseEntity<AIInsightDto> runAlignmentDelta(
+      @org.springframework.web.bind.annotation.PathVariable String weekId) {
+    Week week = requireWeekScope(weekId);
+    AIInsight insight =
+        alignmentDeltaService.runDelta(week.getId(), week.getUserId(), week.getOrgId());
     return ResponseEntity.ok(AIInsightDto.from(insight));
   }
 
