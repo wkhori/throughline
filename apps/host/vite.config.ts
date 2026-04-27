@@ -28,14 +28,18 @@ export default defineConfig({
         },
       },
       shared: {
-        react: { singleton: true, requiredVersion: requiredVersion('react') },
-        'react-dom': { singleton: true, requiredVersion: requiredVersion('react-dom') },
-        'react-router-dom': { singleton: true, requiredVersion: requiredVersion('react-router-dom') },
-        '@reduxjs/toolkit': { singleton: true, requiredVersion: requiredVersion('@reduxjs/toolkit') },
-        'react-redux': { singleton: true, requiredVersion: requiredVersion('react-redux') },
-        '@auth0/auth0-react': { singleton: true, requiredVersion: requiredVersion('@auth0/auth0-react') },
-        '@throughline/shared-ui': { singleton: true, requiredVersion: requiredVersion('@throughline/shared-ui') },
-        '@throughline/shared-types': { singleton: true, requiredVersion: requiredVersion('@throughline/shared-types') },
+        // eager: true avoids @module-federation/vite 1.14.5 circular hang where the
+        // shared-package chunk imports the loadShare proxy, which itself awaits
+        // loadShare(name) and re-imports the same chunk. With eager, the package
+        // is bundled into the host entry directly, no proxy cycle.
+        react: { singleton: true, eager: true, requiredVersion: requiredVersion('react') },
+        'react-dom': { singleton: true, eager: true, requiredVersion: requiredVersion('react-dom') },
+        'react-router-dom': { singleton: true, eager: true, requiredVersion: requiredVersion('react-router-dom') },
+        '@reduxjs/toolkit': { singleton: true, eager: true, requiredVersion: requiredVersion('@reduxjs/toolkit') },
+        'react-redux': { singleton: true, eager: true, requiredVersion: requiredVersion('react-redux') },
+        '@auth0/auth0-react': { singleton: true, eager: true, requiredVersion: requiredVersion('@auth0/auth0-react') },
+        '@throughline/shared-ui': { singleton: true, eager: true, requiredVersion: requiredVersion('@throughline/shared-ui') },
+        '@throughline/shared-types': { singleton: true, eager: true, requiredVersion: requiredVersion('@throughline/shared-types') },
       },
     }),
   ],
