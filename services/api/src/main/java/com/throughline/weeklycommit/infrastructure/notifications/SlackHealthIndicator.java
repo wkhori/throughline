@@ -31,9 +31,12 @@ public class SlackHealthIndicator implements HealthIndicator {
 
   private static final Logger LOG = LoggerFactory.getLogger(SlackHealthIndicator.class);
   private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
-  /** Slack accepts an empty-text payload by replying 400 "no_text" — but it proves the webhook is
-   *  reachable and well-formed, which is the only thing readiness probes need. We treat any 2xx
-   *  OR a 400 with body "no_text" as healthy. */
+
+  /**
+   * Slack accepts an empty-text payload by replying 400 "no_text" — but it proves the webhook is
+   * reachable and well-formed, which is the only thing readiness probes need. We treat any 2xx OR a
+   * 400 with body "no_text" as healthy.
+   */
   private static final String EMPTY_BODY = "{\"text\":\"\"}";
 
   private final OkHttpClient http;
@@ -64,10 +67,7 @@ public class SlackHealthIndicator implements HealthIndicator {
       return;
     }
     Request req =
-        new Request.Builder()
-            .url(webhookUrl)
-            .post(RequestBody.create(EMPTY_BODY, JSON))
-            .build();
+        new Request.Builder().url(webhookUrl).post(RequestBody.create(EMPTY_BODY, JSON)).build();
     try (Response resp = http.newCall(req).execute()) {
       String body = resp.body() == null ? "" : resp.body().string();
       if (resp.isSuccessful()) {

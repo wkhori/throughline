@@ -56,8 +56,10 @@ public class NotificationEvent {
   @Column(name = "sent_at")
   private Instant sentAt;
 
-  /** P1 — set when the recipient first views the digest dashboard. Drives the
-   *  `avgManagerDigestViewMinutesAfterDeliver` metric in {@code MetricsService}. */
+  /**
+   * P1 — set when the recipient first views the digest dashboard. Drives the
+   * `avgManagerDigestViewMinutesAfterDeliver` metric in {@code MetricsService}.
+   */
   @Column(name = "viewed_at")
   private Instant viewedAt;
 

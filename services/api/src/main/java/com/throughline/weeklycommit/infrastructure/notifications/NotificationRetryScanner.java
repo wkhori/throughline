@@ -18,8 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
  * createdAt}: attempt 1 retries after 5min, attempt 2 after 20min, attempt 3 after 80min. Beyond
  * that the event is left in FAILED state for manual triage (or audit-only).
  *
- * <p>The scanner only retries FAILED events: PENDING events are still in flight (the channel is
- * the source of truth for transitioning PENDING → SENT or PENDING → FAILED). SKIPPED_DUPLICATE is
+ * <p>The scanner only retries FAILED events: PENDING events are still in flight (the channel is the
+ * source of truth for transitioning PENDING → SENT or PENDING → FAILED). SKIPPED_DUPLICATE is
  * terminal.
  */
 @Component
@@ -27,6 +27,7 @@ public class NotificationRetryScanner {
 
   private static final Logger LOG = LoggerFactory.getLogger(NotificationRetryScanner.class);
   private static final int MAX_ATTEMPTS = 3;
+
   /** Backoff thresholds keyed by current attempts count (0-indexed). 5min, 20min, 80min. */
   private static final long[] BACKOFF_MINUTES = {5, 20, 80};
 

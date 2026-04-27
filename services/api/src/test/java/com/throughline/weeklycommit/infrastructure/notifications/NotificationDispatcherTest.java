@@ -57,10 +57,18 @@ class NotificationDispatcherTest extends PostgresIntegrationTestBase {
 
     NotificationEvent first =
         dispatcher.dispatch(
-            orgId, NotificationKind.WEEKLY_DIGEST, NotificationChannelKind.LOG, recipientId, payload);
+            orgId,
+            NotificationKind.WEEKLY_DIGEST,
+            NotificationChannelKind.LOG,
+            recipientId,
+            payload);
     NotificationEvent second =
         dispatcher.dispatch(
-            orgId, NotificationKind.WEEKLY_DIGEST, NotificationChannelKind.LOG, recipientId, payload);
+            orgId,
+            NotificationKind.WEEKLY_DIGEST,
+            NotificationChannelKind.LOG,
+            recipientId,
+            payload);
 
     assertThat(first.getState()).isIn(NotificationState.SENT, NotificationState.PENDING);
     assertThat(second.getState()).isEqualTo(NotificationState.SKIPPED_DUPLICATE);

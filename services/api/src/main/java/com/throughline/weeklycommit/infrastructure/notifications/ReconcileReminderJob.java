@@ -24,8 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Friday 09:00 cron — sends a RECONCILE_REMINDER notification to every IC whose current week is
- * still in DRAFT or LOCKED state (i.e. they have not yet entered RECONCILING/RECONCILED). PRD
- * §8.3 trigger inventory + §12 Phase 6.
+ * still in DRAFT or LOCKED state (i.e. they have not yet entered RECONCILING/RECONCILED). PRD §8.3
+ * trigger inventory + §12 Phase 6.
  *
  * <p>The reminder is a soft prompt — the underlying state machine reconcile-window logic enforces
  * the actual reconcile cutoff. ICs whose week is already RECONCILED receive no reminder.
@@ -55,9 +55,10 @@ public class ReconcileReminderJob {
     this.orgRepo = orgRepo;
     this.stateMachine = stateMachine;
     this.dispatcher = dispatcher;
-    this.channelKind = "slack".equalsIgnoreCase(channel)
-        ? NotificationChannelKind.SLACK
-        : NotificationChannelKind.LOG;
+    this.channelKind =
+        "slack".equalsIgnoreCase(channel)
+            ? NotificationChannelKind.SLACK
+            : NotificationChannelKind.LOG;
   }
 
   @Scheduled(cron = "0 0 9 ? * FRI")

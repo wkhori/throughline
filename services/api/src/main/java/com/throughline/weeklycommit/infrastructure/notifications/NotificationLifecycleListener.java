@@ -22,9 +22,9 @@ import org.springframework.transaction.event.TransactionalEventListener;
  *
  * <p>Listeners are invoked AFTER_COMMIT on the lifecycle events the state machine already
  * publishes; running async on {@code notificationExecutor} keeps Anthropic-bound work off the
- * lifecycle critical path. The dispatcher is wholly idempotent (LOCK_CONFIRM and
- * RECONCILE_COMPLETE intentionally do not hit the digest unique index — those notifications fire
- * exactly once per state transition).
+ * lifecycle critical path. The dispatcher is wholly idempotent (LOCK_CONFIRM and RECONCILE_COMPLETE
+ * intentionally do not hit the digest unique index — those notifications fire exactly once per
+ * state transition).
  */
 @Component
 public class NotificationLifecycleListener {
@@ -42,9 +42,10 @@ public class NotificationLifecycleListener {
       @Value("${app.notifications.channel:log}") String channel) {
     this.dispatcher = dispatcher;
     this.weekRepo = weekRepo;
-    this.channelKind = "slack".equalsIgnoreCase(channel)
-        ? NotificationChannelKind.SLACK
-        : NotificationChannelKind.LOG;
+    this.channelKind =
+        "slack".equalsIgnoreCase(channel)
+            ? NotificationChannelKind.SLACK
+            : NotificationChannelKind.LOG;
   }
 
   @Async("notificationExecutor")

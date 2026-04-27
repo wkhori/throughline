@@ -176,8 +176,8 @@ public class ManagerService {
   }
 
   /**
-   * P17: latest digest for the calling manager (hero card). On first GET after delivery, stamps
-   * the matching {@code notification_event.viewed_at} so the {@code MetricsService} can compute
+   * P17: latest digest for the calling manager (hero card). On first GET after delivery, stamps the
+   * matching {@code notification_event.viewed_at} so the {@code MetricsService} can compute
    * `avgManagerDigestViewMinutesAfterDeliver` (P1).
    */
   @Transactional

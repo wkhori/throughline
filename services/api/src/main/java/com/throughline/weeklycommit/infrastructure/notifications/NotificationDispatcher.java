@@ -37,8 +37,8 @@ public class NotificationDispatcher {
   /**
    * Save a fresh PENDING event then dispatch it on the configured channel.
    *
-   * <p>For WEEKLY_DIGEST kinds we probe the partial unique index ({@code findActiveDigestFor})
-   * up front — a duplicate persists as SKIPPED_DUPLICATE in a fresh transaction. For other kinds
+   * <p>For WEEKLY_DIGEST kinds we probe the partial unique index ({@code findActiveDigestFor}) up
+   * front — a duplicate persists as SKIPPED_DUPLICATE in a fresh transaction. For other kinds
    * (LOCK_CONFIRM / RECONCILE_COMPLETE / RECONCILE_REMINDER / ALIGNMENT_RISK) the index does not
    * apply and we always insert.
    */
