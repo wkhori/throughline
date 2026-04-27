@@ -50,14 +50,35 @@ public class MockJwtDecoder implements JwtDecoder {
   private PersonaSpec personaFor(String token) {
     return switch (token) {
       case "mock.ic.token" ->
-          new PersonaSpec("auth0|mock-ic", "ic@demo.throughline.app", "Demo IC", "IC");
+          new PersonaSpec(
+              resolveSub("AUTH0_SUB_IC", "auth0|mock-ic"),
+              "ic@demo.throughline.app",
+              "Demo IC",
+              "IC");
       case "mock.manager.token" ->
           new PersonaSpec(
-              "auth0|mock-manager", "manager@demo.throughline.app", "Demo Manager", "MANAGER");
+              resolveSub("AUTH0_SUB_MANAGER", "auth0|mock-manager"),
+              "manager@demo.throughline.app",
+              "Demo Manager",
+              "MANAGER");
       case "mock.admin.token" ->
-          new PersonaSpec("auth0|mock-admin", "admin@demo.throughline.app", "Demo Admin", "ADMIN");
+          new PersonaSpec(
+              resolveSub("AUTH0_SUB_ADMIN", "auth0|mock-admin"),
+              "admin@demo.throughline.app",
+              "Demo Admin",
+              "ADMIN");
       default -> throw new JwtException("MockJwtDecoder rejects token: " + token);
     };
+  }
+
+  /**
+   * Mirrors {@code DemoSeeder.resolveSub}: when the env var is set (production has the real Auth0
+   * subs from scripts/auth0-provision.mjs), use it so the decoded sub matches the seeded user
+   * row. Falls back to the deterministic stub sub used by Phase-1 dev/test.
+   */
+  private static String resolveSub(String envVar, String fallback) {
+    String value = System.getenv(envVar);
+    return value == null || value.isBlank() ? fallback : value;
   }
 
   private record PersonaSpec(String sub, String email, String name, String role) {}
