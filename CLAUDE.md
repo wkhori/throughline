@@ -78,7 +78,7 @@ yarn evals
 ## Architecture at a glance
 
 - **Monorepo:** Yarn Workspaces + Nx. Two FE apps, one Remotion app, two shared packages, one Spring Boot service.
-- **MF contract:** Host exposes shared singletons (React, React DOM, Redux Toolkit, RTK Query, Auth0 SDK, Flowbite) via Vite Module Federation. Remote consumes them; versions pinned in `packages/shared-deps-versions.json`. JWT propagated from host to remote via shared store.
+- **MF contract:** Host and remote ship as two separate Vite 5 SPAs that share singleton React / Redux / RTK / Flowbite versions via the workspace packages `@throughline/shared-ui` and `@throughline/shared-types` (versions pinned in `packages/shared-deps-versions.json`). Both apps authenticate against the same Auth0 tenant — one shared JWT contract. Runtime federation (`remoteEntry.js`) is deferred: `@module-federation/vite` 1.14.5 has a chunk-cycle bug with our shared-package proxies that prevents React from mounting, and the `eager` escape hatch isn't exposed in that plugin version. The federation *contract* is preserved; flipping the runtime on is a config change in `apps/host/vite.config.ts` once upstream lands a fix or we migrate to `@originjs/vite-plugin-federation`. Decision is documented in ADR.
 - **Backend:** Spring Boot 3.3 / Java 21 / PostgreSQL 16.4 / Hibernate-JPA / Flyway. Every entity extends `AbstractAuditingEntity`. All schema changes go through Flyway migrations in `services/api/src/main/resources/db/migration/` — never manual SQL.
 - **API surface:** All FE↔BE traffic goes through RTK Query endpoints with `tagTypes` for invalidation. Raw `fetch` and `axios` are blocked by lint rule.
 - **Auth:** Auth0 (OAuth2 / JWT, validated against JWKS). A mock decoder is wired alongside the live decoder so demo personas can sign in without an Auth0 account; the delegating filter accepts both.
@@ -158,13 +158,14 @@ Full prompt text, JSON schemas, and fallbacks: `docs/ai-copilot-spec.md`.
 
 ## Decision-making protocol
 
-This project has a fixed brief (`project-brief.md`) with a long, partially-redundant tech-stack list. Every requirement gets exactly one of three treatments, recorded in `docs/architecture-decisions.md`:
+This project has a fixed brief (`project-brief.md`) with a long, partially-redundant tech-stack list. Every architectural decision falls into one of four treatments, recorded in `docs/architecture-decisions.md`:
 
-1. **Implement as specified.**
+1. **Implement as specified.** Brief requirement, no deviation.
 2. **Substitute** — implement the intent with a different mechanism. Document rationale and swap path.
 3. **Out of scope** — drop. Document why and the condition under which it would be picked up.
+4. **Additional** — add capability not in the brief, when it materially serves the problem statement (e.g. the AI Strategic Alignment Copilot, the per-org Anthropic budget guard, the inline eval harness). Document why it earns its place.
 
-`docs/architecture-decisions.md` is the source of truth for applied decisions. **Update the ADR before deviating from the brief**, not after. If a decision is not in the ADR, it has not been made.
+`docs/architecture-decisions.md` is the source of truth for applied decisions. **Update the ADR before deviating from the brief or adding new capability**, not after. If a decision is not in the ADR, it has not been made.
 
 If the brief and the ADR conflict, the ADR wins for *applied* decisions. The brief wins for *unstated* decisions (default to it).
 
