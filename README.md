@@ -41,7 +41,7 @@ services/api                    # Spring Boot 3.3, Java 21, JPA, Flyway
 docs/                           # Decisions, AI spec, patches, source-control, orchestration
 infra/                          # Terraform (AWS swap path) + Helm chart   [Phase 8]
 cypress/                        # Cucumber/Gherkin acceptance specs        [per phase]
-evals/                          # AI eval harness (@wkhori/evalkit)        [Phase 5]
+evals/                          # AI eval harness (inline runner; P41)     [Phase 5]
 ```
 
 ## Run locally
@@ -78,8 +78,11 @@ flip green automatically. See [`docs/orchestration-plan.md`](./docs/orchestratio
 - **Frontend.** Vitest ≥80% lines/branches/functions/statements. `yarn nx run-many -t test`.
 - **E2E acceptance.** Cypress + Cucumber/Gherkin. `.feature` files in
   `cypress/e2e/**` are **deliverable spec artifacts**, not just tests.
-- **AI evals.** `@wkhori/evalkit` against real Anthropic API. Stub-mode fixtures
-  ship in `evals/fixtures/{t1..t7}/`. See `docs/ai-copilot-spec.md` §Eval Harness.
+- **AI evals.** `yarn evals` runs `evals/runner.ts` against the real Anthropic
+  API at temperature 0, N=3, ≥2/3 pass per scenario. Fixtures in
+  `evals/fixtures/{t1..t7}/`; latest report in `evals/last-run.md`. See
+  `docs/ai-copilot-spec.md` §Eval Harness and `docs/architecture-decisions.md`
+  row 34 (P41) for why this substitutes for `@wkhori/evalkit`.
 
 ## Deliverables
 
