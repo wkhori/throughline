@@ -148,7 +148,12 @@ async function callAnthropic(
   apiKey: string,
   scenario: EvalScenario,
   input: unknown,
-): Promise<{ json: unknown; usage: AnthropicResponse['usage']; rawText: string }> {
+): Promise<{
+  json: unknown;
+  usage: AnthropicResponse['usage'];
+  rawText: string;
+  jsonText: string;
+}> {
   const body = {
     model: scenario.model,
     max_tokens: scenario.maxTokens,
@@ -174,15 +179,14 @@ async function callAnthropic(
     .filter((c) => c.type === 'text')
     .map((c) => c.text)
     .join('');
-  let json: unknown;
-  try {
-    json = JSON.parse(rawText);
-  } catch {
-    // strip markdown fences if the model wrapped JSON in them
-    const stripped = rawText.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '');
-    json = JSON.parse(stripped);
-  }
-  return { json, usage: data.usage, rawText };
+  // Anthropic occasionally wraps JSON in ```json fences even when told not to. Normalise once
+  // up front so both the project-specific path DSL *and* evalkit.runChecks see clean JSON.
+  const stripped = rawText
+    .replace(/^\s*```(?:json)?\s*/i, '')
+    .replace(/\s*```\s*$/i, '')
+    .trim();
+  const json = JSON.parse(stripped);
+  return { json, usage: data.usage, rawText, jsonText: stripped };
 }
 
 function costCents(model: string, usage: AnthropicResponse['usage']): number {
@@ -222,17 +226,18 @@ async function runScenario(apiKey: string, scenario: EvalScenario): Promise<RunR
 
   for (let i = 0; i < N; i++) {
     try {
-      const { json, usage, rawText } = await callAnthropic(apiKey, scenario, input);
+      const { json, usage, rawText, jsonText } = await callAnthropic(apiKey, scenario, input);
       const cost = costCents(scenario.model, usage);
       totalCostCents += cost;
       const failures: string[] = [];
 
       // evalkit's runChecks owns the universal assertions every Anthropic JSON response should
       // pass: response is non-empty, parses as JSON, and is an object (not a bare value or
-      // array). Per-scenario schema/content checks come from the fixture.
+      // array). Markdown fences have already been stripped in callAnthropic, so jsonText is
+      // what evalkit should see. Per-scenario schema/content checks come from the fixture.
       const evalkitResult: CheckSuiteResult = runChecks({
-        responseText: rawText,
-        json: { text: rawText, requireObject: true },
+        responseText: jsonText,
+        json: { text: jsonText, requireObject: true },
       });
       if (!evalkitResult.passed) {
         for (const r of evalkitResult.results) {
