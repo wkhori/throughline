@@ -78,28 +78,25 @@ describe('CommitCard', () => {
     expect(screen.getByTestId('commit-no-so')).toBeInTheDocument();
   });
 
-  it('clicking the card invokes onEdit in DRAFT state', async () => {
+  it('shows an explicit remove button in DRAFT and invokes onEdit when clicked', async () => {
     const user = userEvent.setup();
     const onEdit = vi.fn();
     render(<CommitCard commit={baseCommit} rcdo={tree} weekState="DRAFT" onEdit={onEdit} />);
-    await user.click(screen.getByTestId('commit-card'));
+    await user.click(screen.getByTestId('commit-remove'));
     expect(onEdit).toHaveBeenCalledWith(baseCommit);
   });
 
-  it('is read-only in LOCKED state', async () => {
-    const user = userEvent.setup();
+  it('is read-only in LOCKED state — no remove button rendered', () => {
     const onEdit = vi.fn();
     render(<CommitCard commit={baseCommit} rcdo={tree} weekState="LOCKED" onEdit={onEdit} />);
-    await user.click(screen.getByTestId('commit-card'));
-    expect(onEdit).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('commit-remove')).not.toBeInTheDocument();
   });
 
-  it('keyboard Enter triggers onEdit in DRAFT', async () => {
+  it('clicking anywhere on the card body does not delete the commit', async () => {
     const user = userEvent.setup();
     const onEdit = vi.fn();
     render(<CommitCard commit={baseCommit} rcdo={tree} weekState="DRAFT" onEdit={onEdit} />);
-    screen.getByTestId('commit-card').focus();
-    await user.keyboard('{Enter}');
-    expect(onEdit).toHaveBeenCalled();
+    await user.click(screen.getByText(baseCommit.text));
+    expect(onEdit).not.toHaveBeenCalled();
   });
 });

@@ -16,7 +16,7 @@ interface CommitCardProps {
 
 export function CommitCard({ commit, rcdo, weekState, onEdit }: CommitCardProps) {
   const trail = resolveRcdoTrail(rcdo, commit.supportingOutcomeId);
-  const interactive = weekState === 'DRAFT' && !!onEdit;
+  const canRemove = weekState === 'DRAFT' && !!onEdit;
   const linkedOutcome = useMemo<DriftCheckLinkedOutcome | null>(
     () => buildLinkedOutcome(rcdo, commit.supportingOutcomeId),
     [rcdo, commit.supportingOutcomeId],
@@ -25,29 +25,43 @@ export function CommitCard({ commit, rcdo, weekState, onEdit }: CommitCardProps)
     () => buildAlternatives(rcdo, commit.supportingOutcomeId),
     [rcdo, commit.supportingOutcomeId],
   );
-  const className = interactive
-    ? 'cursor-pointer rounded-md border border-(--color-commit-border) bg-(--color-commit-bg) p-3 transition-colors hover:border-(--color-ribbon-link)'
-    : 'rounded-md border border-(--color-commit-border) bg-(--color-commit-bg) p-3';
+  const className =
+    'rounded-md border border-(--color-commit-border) bg-(--color-commit-bg) p-3';
   return (
     <article
       data-testid="commit-card"
       data-commit-id={commit.id}
-      role={interactive ? 'button' : undefined}
-      tabIndex={interactive ? 0 : undefined}
-      onClick={interactive ? () => onEdit?.(commit) : undefined}
-      onKeyDown={
-        interactive
-          ? (e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                onEdit?.(commit);
-              }
-            }
-          : undefined
-      }
       className={className}
     >
-      <p className="text-sm font-medium text-(--color-commit-text)">{commit.text}</p>
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-sm font-medium text-(--color-commit-text)">{commit.text}</p>
+        {canRemove ? (
+          <button
+            type="button"
+            data-testid="commit-remove"
+            aria-label="Remove commit"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onEdit?.(commit);
+            }}
+            className="-mr-1 -mt-1 shrink-0 rounded-md p-1 text-(--color-commit-muted) transition-colors hover:bg-(--color-skeleton-bg) hover:text-(--color-shell-error)"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 14 14"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              aria-hidden="true"
+            >
+              <path d="M4 4l6 6M10 4l-6 6" />
+            </svg>
+          </button>
+        ) : null}
+      </div>
       {trail ? (
         <div className="mt-1.5" data-testid="commit-breadcrumb">
           <RcdoChip trail={trail} variant="trail" />
