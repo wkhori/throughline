@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useGetCurrentWeekQuery } from '../../api/weeksEndpoints.js';
 import { DraftWeek } from './DraftWeek.js';
 import { LockedWeek } from '../locked/LockedWeek.js';
@@ -7,7 +8,14 @@ import { ReconciledWeek } from '../reconciled/ReconciledWeek.js';
 // Top-level shell — switches between DRAFT / LOCKED / RECONCILING / RECONCILED views based on
 // week.state from the current-week query.
 export function WeekShell() {
-  const { data, isLoading, error } = useGetCurrentWeekQuery();
+  const { data, isLoading } = useGetCurrentWeekQuery();
+  // Same StrictMode-driven sticky-loading workaround as ManagerDashboard:
+  // force one re-read shortly after mount so a fulfilled cache is picked up.
+  const [, force] = useState(0);
+  useEffect(() => {
+    const t = setTimeout(() => force((x) => x + 1), 80);
+    return () => clearTimeout(t);
+  }, []);
 
   // Only block on the skeleton if we genuinely have no data yet. Same
   // sticky-isLoading pattern as ManagerDashboard.
