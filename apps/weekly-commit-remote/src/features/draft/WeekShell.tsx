@@ -11,14 +11,15 @@ export function WeekShell() {
 
   if (isLoading) {
     return (
-      <p data-testid="week-shell-loading" className="p-6 text-sm text-(--shell-muted)">
-        Loading current week…
-      </p>
+      <div data-testid="week-shell-loading" className="space-y-4 p-6">
+        <div className="h-24 animate-pulse rounded-lg bg-(--color-skeleton-bg)" />
+        <div className="h-64 animate-pulse rounded-lg bg-(--color-skeleton-bg)" />
+      </div>
     );
   }
   if (error || !data) {
     return (
-      <p data-testid="week-shell-error" className="p-6 text-sm text-(--shell-error)">
+      <p data-testid="week-shell-error" className="p-6 text-sm text-(--color-shell-error)">
         Could not load the current week.
       </p>
     );

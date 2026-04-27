@@ -82,13 +82,18 @@ export function Reconcile({ week }: ReconcileProps) {
   };
 
   return (
-    <section data-testid="reconcile" className="space-y-6 p-6">
-      <header className="flex items-baseline justify-between">
+    <section data-testid="reconcile" className="mx-auto max-w-6xl space-y-8 p-6">
+      <header className="flex flex-wrap items-end justify-between gap-4 rounded-lg border border-(--color-hero-border) bg-(--color-hero-bg) p-6">
         <div>
-          <h1 className="text-lg font-semibold text-(--reconcile-heading)">
-            Reconcile week of {week.weekStart}
+          <p className="text-xs font-medium uppercase tracking-wide text-(--color-hero-muted)">
+            Reconcile
+          </p>
+          <h1 className="mt-1 text-xl font-semibold text-(--color-hero-heading)">
+            Week of {week.weekStart}
           </h1>
-          <p className="text-xs text-(--reconcile-muted)">{week.commits.length} commits</p>
+          <p className="mt-1 text-sm text-(--color-hero-text)">
+            {week.commits.length} commits to mark done, partial, or not done.
+          </p>
         </div>
         {!isReconciling && (
           <button
@@ -96,7 +101,7 @@ export function Reconcile({ week }: ReconcileProps) {
             onClick={start}
             disabled={startState.isLoading}
             data-testid="start-reconcile"
-            className="rounded-md bg-(--reconcile-bg) px-3 py-1.5 text-sm font-medium text-(--reconcile-fg)"
+            className="rounded-md bg-(--color-shell-text) px-4 py-2 text-sm font-medium text-(--color-shell-bg) hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {startState.isLoading ? 'Starting…' : 'Start reconcile'}
           </button>
@@ -117,7 +122,11 @@ export function Reconcile({ week }: ReconcileProps) {
       )}
 
       {serverError && (
-        <p role="alert" data-testid="reconcile-error" className="text-xs text-(--reconcile-error)">
+        <p
+          role="alert"
+          data-testid="reconcile-error"
+          className="rounded-md border border-(--color-ribbon-high-bg) bg-(--color-ribbon-high-bg) px-3 py-2 text-xs text-(--color-ribbon-high-fg)"
+        >
           {serverError}
         </p>
       )}
@@ -129,7 +138,7 @@ export function Reconcile({ week }: ReconcileProps) {
             onClick={send}
             disabled={!allFilled || submitState.isLoading}
             data-testid="submit-reconcile"
-            className="rounded-md bg-(--reconcile-bg) px-3 py-1.5 text-sm font-medium text-(--reconcile-fg) disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-md bg-(--color-shell-text) px-4 py-2 text-sm font-medium text-(--color-shell-bg) hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {submitState.isLoading ? 'Submitting…' : 'Submit reconcile'}
           </button>
@@ -150,10 +159,10 @@ function ReconcileRow({ commit, row, onChange }: RowProps) {
   return (
     <li
       data-testid={`reconcile-row-${commit.id}`}
-      className="rounded-md border border-(--reconcile-row-border) bg-(--reconcile-row-bg) p-3"
+      className="rounded-lg border border-(--color-panel-border) bg-(--color-panel-bg) p-4"
     >
-      <p className="text-sm font-medium text-(--reconcile-row-text)">{commit.text}</p>
-      <div className="mt-2 flex gap-2">
+      <p className="text-sm font-medium text-(--color-panel-heading)">{commit.text}</p>
+      <div className="mt-3 flex flex-wrap gap-2">
         {OUTCOMES.map((o) => (
           <button
             key={o}
@@ -163,10 +172,10 @@ function ReconcileRow({ commit, row, onChange }: RowProps) {
             }
             data-testid={`reconcile-outcome-${commit.id}-${o}`}
             className={
-              'rounded-md px-2 py-1 text-xs ' +
+              'rounded-md px-3 py-1.5 text-xs font-medium ' +
               (row.outcome === o
-                ? 'bg-(--reconcile-pill-active) text-(--reconcile-pill-active-fg)'
-                : 'border border-(--reconcile-pill-border) text-(--reconcile-pill-text)')
+                ? 'bg-(--color-shell-text) text-(--color-shell-bg)'
+                : 'border border-(--color-panel-border) bg-transparent text-(--color-panel-cell) hover:bg-(--color-skeleton-bg)')
             }
           >
             {o}
@@ -180,9 +189,9 @@ function ReconcileRow({ commit, row, onChange }: RowProps) {
         value={row.note}
         onChange={(e) => onChange({ note: e.target.value })}
         data-testid={`reconcile-note-${commit.id}`}
-        className="mt-2 w-full rounded-md border border-(--reconcile-input-border) bg-(--reconcile-input-bg) px-2 py-1 text-xs"
+        className="mt-3 w-full rounded-md border border-(--color-panel-border) bg-(--color-shell-bg) px-3 py-2 text-xs text-(--color-shell-text) placeholder:text-(--color-shell-muted)"
       />
-      <label className="mt-2 flex items-center gap-2 text-xs text-(--reconcile-row-text)">
+      <label className="mt-3 flex items-center gap-2 text-xs text-(--color-panel-cell)">
         <input
           type="checkbox"
           disabled={cfDisabled}
