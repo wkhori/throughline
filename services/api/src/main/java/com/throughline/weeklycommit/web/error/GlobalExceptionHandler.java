@@ -1,6 +1,7 @@
 package com.throughline.weeklycommit.web.error;
 
 import com.throughline.weeklycommit.application.manager.ManagerService;
+import com.throughline.weeklycommit.infrastructure.ai.BudgetExhaustedException;
 import jakarta.validation.ConstraintViolationException;
 import java.util.List;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -67,6 +68,16 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(ValidationException.class)
   public ResponseEntity<ProblemDetail> validation(ValidationException ex) {
     return ResponseEntity.badRequest().body(ProblemDetails.validation(ex.errors()));
+  }
+
+  /** P12 / P23: cost guard refused — return 429 BUDGET_EXHAUSTED so frontend silent-degrades. */
+  @ExceptionHandler(BudgetExhaustedException.class)
+  public ResponseEntity<ProblemDetail> budgetExhausted(BudgetExhaustedException ex) {
+    ProblemDetail pd =
+        ProblemDetails.forStatus(HttpStatus.TOO_MANY_REQUESTS, "BUDGET_EXHAUSTED", ex.getMessage());
+    pd.setProperty("reason", ex.getReason().name());
+    pd.setProperty("kind", ex.getKind().name());
+    return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(pd);
   }
 
   /** P10: stale {@code team_rollup_cache} → 503 so the dashboard can retry/back-off. */
