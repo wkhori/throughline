@@ -1,27 +1,35 @@
-# Deferred Environment Variables
+# Environment Credential Status
 
-Per `docs/orchestration-plan.md` Continue-and-Defer rule, this file lists every
-external credential the build is currently substituting with a stub. Each row
-is removed in a `chore(env): wire real <VAR>` commit when the user posts
-`<VAR> now in .env.local`.
+> **Status as of `phase/4-ai` entry: all credentials resolved. No active deferrals.**
 
-| Var | Stub provider | Smoke that flips on real value |
-|-----|---------------|--------------------------------|
-| _(none — all credentials provisioned)_ | — | — |
+This file used to track stub/real status under the orchestration-plan
+Continue-and-Defer rule. Every external credential is now in `.env.local`
+(gitignored), and the corresponding real provider is the runtime default.
+The file is retained as an audit log + onboarding reference, not as a gate.
 
-## Resolved (status snapshot — keep here for audit, not as gates)
+## Active deferrals
+
+_None._
+
+## Resolved credentials (snapshot)
 
 | Var | Resolved on | Real provider now active |
 |-----|-------------|--------------------------|
-| `AUTH0_ISSUER_URI` / `AUTH0_AUDIENCE` / `VITE_AUTH0_*` | `phase/4-ai` entry | Real Auth0 JWKS-backed `JwtDecoder`; tenant `thoughline.us.auth0.com`; SPA app + API + post-login Action + 3 demo users provisioned via `scripts/auth0-provision.mjs` (P37). |
-| `ANTHROPIC_API_KEY` | `phase/4-ai` entry | Real `AnthropicClient` (`@ConditionalOnProperty(name="anthropic.api-key")`); `StubAnthropicClient` becomes the test-time fallback only. |
-| `SLACK_WEBHOOK_URL` (with `NOTIFICATION_CHANNEL=slack`) | `phase/4-ai` entry | `SlackChannel` posts Block Kit to the configured webhook; `LogChannel` becomes the test-time fallback only. |
+| `AUTH0_ISSUER_URI` / `AUTH0_AUDIENCE` / `VITE_AUTH0_*` | between `phase/3-manager` and `phase/4-ai` | Real Auth0 JWKS-backed `JwtDecoder`; tenant `thoughline.us.auth0.com`; SPA app + API + post-login Action + 3 demo users provisioned via `scripts/auth0-provision.mjs` (P37). |
+| `ANTHROPIC_API_KEY` | between `phase/3-manager` and `phase/4-ai` | Real `AnthropicClient` (`@ConditionalOnProperty(name="anthropic.api-key")`) ships in `phase/4-ai`. `StubAnthropicClient` becomes the test-time fallback only. |
+| `SLACK_WEBHOOK_URL` (with `NOTIFICATION_CHANNEL=slack`) | between `phase/3-manager` and `phase/4-ai` | `SlackChannel` posts Block Kit to the configured private channel; `LogChannel` becomes the test-time fallback only. Webhook scoped to a single private channel at install time (Slack enforces channel binding at the webhook URL level). |
 
-## Rules
+## Test discipline
 
-1. The agent never blocks waiting on a credential.
-2. Every stub-backed test is tagged `@stub`. Every real-integration twin is
-   tagged `@integration` and runs unconditionally now that the credentials
-   are present (no auto-skip).
-3. When a credential changes (rotation, tenant move), update both `.env.local`
-   and the snapshot table above with the new resolved date.
+1. Every external surface ships **two** test variants:
+   - `@stub` — runs offline against the deterministic stub (CI default; no network).
+   - `@integration` — runs against the real provider; now executable unconditionally because the credentials are present.
+2. New `@integration` scenarios authored in `phase/4-ai`+ should run on every PR merge, not gated.
+3. Eval harness E1–E7 runs against the real Anthropic API at N=3 with a ≥2/3 pass threshold (residual non-determinism absorber).
+
+## How to rotate / replace a credential
+
+1. Update the value in `.env.local`.
+2. Restart the affected service (`docker compose down && docker compose up -d` for Postgres, redeploy for Railway services later).
+3. Re-run the integration suite for that surface — `./gradlew test --tests "*Integration*"` or `yarn nx test <project> --grep @integration`.
+4. Update the snapshot row above with the new resolved date if the rotation involved a tenant change (not strictly needed for key rotation).
