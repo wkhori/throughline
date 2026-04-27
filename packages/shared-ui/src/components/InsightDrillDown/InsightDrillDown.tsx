@@ -11,18 +11,16 @@ export interface InsightDrillDownEntity {
 
 export interface InsightDrillDownProps {
   entities: InsightDrillDownEntity[];
-  /** Custom trigger renderer; default is a small inline link. */
+  /** Custom trigger renderer; default is a small inline pill. */
   renderTrigger?: (entity: InsightDrillDownEntity, label: string) => ReactNode;
   /** Renders the drawer body for the selected entity — typically wired to RTK Query fetches. */
   renderDetail?: (entity: InsightDrillDownEntity) => ReactNode;
 }
 
 /**
- * PRD §6.3a — every AI claim is one click away from its evidence.
- *
- * <p>This is intentionally lightweight (custom drawer rather than a full Flowbite Drawer) so the
- * shared-ui package stays free of optional UI deps; the host/remote can still wrap it in their
- * preferred drawer if they want richer chrome. ARIA: dialog role + focus trap; Esc closes.
+ * Every AI claim is one click away from its evidence. Each entity is rendered
+ * as a chip; clicking opens a side drawer with the per-entity detail. The drawer
+ * surface is opaque so it sits cleanly over text-heavy parent views.
  */
 export function InsightDrillDown({ entities, renderTrigger, renderDetail }: InsightDrillDownProps) {
   const [open, setOpen] = useState<InsightDrillDownEntity | null>(null);
@@ -47,12 +45,7 @@ export function InsightDrillDown({ entities, renderTrigger, renderDetail }: Insi
         const trigger = renderTrigger ? (
           renderTrigger(e, label)
         ) : (
-          <button
-            type="button"
-            className="underline decoration-dotted underline-offset-2 hover:opacity-80"
-          >
-            {label}
-          </button>
+          <DefaultTrigger label={label} />
         );
         return (
           <span
@@ -60,7 +53,7 @@ export function InsightDrillDown({ entities, renderTrigger, renderDetail }: Insi
             data-testid="insight-drill-trigger"
             data-entity-type={e.entityType}
             data-entity-id={e.entityId}
-            className="mr-2 inline-block"
+            className="mr-1.5 mb-1 inline-block"
             onClick={(ev) => {
               ev.preventDefault();
               setOpen(e);
@@ -79,36 +72,85 @@ export function InsightDrillDown({ entities, renderTrigger, renderDetail }: Insi
         );
       })}
       {open ? (
-        <div
-          role="dialog"
-          aria-modal="true"
-          data-testid="insight-drill-drawer"
-          className="fixed inset-y-0 right-0 z-50 flex w-96 flex-col border-l border-(--commit-border) bg-(--commit-bg) p-4 shadow-2xl"
-        >
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-(--commit-text)">
-              {open.label ?? `${open.entityType}:${open.entityId}`}
-            </h3>
-            <button
-              ref={closeRef}
-              type="button"
-              data-testid="insight-drill-close"
-              onClick={() => setOpen(null)}
-              aria-label="Close"
-              className="text-(--commit-muted) hover:text-(--commit-text)"
-            >
-              ×
-            </button>
+        <>
+          <div
+            data-testid="insight-drill-backdrop"
+            aria-hidden="true"
+            onClick={() => setOpen(null)}
+            className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm"
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            data-testid="insight-drill-drawer"
+            className="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col border-l border-(--color-panel-border) bg-(--color-panel-bg) text-(--color-panel-cell) shadow-2xl"
+          >
+            <header className="flex items-start justify-between gap-3 border-b border-(--color-panel-border) px-5 py-4">
+              <div>
+                <p className="text-[11px] font-medium uppercase tracking-wide text-(--color-panel-muted)">
+                  {open.entityType.replace(/_/g, ' ')}
+                </p>
+                <h3 className="mt-0.5 text-sm font-semibold text-(--color-panel-heading)">
+                  {open.label ?? open.entityId}
+                </h3>
+              </div>
+              <button
+                ref={closeRef}
+                type="button"
+                data-testid="insight-drill-close"
+                onClick={() => setOpen(null)}
+                aria-label="Close"
+                className="rounded-md p-1 text-(--color-panel-muted) transition-colors hover:bg-(--color-skeleton-bg) hover:text-(--color-panel-heading)"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                >
+                  <path d="M4 4l8 8M12 4l-8 8" />
+                </svg>
+              </button>
+            </header>
+            <div className="flex-1 overflow-auto px-5 py-4 text-xs text-(--color-panel-cell)">
+              {renderDetail ? (
+                renderDetail(open)
+              ) : (
+                <pre data-testid="insight-drill-detail-default" className="whitespace-pre-wrap break-all">
+                  {JSON.stringify(open, null, 2)}
+                </pre>
+              )}
+            </div>
           </div>
-          <div className="mt-3 flex-1 overflow-auto text-xs text-(--commit-muted)">
-            {renderDetail ? (
-              renderDetail(open)
-            ) : (
-              <pre data-testid="insight-drill-detail-default">{JSON.stringify(open, null, 2)}</pre>
-            )}
-          </div>
-        </div>
+        </>
       ) : null}
     </span>
+  );
+}
+
+function DefaultTrigger({ label }: { label: string }) {
+  return (
+    <button
+      type="button"
+      className="inline-flex items-center gap-1 rounded-md border border-(--color-panel-border) bg-(--color-panel-bg) px-1.5 py-0.5 text-[11px] font-medium text-(--color-panel-heading) transition-colors hover:border-(--color-shell-text) hover:bg-(--color-skeleton-bg)"
+    >
+      <span>{label}</span>
+      <svg
+        width="9"
+        height="9"
+        viewBox="0 0 12 12"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M4 2 L8 6 L4 10" />
+      </svg>
+    </button>
   );
 }

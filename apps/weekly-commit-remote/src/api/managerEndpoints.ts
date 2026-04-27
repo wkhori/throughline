@@ -128,6 +128,9 @@ export const managerApi = api.injectEndpoints({
         { type: 'AIInsight', id: 'LIST' },
       ],
     }),
+    dispatchDigestToSlack: build.mutation<void, void>({
+      query: () => ({ url: `/manager/digest/dispatch-slack`, method: 'POST' }),
+    }),
     getAlignmentRisks: build.query<AlignmentRisk[], void>({
       query: () => ({ url: `/manager/alignment-risks` }),
       providesTags: (result) =>
@@ -154,6 +157,7 @@ export const {
   useGetTeamMemberCurrentWeekQuery,
   useGetCurrentDigestQuery,
   useRegenerateDigestMutation,
+  useDispatchDigestToSlackMutation,
   useGetAlignmentRisksQuery,
   useAckAlignmentRiskMutation,
 } = managerApi;

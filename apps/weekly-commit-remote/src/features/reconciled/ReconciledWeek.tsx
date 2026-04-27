@@ -1,14 +1,16 @@
-import type { CommitDto, WeekDto } from '@throughline/shared-types';
+import type { CommitDto, RcdoTreeDto, WeekDto } from '@throughline/shared-types';
+import { RcdoChip, resolveRcdoTrail } from '@throughline/shared-ui';
+import { useGetRcdoTreeQuery } from '../../api/rcdoEndpoints.js';
+import { AlignmentDeltaCard } from '../ai/AlignmentDeltaCard.js';
 
 interface ReconciledWeekProps {
   week: WeekDto;
 }
 
-// Phase-3 reconciled-week surface — renders the lineage timeline (each commit with its outcome,
-// note, and carry-forward badge if the chain continues into next week).
 export function ReconciledWeek({ week }: ReconciledWeekProps) {
+  const { data: rcdo } = useGetRcdoTreeQuery();
   return (
-    <section data-testid="reconciled-week" className="mx-auto max-w-6xl space-y-8 p-6">
+    <section data-testid="reconciled-week" className="mx-auto max-w-6xl space-y-6 p-6">
       <header className="rounded-lg border border-(--color-hero-border) bg-(--color-hero-bg) p-6">
         <p className="text-xs font-medium uppercase tracking-wide text-(--color-hero-muted)">
           Reconciled
@@ -17,25 +19,21 @@ export function ReconciledWeek({ week }: ReconciledWeekProps) {
           Week of {week.weekStart}
         </h1>
         <p className="mt-1 text-sm text-(--color-hero-text)">
-          Reconciled at {week.reconciledAt ?? 'unknown'} · {week.commits.length} commits
+          Reconciled {formatTimestamp(week.reconciledAt)} · {week.commits.length} commits
         </p>
       </header>
-      <div
-        className="rounded-md border border-dashed border-(--color-panel-border) bg-(--color-panel-bg) p-4 text-xs text-(--color-panel-muted)"
-        data-testid="reconciled-alignment-placeholder"
-      >
-        Alignment delta will appear here when the AI copilot lands (Phase 5b).
-      </div>
+      <AlignmentDeltaCard weekId={week.id} />
       <ul className="space-y-3" data-testid="reconciled-rows">
         {week.commits.map((c) => (
-          <ReconciledRow key={c.id} commit={c} />
+          <ReconciledRow key={c.id} commit={c} rcdo={rcdo} />
         ))}
       </ul>
     </section>
   );
 }
 
-function ReconciledRow({ commit }: { commit: CommitDto }) {
+function ReconciledRow({ commit, rcdo }: { commit: CommitDto; rcdo?: RcdoTreeDto }) {
+  const trail = resolveRcdoTrail(rcdo, commit.supportingOutcomeId);
   return (
     <li
       data-testid={`reconciled-row-${commit.id}`}
@@ -50,6 +48,11 @@ function ReconciledRow({ commit }: { commit: CommitDto }) {
           {commit.reconciliationOutcome ?? '—'}
         </span>
       </div>
+      {trail ? (
+        <div className="mt-1.5" data-testid={`reconciled-trail-${commit.id}`}>
+          <RcdoChip trail={trail} variant="trail" />
+        </div>
+      ) : null}
       {commit.reconciliationNote && (
         <p className="mt-2 text-xs text-(--color-panel-muted)">{commit.reconciliationNote}</p>
       )}
@@ -63,4 +66,10 @@ function ReconciledRow({ commit }: { commit: CommitDto }) {
       )}
     </li>
   );
+}
+
+function formatTimestamp(iso: string | null): string {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return Number.isNaN(d.valueOf()) ? iso : d.toLocaleString();
 }

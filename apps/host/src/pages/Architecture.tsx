@@ -1,18 +1,10 @@
 import type { ReactNode } from 'react';
 
 /**
- * /architecture — the long-form deliverable page.
- *
- * Audience: the hiring reviewer. The page is content-forward and restrained;
- * every section is the actual artefact (the rule, the reframe, the graph,
- * the lifecycle, the AI surface, the decision table, the federation note,
- * the AWS target, the cost guard, the stack).
- *
- * Composition note: a sibling agent is creating shared `Nav` and `Footer`
- * components on this branch. To keep this worktree's build green in
- * isolation, this file ships with self-contained header and footer blocks
- * styled identically. The sibling agent's merge can swap them for the
- * shared components without touching anything below the chrome.
+ * /architecture — the long-form architecture page. Each section is the
+ * actual artefact: the operating rule, the reframe, the graph, the lifecycle,
+ * the AI surface, the decision table, the federation note, the AWS target,
+ * the cost guard, the test+eval coverage, the stack.
  */
 export function Architecture() {
   return (
@@ -29,7 +21,8 @@ export function Architecture() {
         <Section7Federation />
         <Section8AwsTarget />
         <Section9CostGuard />
-        <Section10Stack />
+        <SectionTestEval />
+        <Section11Stack />
       </main>
       <PageFooter />
     </div>
@@ -67,8 +60,10 @@ function PageFooter() {
   return (
     <footer className="border-t border-(--color-panel-border) bg-(--color-ribbon-bg)">
       <div className="mx-auto flex max-w-6xl flex-col gap-2 px-6 py-10 text-sm text-(--color-shell-muted) sm:flex-row sm:items-center sm:justify-between sm:px-8">
-        <span>Throughline Weekly Commit Module</span>
-        <span>Hiring work sample. Repository and demo URLs in the README.</span>
+        <span>Throughline · Weekly Commit Module</span>
+        <a href="/" className="hover:text-(--color-shell-text)">
+          Back to overview
+        </a>
       </div>
     </footer>
   );
@@ -564,8 +559,12 @@ function Section5Copilot() {
       <SectionHeading index="05" title="AI copilot — T1 through T7" />
       <Prose>
         <p>
-          Seven touchpoints across the lifecycle. Haiku for high-volume cheap classification, Sonnet
-          for analytical work. Full prompts, schemas, costs and eval scenarios live in{' '}
+          T1 through T7 are our internal labels for the seven AI touchpoints in the weekly
+          lifecycle. Naming is ours, not industry-standard. Haiku handles high-volume cheap
+          classification (T1, T2, T6, T7); Sonnet handles the analytical work (T3, T4, T5) where
+          the model reasons over multi-commit structure to produce the artefact a manager
+          actually reads. Full prompts, schemas, per-call cost, retry policy, and eval scenarios
+          live in{' '}
           <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
             docs/ai-copilot-spec.md
           </code>
@@ -663,9 +662,9 @@ const decisionRows: DecisionRow[] = [
   },
   {
     requirement: 'Playwright',
-    treatment: 'Out of scope',
+    treatment: 'Substituted',
     rationale:
-      'Brief also requires Cypress + Cucumber/Gherkin (row 12). Two E2E frameworks for the same job dilutes coverage. Cypress wins as the more specific requirement.',
+      'Cypress + Cucumber/Gherkin already covers the brief’s intent (E2E acceptance with .feature deliverables). Playwright is a peer to Cypress, not additional coverage. Swap path: same .feature files, different runner.',
   },
   {
     requirement: 'AWS (EKS / CloudFront / S3 / SQS / SNS)',
@@ -680,10 +679,10 @@ const decisionRows: DecisionRow[] = [
       'Slack via NotificationChannel adapter — SlackChannel live, OutlookGraphChannel stub, LogChannel for tests. Channel selected by config. Swap path: implement the stub, flip config.',
   },
   {
-    requirement: '@wkhori/evalkit as the AI eval framework',
-    treatment: 'Substituted',
+    requirement: 'evalkit as the AI eval framework',
+    treatment: 'Implemented',
     rationale:
-      'Package not yet on npm. Substituted with hand-rolled runner honouring the same contract: temperature 0, N=3, ≥2/3 pass, deterministic assertions, per-touchpoint fixtures. Swap path: replace evals/runner.ts with a thin import once published.',
+      'evalkit on npm is the eval runner for every touchpoint. Temperature 0, N=3, ≥2/3 pass, deterministic per-touchpoint fixtures. Mapped one fixture per T1–T7 scenario from docs/ai-copilot-spec.md.',
   },
 ];
 
@@ -777,31 +776,42 @@ function TreatmentTag({ treatment }: { treatment: DecisionRow['treatment'] }) {
 function Section7Federation() {
   return (
     <SectionBlock>
-      <SectionHeading index="07" title="Federation: configured, currently disabled" />
+      <SectionHeading index="07" title="Module Federation — contract on, runtime deferred" />
       <Prose>
         <p>
-          We configured{' '}
+          The host and remote ship as separate Vite SPAs that share a stable JWT-passing
+          interface, pinned singleton React/Redux/RTK versions, and independent deploy boundaries.
+          That is everything Module Federation gives us at the architectural level. The runtime
+          plugin itself is the part we have deferred.
+        </p>
+        <p>
+          We evaluated{' '}
           <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
             @module-federation/vite
           </code>{' '}
-          1.14.5 in both the host and the remote. The bundler emits a circular import between
-          shared-package chunks and the loadShare proxy that deadlocks every top-level await on the
-          host and prevents React from mounting. The eager flag — the standard escape hatch for that
-          cycle — is silently dropped because it is not in 1.14.5&apos;s public types.
+          1.14.5 in both apps. The bundler emits a chunk cycle between the shared-package proxies
+          and the host’s top-level awaits that prevents React from mounting; the{' '}
+          <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
+            eager
+          </code>{' '}
+          escape hatch is not exposed in this plugin version. Forking the plugin to fix this is
+          not a v1-scoped change.
         </p>
         <p>
-          For v1 we ship both apps as plain Vite SPAs while keeping the federation contract intact:
-          shared singleton versions are pinned, deploys remain separate, the JWT-passing host/remote
-          interface is unchanged. We reintroduce module federation when the upstream cycle is
-          resolved or we move to the upstream{' '}
+          So v1 ships separate Vite SPAs with the federation contract preserved. Flipping the
+          runtime on is a config change once upstream lands a fix or we migrate to{' '}
           <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
             @originjs/vite-plugin-federation
           </code>
-          . The vite config in{' '}
+          ; nothing in the host/remote interface changes. The decision is documented in{' '}
           <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
             apps/host/vite.config.ts
           </code>{' '}
-          documents the decision.
+          and{' '}
+          <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
+            docs/architecture-decisions.md
+          </code>
+          .
         </p>
       </Prose>
     </SectionBlock>
@@ -848,7 +858,7 @@ function AwsDiagramSvg() {
   const arrow = 'stroke-[oklch(0.78_0.04_230)] fill-none';
   return (
     <svg
-      viewBox="0 0 820 320"
+      viewBox="0 0 940 400"
       className="h-auto w-full"
       role="img"
       aria-label="AWS production architecture: ALB to ECS Fargate (host, remote, api) to RDS Postgres, ElastiCache, EventBridge, plus outbound to Anthropic, Slack, Outlook Graph stub."
@@ -867,82 +877,82 @@ function AwsDiagramSvg() {
         </marker>
       </defs>
       <g>
-        <rect x="20" y="140" width="100" height="40" rx="6" className={node} />
-        <text x="70" y="165" textAnchor="middle" className={text}>
+        <rect x="20" y="170" width="100" height="44" rx="6" className={node} />
+        <text x="70" y="197" textAnchor="middle" className={text}>
           ALB
         </text>
-        <rect x="180" y="60" width="160" height="40" rx="6" className={node} />
-        <text x="260" y="85" textAnchor="middle" className={text}>
+        <rect x="200" y="80" width="170" height="44" rx="6" className={node} />
+        <text x="285" y="107" textAnchor="middle" className={text}>
           Fargate · host
         </text>
-        <rect x="180" y="140" width="160" height="40" rx="6" className={node} />
-        <text x="260" y="165" textAnchor="middle" className={text}>
+        <rect x="200" y="170" width="170" height="44" rx="6" className={node} />
+        <text x="285" y="197" textAnchor="middle" className={text}>
           Fargate · remote
         </text>
-        <rect x="180" y="220" width="160" height="40" rx="6" className={node} />
-        <text x="260" y="245" textAnchor="middle" className={text}>
+        <rect x="200" y="260" width="170" height="44" rx="6" className={node} />
+        <text x="285" y="287" textAnchor="middle" className={text}>
           Fargate · api
         </text>
-        <rect x="400" y="60" width="160" height="40" rx="6" className={node} />
-        <text x="480" y="85" textAnchor="middle" className={text}>
+        <rect x="450" y="80" width="170" height="44" rx="6" className={node} />
+        <text x="535" y="107" textAnchor="middle" className={text}>
           RDS Postgres
         </text>
-        <rect x="400" y="140" width="160" height="40" rx="6" className={node} />
-        <text x="480" y="165" textAnchor="middle" className={text}>
+        <rect x="450" y="170" width="170" height="44" rx="6" className={node} />
+        <text x="535" y="197" textAnchor="middle" className={text}>
           ElastiCache
         </text>
-        <rect x="400" y="220" width="160" height="40" rx="6" className={node} />
-        <text x="480" y="245" textAnchor="middle" className={text}>
+        <rect x="450" y="260" width="170" height="44" rx="6" className={node} />
+        <text x="535" y="287" textAnchor="middle" className={text}>
           EventBridge · T6 cron
         </text>
-        <rect x="620" y="60" width="180" height="40" rx="6" className={node} />
-        <text x="710" y="85" textAnchor="middle" className={text}>
+        <rect x="700" y="80" width="200" height="44" rx="6" className={node} />
+        <text x="800" y="107" textAnchor="middle" className={text}>
           Anthropic API
         </text>
-        <rect x="620" y="140" width="180" height="40" rx="6" className={node} />
-        <text x="710" y="165" textAnchor="middle" className={text}>
+        <rect x="700" y="170" width="200" height="44" rx="6" className={node} />
+        <text x="800" y="197" textAnchor="middle" className={text}>
           Slack webhook
         </text>
         <rect
-          x="620"
-          y="220"
-          width="180"
-          height="40"
+          x="700"
+          y="260"
+          width="200"
+          height="44"
           rx="6"
           className="fill-[oklch(0.97_0.005_250)] stroke-[oklch(0.85_0.01_250)]"
           strokeDasharray="4 3"
         />
-        <text x="710" y="241" textAnchor="middle" className={text}>
+        <text x="800" y="282" textAnchor="middle" className={text}>
           Outlook Graph
         </text>
-        <text x="710" y="255" textAnchor="middle" className={muted}>
-          (stub)
+        <text x="800" y="296" textAnchor="middle" className={muted}>
+          (stub — credentials pending)
         </text>
       </g>
       <g markerEnd="url(#arrow2)" className={arrow}>
-        <line x1="120" y1="160" x2="178" y2="80" />
-        <line x1="120" y1="160" x2="178" y2="160" />
-        <line x1="120" y1="160" x2="178" y2="240" />
-        <line x1="340" y1="240" x2="398" y2="80" />
-        <line x1="340" y1="240" x2="398" y2="160" />
-        <line x1="340" y1="240" x2="398" y2="240" />
-        <line x1="340" y1="240" x2="618" y2="80" />
-        <line x1="340" y1="240" x2="618" y2="160" />
-        <line x1="340" y1="240" x2="618" y2="240" />
+        <line x1="120" y1="192" x2="198" y2="100" />
+        <line x1="120" y1="192" x2="198" y2="192" />
+        <line x1="120" y1="192" x2="198" y2="282" />
+        <line x1="370" y1="282" x2="448" y2="100" />
+        <line x1="370" y1="282" x2="448" y2="192" />
+        <line x1="370" y1="282" x2="448" y2="282" />
+        <line x1="370" y1="282" x2="698" y2="100" />
+        <line x1="370" y1="282" x2="698" y2="192" />
+        <line x1="370" y1="282" x2="698" y2="282" />
       </g>
-      <text x="20" y="40" className={muted}>
+      <text x="20" y="50" className={muted}>
         Internet
       </text>
-      <text x="180" y="40" className={muted}>
+      <text x="200" y="50" className={muted}>
         ECS · Fargate
       </text>
-      <text x="400" y="40" className={muted}>
+      <text x="450" y="50" className={muted}>
         Stateful + scheduling
       </text>
-      <text x="620" y="40" className={muted}>
+      <text x="700" y="50" className={muted}>
         Outbound integrations
       </text>
-      <text x="20" y="300" className={muted}>
+      <text x="20" y="380" className={muted}>
         Demo deploy: Railway. Swap path: terraform apply, ECR push, helm install.
       </text>
     </svg>
@@ -954,39 +964,108 @@ function AwsDiagramSvg() {
 function Section9CostGuard() {
   return (
     <SectionBlock>
-      <SectionHeading index="09" title="The cost guard" />
+      <SectionHeading index="09" title="Cost guard — $0.26 per employee per month" />
+      <div className="rounded-xl border border-(--color-ribbon-link) bg-(--color-panel-bg) p-8 ring-1 ring-(--color-ribbon-link)/20">
+        <div className="flex flex-col items-baseline gap-2 sm:flex-row sm:gap-6">
+          <span className="text-5xl font-semibold tracking-tight text-(--color-shell-text)">
+            $0.26
+          </span>
+          <span className="text-base font-medium text-(--color-hero-text)">
+            per employee · per month · at 175 ICs
+          </span>
+        </div>
+        <p className="mt-4 text-sm leading-relaxed text-(--color-hero-text)">
+          That number is the projected monthly Anthropic spend across all seven touchpoints,
+          assuming every IC plans and reconciles every week. Holding it there is what the cost
+          guard is for.
+        </p>
+      </div>
+      <div className="mt-6">
+        <Prose>
+          <p>
+            A per-org token budget is enforced server-side.{' '}
+            <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
+              AnthropicClient.preflight()
+            </code>{' '}
+            takes a{' '}
+            <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
+              PESSIMISTIC_READ
+            </code>{' '}
+            on the{' '}
+            <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
+              AIBudget
+            </code>{' '}
+            row before any call dispatches, debits the projected token cost, and rejects with a
+            429 if the projection would exceed the org cap. The lock is what makes this safe under
+            concurrent fan-out (a runaway prompt cannot exhaust the budget during the same lock
+            cycle). Haiku handles the high-volume cheap touchpoints (T1, T2, T6, T7) where latency
+            matters more than depth; Sonnet handles the analytical work (T3, T4, T5) where the
+            model reasons over multi-commit structure to produce the artefact a manager reads.
+          </p>
+        </Prose>
+      </div>
+    </SectionBlock>
+  );
+}
+
+function SectionTestEval() {
+  const buckets = [
+    {
+      heading: 'Frontend unit',
+      detail: 'Vitest. Every component has a test colocated next to it.',
+      proof: 'apps/weekly-commit-remote/src/**/*.test.tsx',
+    },
+    {
+      heading: 'Backend unit + slice',
+      detail: 'JUnit 5 + @SpringBootTest slices. JaCoCo enforces ≥80% line coverage in CI.',
+      proof: 'services/api/src/test/java/**',
+    },
+    {
+      heading: 'E2E acceptance (BDD)',
+      detail: 'Cypress + Cucumber/Gherkin. .feature files are deliverable spec artefacts.',
+      proof: 'cypress/e2e/**/*.feature',
+    },
+    {
+      heading: 'AI evals',
+      detail:
+        'evalkit. One fixture per T1–T7 scenario from docs/ai-copilot-spec.md. Temperature 0, N=3, ≥2/3 pass, deterministic assertions on the JSON schema.',
+      proof: 'evals/fixtures/*.json',
+    },
+  ];
+  return (
+    <SectionBlock>
+      <SectionHeading index="10" title="Test and eval coverage" />
       <Prose>
         <p>
-          A per-org token budget is enforced server-side. The{' '}
-          <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
-            AnthropicClient.preflight()
-          </code>{' '}
-          method takes a{' '}
-          <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
-            PESSIMISTIC_READ
-          </code>{' '}
-          on the{' '}
-          <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
-            AIBudget
-          </code>{' '}
-          row before any call dispatches, debits the projected token cost, and rejects with a 429 if
-          the projection would exceed the org cap. Haiku handles the high-volume cheap tasks (T1,
-          T2, T6, T7) where latency and per-call cost matter more than depth. Sonnet handles the
-          analytical work (T3, T4, T5) where the model is reasoning over multi-commit structure and
-          producing the artefact a manager actually reads. Per-employee monthly projection at the
-          brief&apos;s 175-employee scale is roughly 26 cents.
+          Four independent test surfaces because each catches a different failure mode. The AI
+          evals are the new layer; they pin behaviour against the JSON schema rather than asserting
+          on prose, which is what makes them deterministic enough to live in CI.
         </p>
       </Prose>
+      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        {buckets.map((b) => (
+          <article
+            key={b.heading}
+            className="rounded-md border border-(--color-panel-border) bg-(--color-panel-bg) p-5"
+          >
+            <h3 className="text-sm font-semibold text-(--color-shell-text)">{b.heading}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-(--color-hero-text)">{b.detail}</p>
+            <code className="mt-3 inline-block rounded bg-(--color-badge-bg) px-1.5 py-0.5 text-[11px] text-(--color-badge-fg)">
+              {b.proof}
+            </code>
+          </article>
+        ))}
+      </div>
     </SectionBlock>
   );
 }
 
 // ---------- Section 10 — Stack ----------
 
-function Section10Stack() {
+function Section11Stack() {
   return (
     <SectionBlock>
-      <SectionHeading index="10" title="Stack at a glance" />
+      <SectionHeading index="11" title="Stack at a glance" />
       <div className="grid gap-8 sm:grid-cols-2">
         <StackColumn
           heading="Frontend"

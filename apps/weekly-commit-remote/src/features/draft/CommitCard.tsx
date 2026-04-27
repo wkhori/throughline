@@ -1,4 +1,5 @@
 import type { CommitDto, RcdoTreeDto } from '@throughline/shared-types';
+import { RcdoChip, resolveRcdoTrail } from '@throughline/shared-ui';
 
 interface CommitCardProps {
   commit: CommitDto;
@@ -7,10 +8,8 @@ interface CommitCardProps {
   onEdit?: (commit: CommitDto) => void;
 }
 
-// Phase-2 commit row. Drift indicator (T2) and quality-lint hint (T7) are intentionally hidden
-// in Phase 2 — they wire in Phase 5a.
 export function CommitCard({ commit, rcdo, weekState, onEdit }: CommitCardProps) {
-  const breadcrumb = findSoBreadcrumb(rcdo, commit.supportingOutcomeId);
+  const trail = resolveRcdoTrail(rcdo, commit.supportingOutcomeId);
   const interactive = weekState === 'DRAFT' && !!onEdit;
   const className = interactive
     ? 'cursor-pointer rounded-md border border-(--color-commit-border) bg-(--color-commit-bg) p-3 transition-colors hover:border-(--color-ribbon-link)'
@@ -35,11 +34,11 @@ export function CommitCard({ commit, rcdo, weekState, onEdit }: CommitCardProps)
       className={className}
     >
       <p className="text-sm font-medium text-(--color-commit-text)">{commit.text}</p>
-      {breadcrumb ? (
-        <p className="mt-1 text-xs text-(--color-commit-muted)" data-testid="commit-breadcrumb">
-          {breadcrumb}
-        </p>
-      ) : (
+      {trail ? (
+        <div className="mt-1.5" data-testid="commit-breadcrumb">
+          <RcdoChip trail={trail} variant="trail" />
+        </div>
+      ) : commit.supportingOutcomeId ? null : (
         <p className="mt-1 text-xs italic text-(--color-shell-error)" data-testid="commit-no-so">
           No Supporting Outcome — required to lock
         </p>
@@ -60,20 +59,4 @@ export function CommitCard({ commit, rcdo, weekState, onEdit }: CommitCardProps)
       </div>
     </article>
   );
-}
-
-function findSoBreadcrumb(tree: RcdoTreeDto | undefined, soId: string | null): string | null {
-  if (!tree || !soId) return null;
-  for (const rc of tree.rallyCries) {
-    for (const defo of rc.definingObjectives) {
-      for (const o of defo.outcomes) {
-        for (const so of o.supportingOutcomes) {
-          if (so.id === soId) {
-            return `${rc.title} › ${defo.title} › ${o.title} › ${so.title}`;
-          }
-        }
-      }
-    }
-  }
-  return null;
 }

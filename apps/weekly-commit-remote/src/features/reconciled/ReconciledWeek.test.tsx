@@ -54,8 +54,15 @@ describe('ReconciledWeek', () => {
     expect(screen.getByTestId('reconciled-cf-badge-c2').textContent).toContain('chain length 2');
   });
 
-  it('renders the alignment-delta placeholder pane', () => {
-    renderWithProviders(<ReconciledWeek week={week} />);
-    expect(screen.getByTestId('reconciled-alignment-placeholder')).toBeInTheDocument();
+  it('falls back to em-dash when reconciledAt is missing or invalid', () => {
+    const odd: WeekDto = { ...week, reconciledAt: null };
+    renderWithProviders(<ReconciledWeek week={odd} />);
+    expect(screen.getByText(/—/)).toBeInTheDocument();
+  });
+
+  it('preserves a raw timestamp string when Date parsing fails', () => {
+    const odd: WeekDto = { ...week, reconciledAt: 'not-a-date' };
+    renderWithProviders(<ReconciledWeek week={odd} />);
+    expect(screen.getByText(/not-a-date/)).toBeInTheDocument();
   });
 });

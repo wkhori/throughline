@@ -139,4 +139,47 @@ describe('DigestHero', () => {
       expect(screen.getByTestId('digest-regenerate-error')).toBeInTheDocument(),
     );
   });
+
+  it('dispatch-slack button POSTs and surfaces an ack on the OK variant', async () => {
+    let calls = 0;
+    server.use(
+      http.get('http://localhost:8080/api/v1/manager/digest/current', () =>
+        HttpResponse.json({ digest: okPayload, state: 'OK' }),
+      ),
+      http.post('http://localhost:8080/api/v1/manager/digest/dispatch-slack', () => {
+        calls += 1;
+        return new HttpResponse(null, { status: 202 });
+      }),
+    );
+    renderWithProviders(<DigestHero />, 'MANAGER');
+    const button = await screen.findByTestId('digest-dispatch-slack');
+    await userEvent.click(button);
+    await waitFor(() => expect(calls).toBe(1));
+    await waitFor(() =>
+      expect(screen.getByTestId('digest-dispatch-ack')).toBeInTheDocument(),
+    );
+  });
+
+  it('chipsFor coerces missing displayName + 0-week carry-forwards into clean labels', async () => {
+    const oddPayload = {
+      ...okPayload,
+      driftExceptions: [{ userId: '01J0USER000000000000000003', displayName: '' }],
+      longCarryForwards: [
+        { commitId: '01J0COMMIT00000000000000B', weeks: 0, commitText: 'Edge case' },
+      ],
+      drillDowns: [{ userId: '01J0USER000000000000000004' }],
+    };
+    server.use(
+      http.get('http://localhost:8080/api/v1/manager/digest/current', () =>
+        HttpResponse.json({ digest: oddPayload, state: 'OK' }),
+      ),
+    );
+    renderWithProviders(<DigestHero />, 'MANAGER');
+    await waitFor(() =>
+      expect(screen.getByTestId('digest-state-badge')).toHaveTextContent('OK'),
+    );
+    const userChips = screen.getAllByText(/User #01J0USER/);
+    expect(userChips.length).toBeGreaterThan(0);
+    expect(screen.getByText(/Edge case/)).toBeInTheDocument();
+  });
 });

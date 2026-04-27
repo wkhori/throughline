@@ -9,9 +9,9 @@ interface LockWeekDialogProps {
   onClose: () => void;
 }
 
-// Phase-2 confirm-and-lock modal. Lists commits missing an SO as blockers; disables the lock
-// button until they're resolved. The "portfolio review preview" pane is a placeholder in Phase 2;
-// Phase 5b wires the real T3 output.
+// Confirm-and-lock modal. Lists commits missing a Supporting Outcome as blockers and disables
+// the lock button until they're resolved. T3 portfolio review fires AFTER_COMMIT and shows up
+// on the locked-week surface.
 export function LockWeekDialog({
   open,
   commits,
@@ -57,12 +57,12 @@ export function LockWeekDialog({
             </ul>
           </div>
         )}
-        <div
-          className="mt-4 rounded-md border border-dashed border-(--color-panel-border) p-3 text-xs text-(--color-panel-muted)"
-          data-testid="lock-dialog-portfolio-placeholder"
+        <p
+          className="mt-4 text-xs text-(--color-panel-muted)"
+          data-testid="lock-dialog-portfolio-hint"
         >
-          Portfolio review will appear here after locking. (AI insight wires in Phase 5b.)
-        </div>
+          The AI portfolio review fires on lock and appears on the locked-week surface.
+        </p>
         <div className="mt-6 flex justify-end gap-2">
           <button
             type="button"

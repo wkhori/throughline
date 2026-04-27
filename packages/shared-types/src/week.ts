@@ -34,7 +34,9 @@ export interface WeekDto {
 
 export interface LockResponseDto {
   week: WeekDto;
-  /** Phase 5b wires the real T3 portfolio review; null in Phase 2. */
+  /** Server-attached T3 portfolio review when the AI ran in-band; null when it
+   *  fell back to async retry. The IC view should fall back to the GET endpoint
+   *  in that case. */
   portfolioReview: unknown | null;
 }
 

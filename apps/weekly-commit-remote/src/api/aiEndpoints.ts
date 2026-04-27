@@ -1,7 +1,9 @@
 import type {
   AIInsightDto,
+  AlignmentDeltaPayload,
   DriftCheckPayload,
   DriftCheckRequest,
+  PortfolioReviewPayload,
   QualityLintPayload,
   QualityLintRequest,
   SuggestOutcomePayload,
@@ -9,9 +11,6 @@ import type {
 } from '@throughline/shared-types';
 import { api } from './api.js';
 
-// Phase 5a — IC-side AI surface (T1 / T2 / T7). The endpoints are POST because every call carries
-// a per-call dynamic body. Cost guard refusals surface as 429 BUDGET_EXHAUSTED — components
-// silent-degrade per docs/ai-copilot-spec.md.
 export const aiApi = api.injectEndpoints({
   endpoints: (build) => ({
     suggestOutcome: build.mutation<AIInsightDto<SuggestOutcomePayload>, SuggestOutcomeRequest>({
@@ -26,7 +25,37 @@ export const aiApi = api.injectEndpoints({
       query: (body) => ({ url: '/ai/quality-lint', method: 'POST', body }),
       invalidatesTags: (_res, _err, body) => [{ type: 'AIInsight', id: `commit:${body.commitId}` }],
     }),
+    // T4 — fetched after the IC reconciles the week. 204 means the AFTER_COMMIT consumer hasn't
+    // posted the insight yet (or fell back to deterministic mode). RTK Query treats 204 as null.
+    getAlignmentDelta: build.query<AIInsightDto<AlignmentDeltaPayload> | null, string>({
+      query: (weekId) => ({ url: `/ai/alignment-delta/${weekId}` }),
+      transformResponse: (response: unknown) =>
+        (response as AIInsightDto<AlignmentDeltaPayload> | null | undefined) ?? null,
+      providesTags: (_res, _err, weekId) => [{ type: 'AIInsight', id: `week:${weekId}:T4` }],
+    }),
+    runAlignmentDelta: build.mutation<AIInsightDto<AlignmentDeltaPayload>, string>({
+      query: (weekId) => ({ url: `/ai/alignment-delta/${weekId}`, method: 'POST' }),
+      invalidatesTags: (_res, _err, weekId) => [{ type: 'AIInsight', id: `week:${weekId}:T4` }],
+    }),
+    getPortfolioReview: build.query<AIInsightDto<PortfolioReviewPayload> | null, string>({
+      query: (weekId) => ({ url: `/ai/portfolio-review/${weekId}` }),
+      transformResponse: (response: unknown) =>
+        (response as AIInsightDto<PortfolioReviewPayload> | null | undefined) ?? null,
+      providesTags: (_res, _err, weekId) => [{ type: 'AIInsight', id: `week:${weekId}:T3` }],
+    }),
+    runPortfolioReview: build.mutation<AIInsightDto<PortfolioReviewPayload>, string>({
+      query: (weekId) => ({ url: `/ai/portfolio-review/${weekId}`, method: 'POST' }),
+      invalidatesTags: (_res, _err, weekId) => [{ type: 'AIInsight', id: `week:${weekId}:T3` }],
+    }),
   }),
 });
 
-export const { useSuggestOutcomeMutation, useDriftCheckMutation, useQualityLintMutation } = aiApi;
+export const {
+  useSuggestOutcomeMutation,
+  useDriftCheckMutation,
+  useQualityLintMutation,
+  useGetAlignmentDeltaQuery,
+  useRunAlignmentDeltaMutation,
+  useGetPortfolioReviewQuery,
+  useRunPortfolioReviewMutation,
+} = aiApi;
