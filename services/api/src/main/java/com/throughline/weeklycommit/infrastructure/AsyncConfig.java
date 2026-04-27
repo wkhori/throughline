@@ -3,6 +3,7 @@ package com.throughline.weeklycommit.infrastructure;
 import java.util.concurrent.Executor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -15,8 +16,13 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  *       alignment-risk scans). Bounded so a stuck Anthropic call cannot exhaust the JVM's thread
  *       pool.
  * </ul>
+ *
+ * <p>Gated to {@code !test} so test runs invoke {@code @Async} methods synchronously on the calling
+ * thread — keeping AFTER_COMMIT consumers deterministic in test contexts and avoiding cleanup races
+ * against {@code ai_user_hour_counter} FK.
  */
 @Configuration
+@Profile("!test")
 @EnableAsync
 @EnableScheduling
 public class AsyncConfig {

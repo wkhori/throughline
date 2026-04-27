@@ -3,13 +3,18 @@ package com.throughline.weeklycommit.application.manager;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.throughline.weeklycommit.application.CurrentUserResolver;
+import com.throughline.weeklycommit.application.ai.ManagerDigestService;
 import com.throughline.weeklycommit.application.lifecycle.WeekStateMachine;
+import com.throughline.weeklycommit.domain.AIInsight;
+import com.throughline.weeklycommit.domain.AlignmentRisk;
 import com.throughline.weeklycommit.domain.Org;
 import com.throughline.weeklycommit.domain.Role;
 import com.throughline.weeklycommit.domain.Team;
 import com.throughline.weeklycommit.domain.TeamRollupCache;
 import com.throughline.weeklycommit.domain.User;
 import com.throughline.weeklycommit.domain.Week;
+import com.throughline.weeklycommit.domain.repo.AlignmentRiskRepository;
 import com.throughline.weeklycommit.domain.repo.CommitRepository;
 import com.throughline.weeklycommit.domain.repo.OrgRepository;
 import com.throughline.weeklycommit.domain.repo.TeamRepository;
@@ -53,6 +58,9 @@ public class ManagerService {
   private final MaterializedRollupJob job;
   private final ObjectMapper json;
   private final Clock clock;
+  private final ManagerDigestService digestService;
+  private final AlignmentRiskRepository alignmentRiskRepo;
+  private final CurrentUserResolver currentUser;
 
   public ManagerService(
       TeamRollupCacheRepository cacheRepo,
@@ -64,7 +72,10 @@ public class ManagerService {
       WeekStateMachine stateMachine,
       MaterializedRollupJob job,
       ObjectMapper json,
-      Clock clock) {
+      Clock clock,
+      ManagerDigestService digestService,
+      AlignmentRiskRepository alignmentRiskRepo,
+      CurrentUserResolver currentUser) {
     this.cacheRepo = cacheRepo;
     this.teamRepo = teamRepo;
     this.userRepo = userRepo;
@@ -75,6 +86,9 @@ public class ManagerService {
     this.job = job;
     this.json = json;
     this.clock = clock;
+    this.digestService = digestService;
+    this.alignmentRiskRepo = alignmentRiskRepo;
+    this.currentUser = currentUser;
   }
 
   /**
@@ -157,22 +171,78 @@ public class ManagerService {
             .toList());
   }
 
-  /** Phase-4 contract: digest is always null until Phase 5c wires T5. */
+  /** P17: latest digest for the calling manager (hero card). */
   public ManagerDtos.DigestEnvelope currentDigest() {
-    return new ManagerDtos.DigestEnvelope(null, "AWAITING_AI");
+    User caller = currentUser.requireCurrentUser();
+    return digestService
+        .findLatestDigestForManager(caller.getId())
+        .map(this::digestEnvelope)
+        .orElseGet(() -> new ManagerDtos.DigestEnvelope(null, "AWAITING_AI"));
   }
 
-  /** Phase-4 contract: regenerate is recorded but returns digest=null + a queued state. */
+  /** Synchronous on-demand digest regeneration. Throttled per manager via T5 service Caffeine. */
+  @Transactional
   public ManagerDtos.DigestRegenerateResponse regenerateDigest() {
+    User caller = currentUser.requireCurrentUser();
+    AIInsight insight = digestService.regenerateOnDemand(caller);
+    JsonNode payload = parse(insight.getPayloadJson());
     return new ManagerDtos.DigestRegenerateResponse(
-        null,
-        "QUEUED",
-        "Digest regeneration is queued; T5 wires the synchronous path in Phase 5c.");
+        payload, insight.getModel().equals("deterministic") ? "FALLBACK" : "OK", "Generated");
   }
 
-  /** Phase-4 contract: alignment risks list is empty (Phase 5c populates from T6). */
+  /** Open alignment risks for the caller's org, newest first. */
   public List<JsonNode> alignmentRisks() {
-    return List.of();
+    User caller = currentUser.requireCurrentUser();
+    return alignmentRiskRepo
+        .findByOrgIdAndAcknowledgedAtIsNullOrderByCreatedAtDesc(
+            caller.getOrgId(), org.springframework.data.domain.Pageable.unpaged())
+        .stream()
+        .map(this::riskToJson)
+        .toList();
+  }
+
+  /** Acknowledge an alignment risk (P14). Stamps acknowledgedAt + acknowledgedBy. */
+  @Transactional
+  public AlignmentRisk acknowledgeRisk(String riskId, User caller) {
+    AlignmentRisk risk =
+        alignmentRiskRepo
+            .findById(riskId)
+            .orElseThrow(() -> new NotFoundException("AlignmentRisk", riskId));
+    if (!risk.getOrgId().equals(caller.getOrgId())) {
+      throw new org.springframework.security.access.AccessDeniedException(
+          "cross-org access blocked");
+    }
+    if (risk.getAcknowledgedAt() == null) {
+      risk.acknowledge(caller.getId(), clock.instant());
+      alignmentRiskRepo.save(risk);
+    }
+    return risk;
+  }
+
+  private ManagerDtos.DigestEnvelope digestEnvelope(AIInsight insight) {
+    return new ManagerDtos.DigestEnvelope(
+        parse(insight.getPayloadJson()),
+        insight.getModel().equals("deterministic") ? "FALLBACK" : "OK");
+  }
+
+  private JsonNode parse(String s) {
+    try {
+      return json.readTree(s);
+    } catch (JsonProcessingException e) {
+      return json.createObjectNode();
+    }
+  }
+
+  private JsonNode riskToJson(AlignmentRisk r) {
+    var node = json.createObjectNode();
+    node.put("id", r.getId());
+    node.put("rule", r.getRule().name());
+    node.put("severity", r.getSeverity().name());
+    node.put("entityType", r.getEntityType());
+    node.put("entityId", r.getEntityId());
+    node.put("weekStart", r.getWeekStart().toString());
+    node.put("createdAt", r.getCreatedAt().toString());
+    return node;
   }
 
   // ---------------------------------------------------------------------------------------------

@@ -68,4 +68,12 @@ public class ManagerController {
   public ResponseEntity<List<JsonNode>> alignmentRisks() {
     return ResponseEntity.ok(service.alignmentRisks());
   }
+
+  /** P14: acknowledge an alignment risk. Same-org check enforced in the service. */
+  @PostMapping("/alignment-risks/{id}/ack")
+  @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
+  public ResponseEntity<Void> ackAlignmentRisk(@PathVariable String id) {
+    service.acknowledgeRisk(id, currentUser.requireCurrentUser());
+    return ResponseEntity.noContent().build();
+  }
 }
