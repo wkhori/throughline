@@ -1,13 +1,15 @@
 # --- build stage ---
-# Build context is `services/api/` — the gradle project is self-contained.
+# Build context = repo root (Railway uploads from CWD = repo root). The gradle project paths
+# stay scoped to services/api/ so this Dockerfile is self-consistent regardless of where
+# `docker build` is run from, as long as the context is the repo root.
 FROM eclipse-temurin:21-jdk AS builder
 WORKDIR /workspace
-COPY gradle gradle
-COPY gradlew settings.gradle.kts build.gradle.kts ./
-COPY config config
+COPY services/api/gradle gradle
+COPY services/api/gradlew services/api/settings.gradle.kts services/api/build.gradle.kts ./
+COPY services/api/config config
 RUN chmod +x gradlew
-COPY src src
-RUN --mount=type=cache,target=/root/.gradle ./gradlew bootJar -x test --no-daemon
+COPY services/api/src src
+RUN ./gradlew bootJar -x test --no-daemon
 
 # --- runtime stage ---
 FROM eclipse-temurin:21-jre AS runtime
