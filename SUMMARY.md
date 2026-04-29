@@ -153,7 +153,7 @@ Demo accounts: `ic@demo.throughline.app`, `manager@demo.throughline.app`, `admin
 | File | Audience | Purpose |
 |---|---|---|
 | `README.md` | Everyone | Demo URL, run-locally, env vars, accounts |
-| `CLAUDE.md` | Future agents + reviewer | Methodology, the Rule, manager-burden reframe (this is the deliverable AJ asked for) |
+| `CLAUDE.md` | Future agents + reviewer | Methodology, the Rule, manager-burden reframe |
 | `PRD.md` | Implementing agent | The build script — every section drives a phase |
 | `docs/architecture-decisions.md` | Reviewer + future agents | The 33-row requirement-treatment table; substitution rationale |
 | `docs/ai-copilot-spec.md` | Implementing agent | Full prompt text, JSON schemas, fallbacks, evals |
@@ -163,7 +163,7 @@ Demo accounts: `ic@demo.throughline.app`, `manager@demo.throughline.app`, `admin
 
 ---
 
-## What Will Be Sent to AJ
+## Submission Artifacts
 
 1. **Hosted app URL** (Railway).
 2. **Repo URL** (GitHub).

@@ -1109,7 +1109,7 @@ The project is complete when **every** item below holds:
 11. **AI fallback verified end-to-end:** with `ANTHROPIC_API_KEY` invalidated locally, the demo flow still completes — manager dashboard renders, locks succeed, reconciliations submit.
 12. **Seed data dysfunctions visible** on the manager dashboard immediately after demo login.
 13. **Performance gates met:** `GET /weeks/current` <200ms; manager team-rollup first page <200ms with 2000 records; FCP <1s on Draft route.
-14. **Deliverables to AJ Watson:** hosted URL, repo URL, copy of `CLAUDE.md`.
+14. **Submission artifacts:** hosted URL, repo URL, copy of `CLAUDE.md`.
 
 ---
 
