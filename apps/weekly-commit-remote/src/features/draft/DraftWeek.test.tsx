@@ -7,6 +7,18 @@ import type { CommitDto, WeekDto } from '@throughline/shared-types';
 import { renderWithProviders } from '../../test-utils.js';
 import { DraftWeek } from './DraftWeek.js';
 
+async function pickListboxOption(
+  user: ReturnType<typeof userEvent.setup>,
+  testId: string,
+  value: string,
+) {
+  await user.click(screen.getByTestId(testId));
+  const option = await screen.findByRole('option', {
+    name: (_n, el) => el.getAttribute('data-value') === value,
+  });
+  await user.click(option);
+}
+
 const so = {
   id: 'so-x',
   outcomeId: 'o',
@@ -104,10 +116,10 @@ describe('DraftWeek', () => {
     renderWithProviders(<DraftWeek week={week} />);
     await waitFor(() => expect(screen.getByTestId('commit-rc-select')).toBeInTheDocument());
     await user.type(screen.getByTestId('commit-text-input'), 'Plan something useful');
-    await user.selectOptions(screen.getByTestId('commit-rc-select'), 'rc');
-    await user.selectOptions(screen.getByTestId('commit-do-select'), 'do');
-    await user.selectOptions(screen.getByTestId('commit-outcome-select'), 'o');
-    await user.selectOptions(screen.getByTestId('commit-so-select'), 'so-x');
+    await pickListboxOption(user, 'commit-rc-select', 'rc');
+    await pickListboxOption(user, 'commit-do-select', 'do');
+    await pickListboxOption(user, 'commit-outcome-select', 'o');
+    await pickListboxOption(user, 'commit-so-select', 'so-x');
     await user.click(screen.getByTestId('commit-form-submit'));
     // Successful submit clears the text input.
     await waitFor(() =>
@@ -125,10 +137,10 @@ describe('DraftWeek', () => {
     renderWithProviders(<DraftWeek week={week} />);
     await waitFor(() => expect(screen.getByTestId('commit-rc-select')).toBeInTheDocument());
     await user.type(screen.getByTestId('commit-text-input'), 'Another commit text');
-    await user.selectOptions(screen.getByTestId('commit-rc-select'), 'rc');
-    await user.selectOptions(screen.getByTestId('commit-do-select'), 'do');
-    await user.selectOptions(screen.getByTestId('commit-outcome-select'), 'o');
-    await user.selectOptions(screen.getByTestId('commit-so-select'), 'so-x');
+    await pickListboxOption(user, 'commit-rc-select', 'rc');
+    await pickListboxOption(user, 'commit-do-select', 'do');
+    await pickListboxOption(user, 'commit-outcome-select', 'o');
+    await pickListboxOption(user, 'commit-so-select', 'so-x');
     await user.click(screen.getByTestId('commit-form-submit'));
     await waitFor(() =>
       expect(screen.getByTestId('commit-form-error').textContent).toContain('7-commit cap'),

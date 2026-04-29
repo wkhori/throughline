@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import type {
   CommitCategory,
   CommitDto,
@@ -188,35 +188,218 @@ interface SelectFieldProps {
   options: SelectOption[];
   testId: string;
   disabled?: boolean;
+  placeholder?: string;
 }
 
-function SelectField({ id, label, value, onChange, options, testId, disabled }: SelectFieldProps) {
+// Custom dropdown: trigger button + portal-less popover listbox. Replaces native <select> so the
+// chevron, padding, and option styling are fully ours (instead of OS-rendered). Click-outside
+// closes; full keyboard nav (Up/Down/Home/End/Enter/Escape/Space); ARIA combobox + listbox.
+function SelectField({
+  id,
+  label,
+  value,
+  onChange,
+  options,
+  testId,
+  disabled,
+  placeholder = 'Select…',
+}: SelectFieldProps) {
+  const [open, setOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState<number>(-1);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+  const reactId = useId();
+  const listboxId = `${id}-listbox-${reactId}`;
+  const selectedIndex = options.findIndex((o) => o.value === value);
+  const selectedLabel = selectedIndex >= 0 ? (options[selectedIndex]?.label ?? null) : null;
+
+  useEffect(() => {
+    if (!open) return;
+    const handle = (e: MouseEvent) => {
+      if (!wrapperRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    window.addEventListener('mousedown', handle);
+    return () => window.removeEventListener('mousedown', handle);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    setActiveIndex(selectedIndex >= 0 ? selectedIndex : 0);
+  }, [open, selectedIndex]);
+
+  useEffect(() => {
+    if (!open || activeIndex < 0) return;
+    const el = listRef.current?.querySelector<HTMLLIElement>(`[data-index="${activeIndex}"]`);
+    el?.scrollIntoView?.({ block: 'nearest' });
+  }, [open, activeIndex]);
+
+  const commit = useCallback(
+    (idx: number) => {
+      const opt = options[idx];
+      if (!opt) return;
+      onChange(opt.value);
+      setOpen(false);
+    },
+    [onChange, options],
+  );
+
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (disabled) return;
+    if (!open) {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        setOpen(true);
+      }
+      return;
+    }
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setActiveIndex((i) => Math.min(options.length - 1, (i < 0 ? -1 : i) + 1));
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setActiveIndex((i) => Math.max(0, (i < 0 ? options.length : i) - 1));
+        break;
+      case 'Home':
+        e.preventDefault();
+        setActiveIndex(0);
+        break;
+      case 'End':
+        e.preventDefault();
+        setActiveIndex(options.length - 1);
+        break;
+      case 'Enter':
+      case ' ':
+        e.preventDefault();
+        if (activeIndex >= 0) commit(activeIndex);
+        break;
+      case 'Escape':
+        e.preventDefault();
+        setOpen(false);
+        break;
+      case 'Tab':
+        setOpen(false);
+        break;
+    }
+  };
+
   return (
-    <div>
+    <div ref={wrapperRef} className="relative">
       <label
         htmlFor={id}
         className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-(--color-shell-muted)"
       >
         {label}
       </label>
-      <select
+      <button
         id={id}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+        type="button"
+        role="combobox"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={open ? listboxId : undefined}
+        aria-activedescendant={
+          open && activeIndex >= 0 ? `${listboxId}-opt-${activeIndex}` : undefined
+        }
         disabled={disabled}
-        className="w-full rounded-md border border-(--color-panel-border) bg-(--color-shell-bg) px-3 py-2 text-sm text-(--color-shell-text) disabled:cursor-not-allowed disabled:opacity-40"
+        onClick={() => !disabled && setOpen((o) => !o)}
+        onKeyDown={onKeyDown}
         data-testid={testId}
+        data-state={open ? 'open' : 'closed'}
+        className="flex w-full items-center justify-between gap-2 rounded-md border border-(--color-panel-border) bg-(--color-shell-bg) px-3 py-2 text-left text-sm text-(--color-shell-text) transition-colors hover:border-(--color-shell-text)/40 focus:border-(--color-ribbon-link) focus:outline-none focus:ring-2 focus:ring-(--color-ribbon-link)/30 disabled:cursor-not-allowed disabled:opacity-40 data-[state=open]:border-(--color-ribbon-link)"
       >
-        <option value="" disabled>
-          Select…
-        </option>
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
+        <span
+          className={`truncate ${selectedLabel ? '' : 'text-(--color-shell-muted)'}`}
+          data-testid={`${testId}-value`}
+        >
+          {selectedLabel ?? placeholder}
+        </span>
+        <ChevronDownIcon open={open} />
+      </button>
+      {open && (
+        <ul
+          ref={listRef}
+          id={listboxId}
+          role="listbox"
+          tabIndex={-1}
+          aria-labelledby={id}
+          data-testid={`${testId}-listbox`}
+          className="absolute z-20 mt-1.5 max-h-64 w-full overflow-auto rounded-md border border-(--color-panel-border) bg-(--color-shell-bg) py-1 shadow-lg shadow-black/10"
+        >
+          {options.length === 0 && (
+            <li className="px-3 py-2 text-xs italic text-(--color-shell-muted)">
+              No options available
+            </li>
+          )}
+          {options.map((o, idx) => {
+            const isSelected = idx === selectedIndex;
+            const isActive = idx === activeIndex;
+            return (
+              <li
+                key={o.value}
+                id={`${listboxId}-opt-${idx}`}
+                data-index={idx}
+                data-value={o.value}
+                role="option"
+                aria-selected={isSelected}
+                onMouseEnter={() => setActiveIndex(idx)}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  commit(idx);
+                }}
+                className={`flex cursor-pointer items-center gap-2 px-3 py-2 text-sm ${
+                  isActive
+                    ? 'bg-(--color-ribbon-link)/10 text-(--color-shell-text)'
+                    : 'text-(--color-shell-text)'
+                }`}
+              >
+                <CheckIcon visible={isSelected} />
+                <span className="truncate">{o.label}</span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
+  );
+}
+
+function ChevronDownIcon({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      className={`shrink-0 text-(--color-shell-muted) transition-transform ${open ? 'rotate-180' : ''}`}
+    >
+      <path d="M4 6l4 4 4-4" />
+    </svg>
+  );
+}
+
+function CheckIcon({ visible }: { visible: boolean }) {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      className={`shrink-0 text-(--color-ribbon-link) ${visible ? 'opacity-100' : 'opacity-0'}`}
+    >
+      <path d="M3.5 8.5l3 3 6-6" />
+    </svg>
   );
 }
 
