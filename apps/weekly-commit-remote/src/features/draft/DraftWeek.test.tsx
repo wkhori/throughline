@@ -102,8 +102,11 @@ describe('DraftWeek', () => {
   it('submits a new commit through the create mutation', async () => {
     const user = userEvent.setup();
     renderWithProviders(<DraftWeek week={week} />);
-    await waitFor(() => expect(screen.getByTestId('commit-so-select')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByTestId('commit-rc-select')).toBeInTheDocument());
     await user.type(screen.getByTestId('commit-text-input'), 'Plan something useful');
+    await user.selectOptions(screen.getByTestId('commit-rc-select'), 'rc');
+    await user.selectOptions(screen.getByTestId('commit-do-select'), 'do');
+    await user.selectOptions(screen.getByTestId('commit-outcome-select'), 'o');
     await user.selectOptions(screen.getByTestId('commit-so-select'), 'so-x');
     await user.click(screen.getByTestId('commit-form-submit'));
     // Successful submit clears the text input.
@@ -120,8 +123,11 @@ describe('DraftWeek', () => {
     );
     const user = userEvent.setup();
     renderWithProviders(<DraftWeek week={week} />);
-    await waitFor(() => expect(screen.getByTestId('commit-so-select')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByTestId('commit-rc-select')).toBeInTheDocument());
     await user.type(screen.getByTestId('commit-text-input'), 'Another commit text');
+    await user.selectOptions(screen.getByTestId('commit-rc-select'), 'rc');
+    await user.selectOptions(screen.getByTestId('commit-do-select'), 'do');
+    await user.selectOptions(screen.getByTestId('commit-outcome-select'), 'o');
     await user.selectOptions(screen.getByTestId('commit-so-select'), 'so-x');
     await user.click(screen.getByTestId('commit-form-submit'));
     await waitFor(() =>

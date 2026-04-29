@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type {
   CommitCategory,
   CommitDto,
@@ -109,18 +109,15 @@ export function CommitForm({
           }}
         />
       </div>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <SelectField
-          id="commit-so"
-          label="Supporting Outcome"
-          value={supportingOutcomeId}
-          onChange={(v) => {
-            setSO(v);
-            setManualSelectAt(Date.now());
-          }}
-          options={flattenSO(rcdo)}
-          testId="commit-so-select"
-        />
+      <RcdoCascade
+        tree={rcdo}
+        value={supportingOutcomeId}
+        onChange={(v) => {
+          setSO(v);
+          setManualSelectAt(Date.now());
+        }}
+      />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <SelectField
           id="commit-category"
           label="Category"
@@ -190,9 +187,10 @@ interface SelectFieldProps {
   onChange: (v: string) => void;
   options: SelectOption[];
   testId: string;
+  disabled?: boolean;
 }
 
-function SelectField({ id, label, value, onChange, options, testId }: SelectFieldProps) {
+function SelectField({ id, label, value, onChange, options, testId, disabled }: SelectFieldProps) {
   return (
     <div>
       <label
@@ -205,7 +203,8 @@ function SelectField({ id, label, value, onChange, options, testId }: SelectFiel
         id={id}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-md border border-(--color-panel-border) bg-(--color-shell-bg) px-3 py-2 text-sm text-(--color-shell-text)"
+        disabled={disabled}
+        className="w-full rounded-md border border-(--color-panel-border) bg-(--color-shell-bg) px-3 py-2 text-sm text-(--color-shell-text) disabled:cursor-not-allowed disabled:opacity-40"
         data-testid={testId}
       >
         <option value="" disabled>
@@ -221,19 +220,109 @@ function SelectField({ id, label, value, onChange, options, testId }: SelectFiel
   );
 }
 
-function flattenSO(tree: RcdoTreeDto | undefined): SelectOption[] {
-  if (!tree) return [];
-  const out: SelectOption[] = [];
+interface RcdoCascadeProps {
+  tree: RcdoTreeDto | undefined;
+  value: string;
+  onChange: (supportingOutcomeId: string) => void;
+}
+
+// Cascading 4-step picker (Rally Cry → DO → Outcome → Supporting Outcome). Each level is only
+// enabled once its parent is chosen. Replaces the flat 144-option dropdown — manageable scan,
+// no hunting through repeated prefixes.
+function RcdoCascade({ tree, value, onChange }: RcdoCascadeProps) {
+  const ancestry = useMemo(() => findAncestry(tree, value), [tree, value]);
+  const [rcId, setRcId] = useState<string>(ancestry?.rcId ?? '');
+  const [doId, setDoId] = useState<string>(ancestry?.doId ?? '');
+  const [outcomeId, setOutcomeId] = useState<string>(ancestry?.outcomeId ?? '');
+
+  useEffect(() => {
+    if (ancestry) {
+      setRcId(ancestry.rcId);
+      setDoId(ancestry.doId);
+      setOutcomeId(ancestry.outcomeId);
+    }
+  }, [ancestry]);
+
+  const rallyCries = tree?.rallyCries ?? [];
+  const rc = rallyCries.find((r) => r.id === rcId);
+  const dos = rc?.definingObjectives ?? [];
+  const defo = dos.find((d) => d.id === doId);
+  const outcomes = defo?.outcomes ?? [];
+  const outcome = outcomes.find((o) => o.id === outcomeId);
+  const sos = outcome?.supportingOutcomes ?? [];
+
+  return (
+    <div data-testid="commit-so-cascade" className="space-y-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <SelectField
+          id="commit-rc"
+          label="Rally Cry"
+          value={rcId}
+          onChange={(v) => {
+            setRcId(v);
+            setDoId('');
+            setOutcomeId('');
+            onChange('');
+          }}
+          options={rallyCries.map((r) => ({ value: r.id, label: r.title }))}
+          testId="commit-rc-select"
+        />
+        <SelectField
+          id="commit-do"
+          label="Defining Objective"
+          value={doId}
+          onChange={(v) => {
+            setDoId(v);
+            setOutcomeId('');
+            onChange('');
+          }}
+          options={dos.map((d) => ({ value: d.id, label: d.title }))}
+          testId="commit-do-select"
+          disabled={!rcId}
+        />
+      </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <SelectField
+          id="commit-outcome"
+          label="Outcome"
+          value={outcomeId}
+          onChange={(v) => {
+            setOutcomeId(v);
+            onChange('');
+          }}
+          options={outcomes.map((o) => ({ value: o.id, label: o.title }))}
+          testId="commit-outcome-select"
+          disabled={!doId}
+        />
+        <SelectField
+          id="commit-so"
+          label="Supporting Outcome"
+          value={value}
+          onChange={onChange}
+          options={sos.map((so) => ({ value: so.id, label: so.title }))}
+          testId="commit-so-select"
+          disabled={!outcomeId}
+        />
+      </div>
+    </div>
+  );
+}
+
+function findAncestry(
+  tree: RcdoTreeDto | undefined,
+  supportingOutcomeId: string,
+): { rcId: string; doId: string; outcomeId: string } | null {
+  if (!tree || !supportingOutcomeId) return null;
   for (const rc of tree.rallyCries) {
     for (const defo of rc.definingObjectives) {
       for (const o of defo.outcomes) {
-        for (const so of o.supportingOutcomes) {
-          out.push({ value: so.id, label: `${rc.title} › ${o.title} › ${so.title}` });
+        if (o.supportingOutcomes.some((so) => so.id === supportingOutcomeId)) {
+          return { rcId: rc.id, doId: defo.id, outcomeId: o.id };
         }
       }
     }
   }
-  return out;
+  return null;
 }
 
 function flattenCandidates(tree: RcdoTreeDto | undefined): OutcomeCandidateDto[] {

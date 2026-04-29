@@ -79,7 +79,7 @@ automatically:
 | `SLACK_WEBHOOK_*` | `LogChannel` (logs to SLF4J INFO)              |
 
 Drop real values into `.env.local` whenever convenient; integration tests
-flip green automatically. See [`docs/orchestration-plan.md`](./docs/orchestration-plan.md).
+flip green automatically.
 
 ## Tests
 
@@ -145,5 +145,3 @@ insight through the live channel without burning another LLM call.
 - [`PRD.md`](./PRD.md) — phase-by-phase build script.
 - [`docs/prd-patches.md`](./docs/prd-patches.md) — 26 gap-audit patches.
 - [`docs/ai-copilot-spec.md`](./docs/ai-copilot-spec.md) — full AI prompts, schemas, evals.
-- [`docs/source-control-guide.md`](./docs/source-control-guide.md) — branching, commits, PRs.
-- [`docs/orchestration-plan.md`](./docs/orchestration-plan.md) — execution contract.

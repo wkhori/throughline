@@ -50,6 +50,9 @@ describe('CommitForm', () => {
     const onSubmit = vi.fn();
     render(<CommitForm weekId="w1" rcdo={tree} onSubmit={onSubmit} />);
     await user.type(screen.getByTestId('commit-text-input'), 'Ship sequence v2');
+    await user.selectOptions(screen.getByTestId('commit-rc-select'), 'rc');
+    await user.selectOptions(screen.getByTestId('commit-do-select'), 'do');
+    await user.selectOptions(screen.getByTestId('commit-outcome-select'), 'o');
     await user.selectOptions(screen.getByTestId('commit-so-select'), 'so-x');
     await user.selectOptions(screen.getByTestId('commit-category-select'), 'STRATEGIC');
     await user.selectOptions(screen.getByTestId('commit-priority-select'), 'MUST');

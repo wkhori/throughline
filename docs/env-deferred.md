@@ -2,11 +2,10 @@
 
 > **Status as of `v0.1.0` (Phase 8 deploy): all credentials resolved. Live demo on Railway.**
 
-This file used to track stub/real status under the orchestration-plan
-Continue-and-Defer rule. Every external credential is now in `.env.local`
-(gitignored) and on the matching Railway service, and the corresponding real
-provider is the runtime default. The file is retained as an audit log +
-onboarding reference, not as a gate.
+This file tracks stub/real status under the Continue-and-Defer rule. Every
+external credential is now in `.env.local` (gitignored) and on the matching
+Railway service, and the corresponding real provider is the runtime default.
+The file is retained as an audit log + onboarding reference, not as a gate.
 
 ## Active deferrals
 

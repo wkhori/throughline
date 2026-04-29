@@ -185,8 +185,6 @@ If the brief and the ADR conflict, the ADR wins for *applied* decisions. The bri
 - `PRD.md` — phase-by-phase build plan.
 - `docs/prd-patches.md` — gap-audit patches by phase.
 - `docs/ai-copilot-spec.md` — T1–T7 prompts, schemas, fallbacks, eval harness contract.
-- `docs/source-control-guide.md` — branching and PR workflow.
-- `docs/orchestration-plan.md` — kickoff prompt, sub-agent spawn protocol, per-phase entry checklist.
 - `infra/README.md` — AWS swap path detail.
 - `evals/last-run.md` — most recent eval results.
 - `README.md` — what it is, demo URL, run instructions.

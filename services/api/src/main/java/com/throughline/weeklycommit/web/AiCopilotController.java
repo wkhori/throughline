@@ -185,7 +185,7 @@ public class AiCopilotController {
 
   public record SuggestOutcomeRequest(
       @NotBlank @Size(min = 15, max = 500) String draftCommitText,
-      @NotNull @Size(min = 1, max = 25) List<CandidateDto> candidates,
+      @NotNull @Size(min = 1, max = 250) List<CandidateDto> candidates,
       List<java.util.Map<String, String>> recentUserCommits) {}
 
   public record CandidateDto(

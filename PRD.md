@@ -729,7 +729,7 @@ throughline/
 ├── package.json (yarn workspaces), cypress.config.ts, .cypress-cucumber-preprocessorrc.json
 ├── docker-compose.yml (local Postgres 16.4 for dev), docker-compose.observability.yml (Phase 7 opportunistic)
 ├── README.md, CLAUDE.md, ARCHITECTURE.md, PRD.md
-└── docs/{architecture-decisions.md, ai-copilot-spec.md, AWS-MIGRATION.md, source-control-guide.md, orchestration-plan.md, prd-patches.md}
+└── docs/{architecture-decisions.md, ai-copilot-spec.md, AWS-MIGRATION.md, prd-patches.md}
 ```
 
 > Authoritative file-by-file content (vite configs, security config, package layout, build.gradle.kts, all canonical) lives in the MF/Infra spec section the implementing agent will follow. The companion `ARCHITECTURE.md` will be generated during build with the diagrams.
