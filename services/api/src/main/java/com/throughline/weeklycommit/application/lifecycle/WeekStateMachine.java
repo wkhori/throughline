@@ -74,10 +74,8 @@ public class WeekStateMachine {
     if (!errors.isEmpty()) throw new ValidationException(errors);
     week.setState(WeekState.LOCKED);
     week.setLockedAt(Instant.now(clock));
-    // TODO(phase-5b): wire T3 portfolio review here — publish WeekLockedEvent triggers an
-    // @TransactionalEventListener(AFTER_COMMIT) consumer that calls AnthropicClient and persists
-    // an AIInsight. For now the consumer is a no-op stub, so portfolioReview stays null in the
-    // controller response.
+    // PortfolioReviewService and NotificationLifecycleListener consume WeekLockedEvent
+    // AFTER_COMMIT — T3 runs out-of-band so lock latency stays under the perf gate.
     events.publishEvent(new WeekLockedEvent(week.getId(), week.getUserId(), week.getOrgId()));
     return true;
   }
@@ -146,8 +144,8 @@ public class WeekStateMachine {
     }
     week.setState(WeekState.RECONCILED);
     week.setReconciledAt(Instant.now(clock));
-    // TODO(phase-5b): wire T4 alignment delta consumer here. For now the event listener is a
-    // no-op stub and the controller returns alignmentDelta=null.
+    // AlignmentDeltaService (T4), MaterializedRollupJob, and NotificationLifecycleListener
+    // consume WeekReconciledEvent AFTER_COMMIT.
     events.publishEvent(new WeekReconciledEvent(week.getId(), week.getUserId(), week.getOrgId()));
   }
 }

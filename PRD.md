@@ -20,7 +20,7 @@
 - `CLAUDE.md` — methodology, the Rule, lifecycle and AI canonical references.
 - `docs/architecture-decisions.md` — 33-row requirement-treatment table. **Every decision is final.** Two substitutions only: AWS → Railway + Terraform skeleton; Outlook Graph → Slack via channel-adapter pattern with stubbed Graph impl. Playwright is out of scope (Cypress + Cucumber/Gherkin only).
 - `docs/ai-copilot-spec.md` — full text of the 6 AI prompts, schemas, fallbacks, evals.
-- `docs/prd-patches.md` — **26 patches from Loop 5 gap check.** 10 critical patches are applied inline below; 12 important patches are scoped per phase; 4 minor patches are queued. The implementing agent reads this document at the start of every phase.
+- `docs/prd-patches.md` — **26 patches from the gap audit.** 10 critical patches are applied inline below; 12 important patches are scoped per phase; 4 minor patches are queued. Consult this document at the start of every phase.
 
 If any tension surfaces between this PRD and the locked inputs, the locked inputs win.
 
@@ -644,7 +644,7 @@ Manager weekly digest is idempotent per `(managerId, weekStart)` — second invo
 
 ## 9. File-Level Architecture
 
-Yarn Workspaces + Nx monorepo. Tree (abbreviated — every file Claude will create):
+Yarn Workspaces + Nx monorepo. Tree (abbreviated):
 
 ```
 throughline/
@@ -728,11 +728,11 @@ throughline/
 ├── eslint.config.js, prettier.config.js, nx.json, tsconfig.base.json,
 ├── package.json (yarn workspaces), cypress.config.ts, .cypress-cucumber-preprocessorrc.json
 ├── docker-compose.yml (local Postgres 16.4 for dev), docker-compose.observability.yml (Phase 7 opportunistic)
-├── README.md, CLAUDE.md, ARCHITECTURE.md, PRD.md
+├── README.md, CLAUDE.md, PRD.md
 └── docs/{architecture-decisions.md, ai-copilot-spec.md, AWS-MIGRATION.md, prd-patches.md}
 ```
 
-> Authoritative file-by-file content (vite configs, security config, package layout, build.gradle.kts, all canonical) lives in the MF/Infra spec section the implementing agent will follow. The companion `ARCHITECTURE.md` will be generated during build with the diagrams.
+> Authoritative file-by-file content (vite configs, security config, package layout, build.gradle.kts, all canonical) lives in the MF/Infra spec section that follows. System architecture diagrams live on the `/architecture` route of the host app.
 
 ---
 
@@ -765,7 +765,7 @@ Test artifacts are written **before** implementation in every phase. Three layer
 
 Tags: `@auth`, `@ai`, `@happy-path`, `@edge`, `@regression`, `@ai-fallback`, `@perf`, plus phase tags `@phase-1` … `@phase-6`. Use `Scenario Outline + Examples` for role-based access matrices. Every AI surface has an `@ai-fallback` scenario verifying graceful degradation.
 
-The full Gherkin text for every scenario is appended to the implementing agent's task on a per-phase basis (see Phase plan).
+The full Gherkin text for every scenario is referenced per-phase (see Phase plan).
 
 ### 10.2 Backend contract tests (Spring `@WebMvcTest`)
 
@@ -1098,10 +1098,10 @@ The project is complete when **every** item below holds:
 
 1. **Hosted demo URL live** on Railway, demonstrable end-to-end (admin authors RCDO → IC drafts week → AI suggests outcomes → IC locks → AI portfolio review → Friday reconciles → AI alignment delta → Monday manager digest in Slack).
 2. **Repo public** on GitHub with clean history.
-3. **`CLAUDE.md`** present at root and matches the methodology in this conversation.
+3. **`CLAUDE.md`** present at root with the methodology, the Rule, and the manager-burden reframe.
 4. **`docs/architecture-decisions.md`** present with the 33-row table.
 5. **`README.md`** present with: project description, demo URL, repo structure, how-to-run-locally, env-var checklist, demo accounts.
-6. **`ARCHITECTURE.md`** present with: domain model diagram, lifecycle state machine, MF host/remote contract, AI copilot data flow, notification adapter design.
+6. **`/architecture` host route** present with: domain model diagram, lifecycle state machine, MF host/remote contract, AI copilot data flow, notification adapter design.
 7. **`PRD.md`** (this document) present.
 8. **`docs/ai-copilot-spec.md`** present with full prompt text + JSON schemas + eval scenarios.
 9. **CI green on `main`** with coverage gates: JaCoCo ≥80%, Vitest ≥80%, all Cypress scenarios pass, all eval scenarios pass.

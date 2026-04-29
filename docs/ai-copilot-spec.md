@@ -1,6 +1,6 @@
 # AI Strategic Alignment Copilot — Implementation Spec
 
-This document is the source of truth for the AI Copilot prompts, schemas, fallbacks, costs, and evals. The PRD references it; the implementing agent reads from it verbatim.
+This document is the source of truth for the AI Copilot prompts, schemas, fallbacks, costs, and evals. The PRD references it.
 
 **Provider:** Anthropic. **Models:** `claude-haiku-4-5-20251001` (cheap high-volume), `claude-sonnet-4-6` (analytical). **Pricing (April 2026):** Haiku $1/$5 per 1M input/output tokens; Sonnet $3/$15; prompt-cache read at 0.10× base input.
 

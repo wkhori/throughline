@@ -117,7 +117,7 @@ CI fails on any coverage regression below 80% on either FE or BE.
 
 ## Phased Build Plan
 
-Each phase ships independently with its tests gating exit. **Phase 5 split into 5a/5b/5c per Loop 5 gap check.**
+Each phase ships independently with its tests gating exit. **Phase 5 split into 5a/5b/5c after a gap audit identified slip risk in bundling six AI surfaces.**
 
 | Phase | What lands |
 |---|---|
@@ -153,12 +153,12 @@ Demo accounts: `ic@demo.throughline.app`, `manager@demo.throughline.app`, `admin
 | File | Audience | Purpose |
 |---|---|---|
 | `README.md` | Everyone | Demo URL, run-locally, env vars, accounts |
-| `CLAUDE.md` | Future agents + reviewer | Methodology, the Rule, manager-burden reframe |
-| `PRD.md` | Implementing agent | The build script — every section drives a phase |
-| `docs/architecture-decisions.md` | Reviewer + future agents | The 33-row requirement-treatment table; substitution rationale |
-| `docs/ai-copilot-spec.md` | Implementing agent | Full prompt text, JSON schemas, fallbacks, evals |
-| `docs/prd-patches.md` | Implementing agent | 26 patches from Loop 5 — 10 critical applied inline, 12 important per-phase, 4 minor queued |
-| `ARCHITECTURE.md` | Reviewer | Generated during build — system diagram, MF contract, AI data flow |
+| `CLAUDE.md` | Reviewer | Methodology, the Rule, manager-burden reframe |
+| `PRD.md` | Build reference | The build script — every section drives a phase |
+| `docs/architecture-decisions.md` | Reviewer | The 33-row requirement-treatment table; substitution rationale |
+| `docs/ai-copilot-spec.md` | Build reference | Full prompt text, JSON schemas, fallbacks, evals |
+| `docs/prd-patches.md` | Build reference | 26 patches from the gap audit — 10 critical applied inline, 12 important per-phase, 4 minor queued |
+| `/architecture` (host page) | Reviewer | System diagram, MF contract, AI data flow — rendered from `apps/host/src/architecture/` |
 | `infra/README.md` | Operations | Railway → AWS swap path |
 
 ---
@@ -180,7 +180,7 @@ The reviewer's expected reading order: `CLAUDE.md` → `docs/architecture-decisi
 3. **The chess layer interpretation.** 2D matrix (category × priority) — confirmed, not a 1D pipeline.
 4. **The carry-forward modeling.** Original commit → CARRIED_FORWARD terminal; new DRAFT in week N+1 with `parentCommitId`. Confirmed.
 5. **The cost ceiling.** $46/mo at 175 employees with caching. Hard cap $500/mo. Server-side enforcement. Confirmed.
-6. **The Phase 5 split.** Six AI surfaces in one phase was a slip risk; split into 5a/5b/5c. Confirmed via Loop 5.
+6. **The Phase 5 split.** Six AI surfaces in one phase was a slip risk; split into 5a/5b/5c after the gap audit.
 7. **The seed dysfunctions.** Four baked-in issues so AI dashboards show signal on first demo login. Confirmed.
 8. **No time estimates anywhere.** Phase sizing by scope, not duration. Confirmed.
 

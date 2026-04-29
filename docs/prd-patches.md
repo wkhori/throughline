@@ -1,8 +1,8 @@
-# PRD Patches Applied (Loop 5 Gap Check)
+# PRD Patches Applied (Gap Audit)
 
-The Challenger pass surfaced 26 specific patches against `PRD.md`. This document is the canonical record of every patch, its severity, where it applies, and its status. Critical patches (10) are applied inline in `PRD.md` and reflected in this document. Important patches (12) are scoped for application during their relevant phase. Minor patches (4) are queued.
+A gap audit against `PRD.md` surfaced 26 specific patches. This document is the canonical record of every patch, its severity, where it applies, and its status. Critical patches (10) are applied inline in `PRD.md` and reflected in this document. Important patches (12) are scoped for application during their relevant phase. Minor patches (4) are queued.
 
-The implementing agent must consult this document when starting any phase. If a patch is listed and not yet applied, apply it before writing the phase's first line of code.
+Consult this document at the start of every phase. If a patch is listed and not yet applied, apply it before writing the phase's first line of code.
 
 ---
 
