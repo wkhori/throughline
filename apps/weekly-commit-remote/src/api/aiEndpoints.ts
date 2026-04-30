@@ -77,13 +77,16 @@ export const aiApi = api.injectEndpoints({
         if (!commitIds.length || !kinds.length) {
           return { data: { byCommit } };
         }
-        for (const k of kinds) {
-          const enumKind = KIND_TO_ENUM[k];
-          const res = await baseQuery({
-            url: '/ai/insights/batch',
-            method: 'POST',
-            body: { commitIds, kind: enumKind },
-          });
+        const responses = await Promise.all(
+          kinds.map((k) =>
+            baseQuery({
+              url: '/ai/insights/batch',
+              method: 'POST',
+              body: { commitIds, kind: KIND_TO_ENUM[k] },
+            }),
+          ),
+        );
+        for (const res of responses) {
           if (res.error) return { error: res.error };
           const body = res.data as { insights: AIInsightDto[] } | undefined;
           for (const insight of body?.insights ?? []) {
