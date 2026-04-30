@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRtkSubscriptionKick } from '@throughline/shared-ui';
 import type { CommitDto, CreateCommitRequest, WeekDto } from '@throughline/shared-types';
 import { useGetRcdoTreeQuery } from '../../api/rcdoEndpoints.js';
@@ -7,6 +7,8 @@ import { useLockWeekMutation } from '../../api/weeksEndpoints.js';
 import { ChessMatrix } from './ChessMatrix.js';
 import { CommitForm } from './CommitForm.js';
 import { LockWeekDialog } from './LockWeekDialog.js';
+import { ShortcutsModal } from '../help/ShortcutsModal.js';
+import { useShortcuts } from '../../hooks/useShortcuts.js';
 
 interface DraftWeekProps {
   week: WeekDto;
@@ -24,6 +26,28 @@ export function DraftWeek({ week }: DraftWeekProps) {
   const [lockWeek, lockState] = useLockWeekMutation();
   const [serverError, setServerError] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+
+  // Ref on the CommitForm wrapper div; lets mod+Enter locate and submit the form without
+  // modifying CommitForm.tsx (owned by Phase 4).
+  const formWrapperRef = useRef<HTMLDivElement | null>(null);
+
+  useShortcuts(
+    {
+      '?': () => setShortcutsOpen(true),
+      'mod+enter': () => {
+        const form = formWrapperRef.current?.querySelector<HTMLFormElement>('form');
+        form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      },
+      'mod+k': () => {
+        // Phase 4 will wire full SoLinker focus; stub focuses the SO cascade trigger for now.
+        const soTrigger = document.querySelector<HTMLElement>('[data-testid="commit-so-select"]');
+        soTrigger?.focus();
+      },
+      escape: () => setConfirmOpen(false),
+    },
+    { enabled: true },
+  );
 
   const submit = async (body: CreateCommitRequest) => {
     setServerError(null);
@@ -105,13 +129,15 @@ export function DraftWeek({ week }: DraftWeekProps) {
           At the 7-commit cap. Remove or rephrase before adding more.
         </p>
       ) : (
-        <CommitForm
-          weekId={week.id}
-          rcdo={rcdo}
-          submitting={createState.isLoading}
-          onSubmit={submit}
-          serverError={serverError}
-        />
+        <div ref={formWrapperRef}>
+          <CommitForm
+            weekId={week.id}
+            rcdo={rcdo}
+            submitting={createState.isLoading}
+            onSubmit={submit}
+            serverError={serverError}
+          />
+        </div>
       )}
 
       <LockWeekDialog
@@ -121,6 +147,8 @@ export function DraftWeek({ week }: DraftWeekProps) {
         onConfirm={lock}
         onClose={() => setConfirmOpen(false)}
       />
+
+      <ShortcutsModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
     </section>
   );
 }
