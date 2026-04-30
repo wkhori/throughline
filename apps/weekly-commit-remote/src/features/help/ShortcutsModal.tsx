@@ -14,8 +14,8 @@ interface ShortcutEntry {
 
 const SHORTCUTS: ShortcutEntry[] = [
   { binding: 'mod+enter', description: 'Save commit', scope: 'Editing' },
-  { binding: 'mod+k', description: 'Focus the Supporting Outcome linker', scope: 'Editing' },
-  { binding: 'escape', description: 'Close dialog · cancel edit', scope: 'Navigation' },
+  { binding: 'mod+k', description: 'Focus SO linker', scope: 'Editing' },
+  { binding: 'escape', description: 'Close · cancel edit', scope: 'Navigation' },
   { binding: '?', description: 'Open this cheat-sheet', scope: 'Help' },
 ];
 

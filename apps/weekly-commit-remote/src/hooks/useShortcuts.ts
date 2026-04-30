@@ -48,11 +48,17 @@ function buildMatcher(binding: string): (e: KeyboardEvent) => boolean {
 
   const expected = normalise(keyPart ?? '');
 
+  // Printable-symbol keys (?, /, ., etc.) often require shift on US layouts —
+  // e.g. "?" is Shift+/. KeyboardEvent.key already contains the resolved glyph,
+  // so we only enforce the shiftKey check for non-printable keys (length > 1
+  // or alphanumeric) where the binding might mean "letter pressed with Shift".
+  const expectedNeedsShiftCheck = expected.length !== 1 || /[a-z0-9]/.test(expected);
+
   return (e: KeyboardEvent): boolean => {
     const key = e.key.toLowerCase();
     if (normalise(key) !== expected) return false;
     if (hasMod_ !== hasMod(e)) return false;
-    if (hasShift !== e.shiftKey) return false;
+    if (expectedNeedsShiftCheck && hasShift !== e.shiftKey) return false;
     if (hasAlt !== e.altKey) return false;
     return true;
   };

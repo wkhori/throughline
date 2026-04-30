@@ -1,7 +1,13 @@
-import { useState, type MutableRefObject } from 'react';
+import { useMemo, useState, type MutableRefObject } from 'react';
 import { useRtkSubscriptionKick } from '@throughline/shared-ui';
-import type { CommitDto, CreateCommitRequest, WeekDto } from '@throughline/shared-types';
+import type {
+  CommitDto,
+  CreateCommitRequest,
+  DriftCheckPayload,
+  WeekDto,
+} from '@throughline/shared-types';
 import { useGetRcdoTreeQuery } from '../../api/rcdoEndpoints.js';
+import { useGetBatchInsightsQuery } from '../../api/aiEndpoints.js';
 import { useCreateCommitMutation, useDeleteCommitMutation } from '../../api/commitsEndpoints.js';
 import { useLockWeekMutation } from '../../api/weeksEndpoints.js';
 import { CarryForwardGhost } from './CarryForwardGhost.js';
@@ -30,6 +36,28 @@ export function DraftWeek({ week, formWrapperRef, commitFormRef }: DraftWeekProp
   const [lockWeek, lockState] = useLockWeekMutation();
   const [serverError, setServerError] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const activeCommitIds = useMemo(
+    () => week.commits.filter((c) => c.state === 'ACTIVE').map((c) => c.id),
+    [week.commits],
+  );
+  const { data: driftInsights } = useGetBatchInsightsQuery(
+    { commitIds: activeCommitIds, kinds: ['drift'] },
+    { skip: activeCommitIds.length === 0 },
+  );
+  const { driftPayloadByCommitId, driftInsightKeyByCommitId } = useMemo(() => {
+    const payloads: Record<string, DriftCheckPayload | undefined> = {};
+    const keys: Record<string, string | null> = {};
+    if (driftInsights?.byCommit) {
+      for (const [id, slot] of Object.entries(driftInsights.byCommit)) {
+        const insight = slot.T2_DRIFT;
+        if (!insight) continue;
+        payloads[id] = insight.payload as DriftCheckPayload | undefined;
+        keys[id] = insight.id ?? null;
+      }
+    }
+    return { driftPayloadByCommitId: payloads, driftInsightKeyByCommitId: keys };
+  }, [driftInsights]);
 
   const submit = async (body: CreateCommitRequest) => {
     setServerError(null);
@@ -105,7 +133,14 @@ export function DraftWeek({ week, formWrapperRef, commitFormRef }: DraftWeekProp
 
       <CommitsList commits={week.commits} rcdo={rcdo} weekState="DRAFT" />
 
-      <ChessMatrix commits={week.commits} rcdo={rcdo} weekState="DRAFT" onEditCommit={remove} />
+      <ChessMatrix
+        commits={week.commits}
+        rcdo={rcdo}
+        weekState="DRAFT"
+        onEditCommit={remove}
+        driftPayloadByCommitId={driftPayloadByCommitId}
+        driftInsightKeyByCommitId={driftInsightKeyByCommitId}
+      />
 
       {atCap ? (
         <p

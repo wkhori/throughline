@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
-import type { CommitDto, RcdoTreeDto } from '@throughline/shared-types';
+import type { CommitDto, DriftCheckPayload, RcdoTreeDto } from '@throughline/shared-types';
 import { AIStatusIndicator, RcdoChip, resolveRcdoTrail } from '@throughline/shared-ui';
 import { useGetBatchInsightsQuery } from '../../api/aiEndpoints.js';
+import { interpretDrift } from './driftRule.js';
 import { EffortShareBar, computeEffortShares, type EffortShareSegment } from './EffortShareBar.js';
 
 interface CommitsListProps {
@@ -93,14 +94,9 @@ export function CommitsList({ commits, rcdo, weekState, onCommitClick }: Commits
               <ul className="mt-2 space-y-1.5">
                 {group.commits.map((commit) => {
                   const driftPayload = insights?.byCommit[commit.id]?.T2_DRIFT?.payload as
-                    | { alignmentVerdict?: string; driftScore?: number }
+                    | DriftCheckPayload
                     | undefined;
-                  const drifted =
-                    !!driftPayload &&
-                    (driftPayload.alignmentVerdict === 'tangential' ||
-                      driftPayload.alignmentVerdict === 'unrelated' ||
-                      (typeof driftPayload.driftScore === 'number' &&
-                        driftPayload.driftScore >= 0.5));
+                  const { drifted, fixSuggestion } = interpretDrift(driftPayload);
                   const isClickable = weekState === 'DRAFT' && !!onCommitClick;
                   return (
                     <li
@@ -125,10 +121,7 @@ export function CommitsList({ commits, rcdo, weekState, onCommitClick }: Commits
                         {drifted ? (
                           <span
                             data-testid="drift-badge"
-                            title={
-                              (driftPayload as { fixSuggestion?: string | null } | undefined)
-                                ?.fixSuggestion ?? 'Drift detected for this commit'
-                            }
+                            title={fixSuggestion ?? 'Drift detected for this commit'}
                             className="inline-flex items-center gap-1 rounded-sm border border-amber-300 bg-(--color-ribbon-medium-bg) px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-(--color-ai-warn)"
                           >
                             <AIStatusIndicator state="warning" />

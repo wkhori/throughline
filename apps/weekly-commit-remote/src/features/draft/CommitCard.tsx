@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import type { CommitDto, DriftCheckLinkedOutcome, RcdoTreeDto } from '@throughline/shared-types';
+import { useState } from 'react';
+import type { CommitDto, DriftCheckPayload, RcdoTreeDto } from '@throughline/shared-types';
 import { RcdoChip, resolveRcdoTrail } from '@throughline/shared-ui';
 import { DriftWarningBanner } from './DriftWarningBanner.js';
 
@@ -10,19 +10,27 @@ interface CommitCardProps {
   onEdit?: (commit: CommitDto) => void;
   /** Persisted T2 drift score (0–1). Only rendered as a static badge in non-DRAFT states. */
   driftScore?: number;
+  /**
+   * Persisted T2_DRIFT payload for this commit. Lifted up to DraftWeek/LockedWeek
+   * so the batch query is issued once per week and never per-card. Drives the
+   * inline DriftWarningBanner under DRAFT cards.
+   */
+  driftPayload?: DriftCheckPayload;
+  /** Stable key of the underlying insight (id/createdAt) for un-dismiss-on-refresh. */
+  driftInsightKey?: string | null;
 }
 
-export function CommitCard({ commit, rcdo, weekState, onEdit, driftScore }: CommitCardProps) {
+export function CommitCard({
+  commit,
+  rcdo,
+  weekState,
+  onEdit,
+  driftScore,
+  driftPayload,
+  driftInsightKey,
+}: CommitCardProps) {
   const trail = resolveRcdoTrail(rcdo, commit.supportingOutcomeId);
   const canRemove = weekState === 'DRAFT' && !!onEdit;
-  const linkedOutcome = useMemo<DriftCheckLinkedOutcome | null>(
-    () => buildLinkedOutcome(rcdo, commit.supportingOutcomeId),
-    [rcdo, commit.supportingOutcomeId],
-  );
-  const alternatives = useMemo(
-    () => buildAlternatives(rcdo, commit.supportingOutcomeId),
-    [rcdo, commit.supportingOutcomeId],
-  );
   const [confirming, setConfirming] = useState(false);
   const className = 'rounded-md border border-(--color-commit-border) bg-(--color-commit-bg) p-3';
   return (
@@ -88,13 +96,8 @@ export function CommitCard({ commit, rcdo, weekState, onEdit, driftScore }: Comm
           </span>
         ) : null}
       </div>
-      {weekState === 'DRAFT' && linkedOutcome ? (
-        <DriftWarningBanner
-          commitId={commit.id}
-          commitText={commit.text}
-          linkedOutcome={linkedOutcome}
-          alternativeOutcomes={alternatives}
-        />
+      {weekState === 'DRAFT' ? (
+        <DriftWarningBanner payload={driftPayload} insightKey={driftInsightKey ?? null} />
       ) : null}
       {confirming ? (
         <>
@@ -150,45 +153,3 @@ export function CommitCard({ commit, rcdo, weekState, onEdit, driftScore }: Comm
   );
 }
 
-function buildLinkedOutcome(
-  tree: RcdoTreeDto | undefined,
-  supportingOutcomeId: string | null | undefined,
-): DriftCheckLinkedOutcome | null {
-  if (!tree || !supportingOutcomeId) return null;
-  for (const rc of tree.rallyCries) {
-    for (const defo of rc.definingObjectives) {
-      for (const o of defo.outcomes) {
-        for (const so of o.supportingOutcomes) {
-          if (so.id === supportingOutcomeId) {
-            return {
-              supportingOutcomeId: so.id,
-              title: so.title,
-              parentOutcomeTitle: o.title,
-              parentDOTitle: defo.title,
-              metricStatement: null,
-            };
-          }
-        }
-      }
-    }
-  }
-  return null;
-}
-
-function buildAlternatives(
-  tree: RcdoTreeDto | undefined,
-  exclude: string | null | undefined,
-): Array<{ supportingOutcomeId: string; title: string }> {
-  if (!tree) return [];
-  const out: Array<{ supportingOutcomeId: string; title: string }> = [];
-  for (const rc of tree.rallyCries) {
-    for (const defo of rc.definingObjectives) {
-      for (const o of defo.outcomes) {
-        for (const so of o.supportingOutcomes) {
-          if (so.id !== exclude) out.push({ supportingOutcomeId: so.id, title: so.title });
-        }
-      }
-    }
-  }
-  return out.slice(0, 6);
-}

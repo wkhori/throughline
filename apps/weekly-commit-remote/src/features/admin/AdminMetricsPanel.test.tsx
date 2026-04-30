@@ -42,7 +42,7 @@ describe('AdminMetricsPanel', () => {
     await waitFor(() => expect(screen.getByTestId('metrics-error')).toBeInTheDocument());
   });
 
-  it('renders an em-dash when digest latency is zero', async () => {
+  it('renders an empty-state label when digest latency is zero', async () => {
     server.use(
       http.get('http://localhost:8080/api/v1/metrics/org', () =>
         HttpResponse.json({
@@ -56,7 +56,9 @@ describe('AdminMetricsPanel', () => {
     );
     renderWithProviders(<AdminMetricsPanel />, 'ADMIN');
     await waitFor(() =>
-      expect(screen.getByTestId('metric-card-digest-read-latency')).toHaveTextContent('—'),
+      expect(screen.getByTestId('metric-card-digest-read-latency')).toHaveTextContent(
+        'No data yet',
+      ),
     );
   });
 });

@@ -97,7 +97,7 @@ function pct(rate: number): string {
 }
 
 function minutes(value: number): string {
-  if (value <= 0) return '—';
+  if (value <= 0) return 'No data yet';
   if (value < 60) return `${Math.round(value)}m`;
   return `${(value / 60).toFixed(1)}h`;
 }

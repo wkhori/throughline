@@ -3,6 +3,7 @@ import type {
   CommitCategory,
   CommitDto,
   CommitPriority,
+  DriftCheckPayload,
   RcdoTreeDto,
 } from '@throughline/shared-types';
 import { CommitCard } from './CommitCard.js';
@@ -17,6 +18,10 @@ interface ChessMatrixProps {
   onEditCommit?: (commit: CommitDto) => void;
   /** Persisted drift scores keyed by commit id; surfaces drift badges in non-DRAFT states. */
   driftByCommitId?: Record<string, number>;
+  /** Persisted T2_DRIFT payloads keyed by commit id; drives the in-card drift banner in DRAFT. */
+  driftPayloadByCommitId?: Record<string, DriftCheckPayload | undefined>;
+  /** Persisted T2_DRIFT insight ids keyed by commit id; used as the un-dismiss key in DRAFT. */
+  driftInsightKeyByCommitId?: Record<string, string | null | undefined>;
 }
 
 // Phase-2 chess matrix: 3x3 category × priority grid. Keyboard nav via arrow keys; Enter selects
@@ -27,6 +32,8 @@ export function ChessMatrix({
   weekState,
   onEditCommit,
   driftByCommitId,
+  driftPayloadByCommitId,
+  driftInsightKeyByCommitId,
 }: ChessMatrixProps) {
   const [focused, setFocused] = useState<{ r: number; c: number } | null>(null);
   const cellRefs = useRef(new Map<string, HTMLElement>());
@@ -100,6 +107,8 @@ export function ChessMatrix({
             cellRefs={cellRefs.current}
             onEditCommit={onEditCommit}
             driftByCommitId={driftByCommitId}
+            driftPayloadByCommitId={driftPayloadByCommitId}
+            driftInsightKeyByCommitId={driftInsightKeyByCommitId}
           />
         ))}
       </div>
@@ -118,6 +127,8 @@ interface RowProps {
   cellRefs: Map<string, HTMLElement>;
   onEditCommit?: (commit: CommitDto) => void;
   driftByCommitId?: Record<string, number>;
+  driftPayloadByCommitId?: Record<string, DriftCheckPayload | undefined>;
+  driftInsightKeyByCommitId?: Record<string, string | null | undefined>;
 }
 
 function RowFragment({
@@ -131,6 +142,8 @@ function RowFragment({
   cellRefs,
   onEditCommit,
   driftByCommitId,
+  driftPayloadByCommitId,
+  driftInsightKeyByCommitId,
 }: RowProps) {
   return (
     <>
@@ -174,6 +187,8 @@ function RowFragment({
                     weekState={weekState}
                     onEdit={onEditCommit}
                     driftScore={driftByCommitId?.[cm.id]}
+                    driftPayload={driftPayloadByCommitId?.[cm.id]}
+                    driftInsightKey={driftInsightKeyByCommitId?.[cm.id] ?? null}
                   />
                 ))}
               </div>
