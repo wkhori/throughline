@@ -38,8 +38,8 @@ import org.springframework.transaction.annotation.Transactional;
  * (Reactive priority bug-bash linked to a strategic SMB outcome) so the T2 drift warning fires
  * inline and the AI surface is visible without the reviewer having to type anything.
  *
- * <p>Idempotent: skips if the demo persona already has commits, if the week isn't DRAFT, or if
- * the SO catalogue we look up isn't present.
+ * <p>Idempotent: skips if the demo persona already has commits, if the week isn't DRAFT, or if the
+ * SO catalogue we look up isn't present.
  */
 @Component
 @Profile("dev")
@@ -68,13 +68,15 @@ public class DemoIcCommitsBootstrap implements CommandLineRunner {
               CommitPriority.MUST,
               0),
           new Seed(
-              "Run an A/B test on the simplified self-serve onboarding flow with sample-data preload",
+              "Run an A/B test on the simplified self-serve onboarding flow with sample-data"
+                  + " preload",
               "Reduce setup friction",
               CommitCategory.OPERATIONAL,
               CommitPriority.SHOULD,
               1),
           new Seed(
-              "Instrument week-1 activation events and ship the dashboard for the GTM weekly review",
+              "Instrument week-1 activation events and ship the dashboard for the GTM weekly"
+                  + " review",
               "Lift activation events week-1",
               CommitCategory.OPERATIONAL,
               CommitPriority.SHOULD,
@@ -125,8 +127,7 @@ public class DemoIcCommitsBootstrap implements CommandLineRunner {
     for (User user : userRepo.findAll()) {
       if (user.getRole() != Role.IC) continue;
       if (user.getEmail() == null || !user.getEmail().endsWith("@demo.throughline.app")) continue;
-      Optional<Week> weekOpt =
-          weekRepo.findByUserIdAndWeekStart(user.getId(), currentWeekStart);
+      Optional<Week> weekOpt = weekRepo.findByUserIdAndWeekStart(user.getId(), currentWeekStart);
       if (weekOpt.isEmpty()) continue;
       Week week = weekOpt.get();
       if (week.getState() != WeekState.DRAFT) {
@@ -146,7 +147,9 @@ public class DemoIcCommitsBootstrap implements CommandLineRunner {
                 .findFirst()
                 .orElse(null);
         if (so == null) {
-          log.warn("DemoIcCommitsBootstrap: SO matching '{}' not found, skipping seed", seed.soTitleContains());
+          log.warn(
+              "DemoIcCommitsBootstrap: SO matching '{}' not found, skipping seed",
+              seed.soTitleContains());
           continue;
         }
         Commit commit = new Commit(week.getId(), seed.text());
@@ -158,6 +161,7 @@ public class DemoIcCommitsBootstrap implements CommandLineRunner {
       }
       seeded++;
     }
-    log.info("DemoIcCommitsBootstrap seeded commits for {} demo IC(s) (skipped {})", seeded, skipped);
+    log.info(
+        "DemoIcCommitsBootstrap seeded commits for {} demo IC(s) (skipped {})", seeded, skipped);
   }
 }

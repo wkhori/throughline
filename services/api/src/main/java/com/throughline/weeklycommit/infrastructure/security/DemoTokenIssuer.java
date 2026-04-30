@@ -16,8 +16,8 @@ import org.springframework.stereotype.Component;
 
 /**
  * Mints short-lived HS256 JWTs for the three demo personas. Replaces the literal {@code
- * mock.ic.token} string with real signed JWTs that the resource server verifies via
- * {@link DemoJwtDecoder}.
+ * mock.ic.token} string with real signed JWTs that the resource server verifies via {@link
+ * DemoJwtDecoder}.
  *
  * <p>Issuer claim {@code throughline-demo} is the discriminator that {@link DelegatingJwtDecoder}
  * uses to route incoming tokens to this decoder vs. the Auth0 JWKS decoder. Audience matches the
@@ -81,10 +81,7 @@ public class DemoTokenIssuer {
     return switch (name == null ? "" : name.toLowerCase(java.util.Locale.ROOT)) {
       case "ic" ->
           new Persona(
-              env("AUTH0_SUB_IC", "auth0|mock-ic"),
-              "ic@demo.throughline.app",
-              "Demo IC",
-              "IC");
+              env("AUTH0_SUB_IC", "auth0|mock-ic"), "ic@demo.throughline.app", "Demo IC", "IC");
       case "manager" ->
           new Persona(
               env("AUTH0_SUB_MANAGER", "auth0|mock-manager"),

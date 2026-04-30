@@ -133,7 +133,8 @@ public class SlackChannel implements NotificationChannel {
     ArrayNode blocks = root.putArray("blocks");
 
     String displayKindOverride = payload.path("displayKind").asText("");
-    String header = displayKindOverride.isBlank() ? headerFor(event) : headerFor(displayKindOverride);
+    String header =
+        displayKindOverride.isBlank() ? headerFor(event) : headerFor(displayKindOverride);
     if (header != null) {
       ObjectNode hb = blocks.addObject();
       hb.put("type", "header");

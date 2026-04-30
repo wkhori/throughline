@@ -20,8 +20,8 @@ import org.springframework.stereotype.Component;
 /**
  * Idempotent post-seed rollup cache repair. Runs after {@link DemoHistorySeeder} on every dev
  * startup so the manager dashboard always reads warm rollup data — without this, weeks written by
- * the seeder bypass the {@code WeekReconciledEvent} listener that normally drives cache writes,
- * and 7/8 sub-teams render empty drift / starved-outcome panels until the Monday 08:30 cron fires.
+ * the seeder bypass the {@code WeekReconciledEvent} listener that normally drives cache writes, and
+ * 7/8 sub-teams render empty drift / starved-outcome panels until the Monday 08:30 cron fires.
  */
 @Component
 @Profile("dev")

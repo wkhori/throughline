@@ -109,7 +109,8 @@ public class DemoDraftWeekBootstrap implements CommandLineRunner {
       rewound++;
     }
     log.info(
-        "DemoDraftWeekBootstrap rewound {} IC weeks to DRAFT (already draft: {}, not seeder-pattern: {})",
+        "DemoDraftWeekBootstrap rewound {} IC weeks to DRAFT (already draft: {}, not"
+            + " seeder-pattern: {})",
         rewound,
         skippedAlreadyDraft,
         skippedNotSeeded);
