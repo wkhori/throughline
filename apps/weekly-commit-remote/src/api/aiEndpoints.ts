@@ -1,5 +1,6 @@
 import type {
   AIInsightDto,
+  AIInsightKind,
   AlignmentDeltaPayload,
   DriftCheckPayload,
   DriftCheckRequest,
@@ -10,6 +11,23 @@ import type {
   SuggestOutcomeRequest,
 } from '@throughline/shared-types';
 import { api } from './api.js';
+
+export interface BatchInsightsArgs {
+  commitIds: string[];
+  /** Logical kinds; mapped to backend AIInsightKind enums below. */
+  kinds: Array<'drift' | 'lint' | 'suggestion'>;
+}
+
+export interface BatchInsightsResult {
+  /** Latest insight per (commitId, kind) tuple. */
+  byCommit: Record<string, Partial<Record<AIInsightKind, AIInsightDto>>>;
+}
+
+const KIND_TO_ENUM: Record<'drift' | 'lint' | 'suggestion', AIInsightKind> = {
+  drift: 'T2_DRIFT',
+  lint: 'T7_QUALITY',
+  suggestion: 'T1_SUGGESTION',
+};
 
 export const aiApi = api.injectEndpoints({
   endpoints: (build) => ({
@@ -47,6 +65,40 @@ export const aiApi = api.injectEndpoints({
       query: (weekId) => ({ url: `/ai/portfolio-review/${weekId}`, method: 'POST' }),
       invalidatesTags: (_res, _err, weekId) => [{ type: 'AIInsight', id: `week:${weekId}:T3` }],
     }),
+    /**
+     * Phase-5 batch hydration. Fans out one request per requested logical kind
+     * (the backend endpoint is keyed by a single AIInsightKind) and merges the
+     * results into a `commitId → kind → insight` lookup. We use queryFn so the
+     * caller still gets a single hook with single loading/error semantics.
+     */
+    getBatchInsights: build.query<BatchInsightsResult, BatchInsightsArgs>({
+      async queryFn({ commitIds, kinds }, _api, _extra, baseQuery) {
+        const byCommit: BatchInsightsResult['byCommit'] = {};
+        if (!commitIds.length || !kinds.length) {
+          return { data: { byCommit } };
+        }
+        for (const k of kinds) {
+          const enumKind = KIND_TO_ENUM[k];
+          const res = await baseQuery({
+            url: '/ai/insights/batch',
+            method: 'POST',
+            body: { commitIds, kind: enumKind },
+          });
+          if (res.error) return { error: res.error };
+          const body = res.data as { insights: AIInsightDto[] } | undefined;
+          for (const insight of body?.insights ?? []) {
+            const commitId = insight.entityId;
+            if (!commitId) continue;
+            const slot = byCommit[commitId] ?? {};
+            slot[insight.kind] = insight;
+            byCommit[commitId] = slot;
+          }
+        }
+        return { data: { byCommit } };
+      },
+      providesTags: (_res, _err, { commitIds }) =>
+        commitIds.map((id) => ({ type: 'AIInsight' as const, id: `commit:${id}` })),
+    }),
   }),
 });
 
@@ -58,4 +110,5 @@ export const {
   useRunAlignmentDeltaMutation,
   useGetPortfolioReviewQuery,
   useRunPortfolioReviewMutation,
+  useGetBatchInsightsQuery,
 } = aiApi;

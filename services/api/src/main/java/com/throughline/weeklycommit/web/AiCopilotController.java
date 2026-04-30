@@ -281,7 +281,13 @@ public class AiCopilotController {
   // ---------- Response DTO ----------
 
   public record AIInsightDto(
-      String id, String kind, String model, JsonNode payload, int latencyMs, String costCents) {
+      String id,
+      String kind,
+      String model,
+      JsonNode payload,
+      int latencyMs,
+      String costCents,
+      String entityId) {
 
     static AIInsightDto from(AIInsight insight) {
       JsonNode parsed;
@@ -296,7 +302,8 @@ public class AiCopilotController {
           insight.getModel(),
           parsed,
           insight.getLatencyMs(),
-          insight.getCostCents().toPlainString());
+          insight.getCostCents().toPlainString(),
+          insight.getEntityId());
     }
   }
 }

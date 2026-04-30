@@ -18,6 +18,8 @@ export interface AIInsightDto<P = unknown> {
   payload: P;
   latencyMs: number;
   costCents: string;
+  /** Entity the insight is keyed on (commit id for T1/T2/T7, week id for T3/T4/T5). */
+  entityId?: string;
 }
 
 // ---------------- T1 Outcome Suggestion ----------------

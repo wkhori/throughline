@@ -70,3 +70,21 @@ Feature: Commit CRUD in DRAFT
     When I add a commit with category "REACTIVE" and priority "COULD"
     And I add a commit with category "STRATEGIC" and priority "MUST"
     Then the chess matrix returns from "GET /api/v1/weeks/{id}" with both commits in the correct cells
+
+  @ui @happy-path
+  Scenario: drift warning shows on misaligned commit row
+    Given my draft week contains a commit whose linked Supporting Outcome does not match its text
+    And the AI Copilot has classified that commit as "unrelated" via T2 drift check
+    When I view the grouped commits list
+    Then the misaligned row carries a "drift-badge" indicator with the verdict
+    And the row is visually emphasised with an amber border
+    And no other row in the same Supporting Outcome group carries the drift indicator
+
+  @ui @happy-path
+  Scenario: carry-forward ghost shows above current week
+    Given my prior week reconciled with one commit marked carry-forward
+    And the same commit text has been carry-forwarded for 4 consecutive weeks
+    When I open the current draft week
+    Then a "carry-forward-ghost" row renders above the grouped commits list
+    And the ghost row displays the parent commit text and a "4 weeks" running badge
+    And clicking the ghost row navigates to the parent commit's lineage view

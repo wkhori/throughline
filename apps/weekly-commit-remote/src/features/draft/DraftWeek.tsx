@@ -4,8 +4,10 @@ import type { CommitDto, CreateCommitRequest, WeekDto } from '@throughline/share
 import { useGetRcdoTreeQuery } from '../../api/rcdoEndpoints.js';
 import { useCreateCommitMutation, useDeleteCommitMutation } from '../../api/commitsEndpoints.js';
 import { useLockWeekMutation } from '../../api/weeksEndpoints.js';
+import { CarryForwardGhost } from './CarryForwardGhost.js';
 import { ChessMatrix } from './ChessMatrix.js';
-import { CommitForm } from './CommitForm.js';
+import { CommitForm, type CommitFormHandle } from './CommitForm.js';
+import { CommitsList } from './CommitsList.js';
 import { LockWeekDialog } from './LockWeekDialog.js';
 import { ShortcutsModal } from '../help/ShortcutsModal.js';
 import { useShortcuts } from '../../hooks/useShortcuts.js';
@@ -29,8 +31,11 @@ export function DraftWeek({ week }: DraftWeekProps) {
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   // Ref on the CommitForm wrapper div; lets mod+Enter locate and submit the form without
-  // modifying CommitForm.tsx (owned by Phase 4).
+  // pulling the form into ref-based imperative APIs for that path.
   const formWrapperRef = useRef<HTMLDivElement | null>(null);
+  // Imperative handle on CommitForm — exposes focusLinker() for the mod+K binding so the
+  // shortcut drops the cursor into the SoLinker's typeahead input directly.
+  const commitFormRef = useRef<CommitFormHandle | null>(null);
 
   useShortcuts(
     {
@@ -40,9 +45,7 @@ export function DraftWeek({ week }: DraftWeekProps) {
         form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
       },
       'mod+k': () => {
-        // Phase 4 will wire full SoLinker focus; stub focuses the SO cascade trigger for now.
-        const soTrigger = document.querySelector<HTMLElement>('[data-testid="commit-so-select"]');
-        soTrigger?.focus();
+        commitFormRef.current?.focusLinker();
       },
       escape: () => setConfirmOpen(false),
     },
@@ -119,6 +122,10 @@ export function DraftWeek({ week }: DraftWeekProps) {
         </p>
       </aside>
 
+      <CarryForwardGhost week={week} rcdo={rcdo} />
+
+      <CommitsList commits={week.commits} rcdo={rcdo} weekState="DRAFT" />
+
       <ChessMatrix commits={week.commits} rcdo={rcdo} weekState="DRAFT" onEditCommit={remove} />
 
       {atCap ? (
@@ -131,6 +138,7 @@ export function DraftWeek({ week }: DraftWeekProps) {
       ) : (
         <div ref={formWrapperRef}>
           <CommitForm
+            ref={commitFormRef}
             weekId={week.id}
             rcdo={rcdo}
             submitting={createState.isLoading}
