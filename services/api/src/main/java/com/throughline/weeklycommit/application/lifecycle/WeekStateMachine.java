@@ -13,6 +13,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
@@ -73,7 +74,7 @@ public class WeekStateMachine {
     }
     if (!errors.isEmpty()) throw new ValidationException(errors);
     week.setState(WeekState.LOCKED);
-    week.setLockedAt(Instant.now(clock));
+    week.setLockedAt(Instant.now(clock).truncatedTo(ChronoUnit.MICROS));
     // PortfolioReviewService and NotificationLifecycleListener consume WeekLockedEvent
     // AFTER_COMMIT — T3 runs out-of-band so lock latency stays under the perf gate.
     events.publishEvent(new WeekLockedEvent(week.getId(), week.getUserId(), week.getOrgId()));
@@ -143,7 +144,7 @@ public class WeekStateMachine {
           "Cannot reconcile from state " + week.getState() + " (expected RECONCILING)");
     }
     week.setState(WeekState.RECONCILED);
-    week.setReconciledAt(Instant.now(clock));
+    week.setReconciledAt(Instant.now(clock).truncatedTo(ChronoUnit.MICROS));
     // AlignmentDeltaService (T4), MaterializedRollupJob, and NotificationLifecycleListener
     // consume WeekReconciledEvent AFTER_COMMIT.
     events.publishEvent(new WeekReconciledEvent(week.getId(), week.getUserId(), week.getOrgId()));
