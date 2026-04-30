@@ -20,9 +20,7 @@ const treeWithOneRC = {
 };
 
 const handlers = [
-  http.get('http://localhost:8080/api/v1/rcdo/tree', () =>
-    HttpResponse.json({ rallyCries: [] }),
-  ),
+  http.get('http://localhost:8080/api/v1/rcdo/tree', () => HttpResponse.json({ rallyCries: [] })),
 ];
 
 const server = setupServer(...handlers);
@@ -39,15 +37,15 @@ describe('RcdoTreeEditor', () => {
 
   it('renders rally cries from the API and reports DO counts', async () => {
     server.use(
-      http.get('http://localhost:8080/api/v1/rcdo/tree', () =>
-        HttpResponse.json(treeWithOneRC),
-      ),
+      http.get('http://localhost:8080/api/v1/rcdo/tree', () => HttpResponse.json(treeWithOneRC)),
     );
     renderWithProviders(<RcdoTreeEditor />, 'ADMIN');
     expect(await screen.findByText('Win the SMB segment')).toBeInTheDocument();
-    expect(
-      screen.getByText(/0 Defining Objectives.*0 Outcomes.*0 Supporting/),
-    ).toBeInTheDocument();
+    // counts collapse into compact "0 DO · 0 Outcomes · 0 SOs" line; chase the spans by testid.
+    expect(screen.getByTestId('rc-01RCID000000000000000000AA-outcome-count')).toHaveTextContent(
+      '0',
+    );
+    expect(screen.getByTestId('rc-01RCID000000000000000000AA-so-count')).toHaveTextContent('0');
   });
 
   it('rejects titles shorter than 5 chars without hitting the API', async () => {
@@ -98,15 +96,15 @@ describe('RcdoTreeEditor', () => {
     const user = userEvent.setup();
     let deleteCalls = 0;
     server.use(
-      http.get('http://localhost:8080/api/v1/rcdo/tree', () =>
-        HttpResponse.json(treeWithOneRC),
-      ),
+      http.get('http://localhost:8080/api/v1/rcdo/tree', () => HttpResponse.json(treeWithOneRC)),
       http.delete('http://localhost:8080/api/v1/admin/rally-cries/:id', () => {
         deleteCalls += 1;
         return HttpResponse.json({ status: 409 }, { status: 409 });
       }),
     );
     renderWithProviders(<RcdoTreeEditor />, 'ADMIN');
+    // Archive button is nested inside the expanded summary; expand the row first.
+    await user.click(await screen.findByTestId('rc-summary-01RCID000000000000000000AA'));
     const archiveBtn = await screen.findByTestId('archive-rc-01RCID000000000000000000AA');
     await user.click(archiveBtn);
     // Dialog open, no DELETE yet
@@ -123,15 +121,14 @@ describe('RcdoTreeEditor', () => {
     const user = userEvent.setup();
     let deleteCalls = 0;
     server.use(
-      http.get('http://localhost:8080/api/v1/rcdo/tree', () =>
-        HttpResponse.json(treeWithOneRC),
-      ),
+      http.get('http://localhost:8080/api/v1/rcdo/tree', () => HttpResponse.json(treeWithOneRC)),
       http.delete('http://localhost:8080/api/v1/admin/rally-cries/:id', () => {
         deleteCalls += 1;
         return new HttpResponse(null, { status: 204 });
       }),
     );
     renderWithProviders(<RcdoTreeEditor />, 'ADMIN');
+    await user.click(await screen.findByTestId('rc-summary-01RCID000000000000000000AA'));
     const archiveBtn = await screen.findByTestId('archive-rc-01RCID000000000000000000AA');
     await user.click(archiveBtn);
     await user.click(screen.getByTestId('archive-rc-cancel'));
@@ -192,9 +189,7 @@ describe('RcdoTreeEditor', () => {
   it('renders generic error message on unknown failure', async () => {
     const user = userEvent.setup();
     server.use(
-      http.post('http://localhost:8080/api/v1/admin/rally-cries', () =>
-        HttpResponse.error(),
-      ),
+      http.post('http://localhost:8080/api/v1/admin/rally-cries', () => HttpResponse.error()),
     );
     vi.spyOn(console, 'error').mockImplementation(() => {});
     renderWithProviders(<RcdoTreeEditor />, 'ADMIN');

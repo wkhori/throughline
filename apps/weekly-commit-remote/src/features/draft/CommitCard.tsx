@@ -1,9 +1,5 @@
 import { useMemo, useState } from 'react';
-import type {
-  CommitDto,
-  DriftCheckLinkedOutcome,
-  RcdoTreeDto,
-} from '@throughline/shared-types';
+import type { CommitDto, DriftCheckLinkedOutcome, RcdoTreeDto } from '@throughline/shared-types';
 import { RcdoChip, resolveRcdoTrail } from '@throughline/shared-ui';
 import { DriftWarningBanner } from './DriftWarningBanner.js';
 
@@ -12,9 +8,11 @@ interface CommitCardProps {
   rcdo?: RcdoTreeDto;
   weekState: 'DRAFT' | 'LOCKED' | 'RECONCILING' | 'RECONCILED';
   onEdit?: (commit: CommitDto) => void;
+  /** Persisted T2 drift score (0–1). Only rendered as a static badge in non-DRAFT states. */
+  driftScore?: number;
 }
 
-export function CommitCard({ commit, rcdo, weekState, onEdit }: CommitCardProps) {
+export function CommitCard({ commit, rcdo, weekState, onEdit, driftScore }: CommitCardProps) {
   const trail = resolveRcdoTrail(rcdo, commit.supportingOutcomeId);
   const canRemove = weekState === 'DRAFT' && !!onEdit;
   const linkedOutcome = useMemo<DriftCheckLinkedOutcome | null>(
@@ -26,14 +24,9 @@ export function CommitCard({ commit, rcdo, weekState, onEdit }: CommitCardProps)
     [rcdo, commit.supportingOutcomeId],
   );
   const [confirming, setConfirming] = useState(false);
-  const className =
-    'rounded-md border border-(--color-commit-border) bg-(--color-commit-bg) p-3';
+  const className = 'rounded-md border border-(--color-commit-border) bg-(--color-commit-bg) p-3';
   return (
-    <article
-      data-testid="commit-card"
-      data-commit-id={commit.id}
-      className={className}
-    >
+    <article data-testid="commit-card" data-commit-id={commit.id} className={className}>
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-medium text-(--color-commit-text)">{commit.text}</p>
         {canRemove ? (
@@ -85,6 +78,15 @@ export function CommitCard({ commit, rcdo, weekState, onEdit }: CommitCardProps)
         >
           {commit.priority}
         </span>
+        {weekState !== 'DRAFT' && typeof driftScore === 'number' && driftScore > 0.5 ? (
+          <span
+            data-testid="commit-drift-badge"
+            title={`AI flagged this commit with drift ${driftScore.toFixed(2)} against its linked Supporting Outcome.`}
+            className="rounded-sm bg-(--color-ribbon-medium-bg) px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-(--color-ribbon-medium-fg)"
+          >
+            Drift {driftScore.toFixed(2)}
+          </span>
+        ) : null}
       </div>
       {weekState === 'DRAFT' && linkedOutcome ? (
         <DriftWarningBanner

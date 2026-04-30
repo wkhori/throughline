@@ -72,9 +72,18 @@ export function PersonaSwitcher() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [me]);
 
+  const activePersona = personas.find((p) => p.role === me?.role);
   return (
     <div role="region" aria-label="Persona switcher" className="persona-bar">
-      <span className="persona-bar-label">Personas</span>
+      <span className="persona-bar-label">
+        {activePersona ? (
+          <>
+            Signed in as <strong className="persona-bar-active-name">{activePersona.label}</strong>
+          </>
+        ) : (
+          'Personas'
+        )}
+      </span>
       {personas.map((p) => {
         const isActive = me?.role === p.role;
         return (
@@ -87,16 +96,12 @@ export function PersonaSwitcher() {
             data-testid={`persona-${p.id}`}
             aria-pressed={isActive}
           >
-            {pending === p.id ? 'Switching…' : p.label}
+            {pending === p.id ? 'Switching…' : isActive ? `${p.label} ✓` : p.label}
           </button>
         );
       })}
       {me ? (
-        <button
-          type="button"
-          onClick={() => dispatch(clearToken())}
-          className="persona-btn-ghost"
-        >
+        <button type="button" onClick={() => dispatch(clearToken())} className="persona-btn-ghost">
           Sign out
         </button>
       ) : null}

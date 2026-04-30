@@ -42,11 +42,12 @@ describe('ShortcutsModal', () => {
   it('renders pretty shortcut labels in kbd elements', () => {
     const onClose = vi.fn();
     render(<ShortcutsModal open={true} onClose={onClose} />);
-    // On non-Mac (jsdom), mod → Ctrl
+    // KbdSequence renders one <kbd> per modifier; on non-Mac (jsdom), mod → Ctrl.
     const kbdElements = document.querySelectorAll('kbd');
     const texts = Array.from(kbdElements).map((el) => el.textContent);
-    expect(texts).toContain('Ctrl+Enter');
-    expect(texts).toContain('Ctrl+K');
+    expect(texts).toContain('Ctrl');
+    expect(texts).toContain('Enter');
+    expect(texts).toContain('K');
     expect(texts).toContain('Esc');
     expect(texts).toContain('?');
   });

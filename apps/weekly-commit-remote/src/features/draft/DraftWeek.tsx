@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useState, type MutableRefObject } from 'react';
 import { useRtkSubscriptionKick } from '@throughline/shared-ui';
 import type { CommitDto, CreateCommitRequest, WeekDto } from '@throughline/shared-types';
 import { useGetRcdoTreeQuery } from '../../api/rcdoEndpoints.js';
@@ -9,18 +9,20 @@ import { ChessMatrix } from './ChessMatrix.js';
 import { CommitForm, type CommitFormHandle } from './CommitForm.js';
 import { CommitsList } from './CommitsList.js';
 import { LockWeekDialog } from './LockWeekDialog.js';
-import { ShortcutsModal } from '../help/ShortcutsModal.js';
-import { useShortcuts } from '../../hooks/useShortcuts.js';
 
 interface DraftWeekProps {
   week: WeekDto;
+  formWrapperRef?: MutableRefObject<HTMLDivElement | null>;
+  commitFormRef?: MutableRefObject<CommitFormHandle | null>;
 }
 
 const MAX_COMMITS = 7;
 
 // Phase-2 IC draft surface. Hosts the chess matrix + composer + lock dialog. All server
 // interactions go through RTK Query mutations with tag invalidation; no raw fetch anywhere.
-export function DraftWeek({ week }: DraftWeekProps) {
+// Shortcuts (?, mod+enter, mod+k, esc) live on WeekShell so they're available across every
+// week state — DraftWeek receives the refs that wire mod+enter / mod+k to the composer.
+export function DraftWeek({ week, formWrapperRef, commitFormRef }: DraftWeekProps) {
   useRtkSubscriptionKick();
   const { data: rcdo } = useGetRcdoTreeQuery();
   const [createCommit, createState] = useCreateCommitMutation();
@@ -28,29 +30,6 @@ export function DraftWeek({ week }: DraftWeekProps) {
   const [lockWeek, lockState] = useLockWeekMutation();
   const [serverError, setServerError] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [shortcutsOpen, setShortcutsOpen] = useState(false);
-
-  // Ref on the CommitForm wrapper div; lets mod+Enter locate and submit the form without
-  // pulling the form into ref-based imperative APIs for that path.
-  const formWrapperRef = useRef<HTMLDivElement | null>(null);
-  // Imperative handle on CommitForm — exposes focusLinker() for the mod+K binding so the
-  // shortcut drops the cursor into the SoLinker's typeahead input directly.
-  const commitFormRef = useRef<CommitFormHandle | null>(null);
-
-  useShortcuts(
-    {
-      '?': () => setShortcutsOpen(true),
-      'mod+enter': () => {
-        const form = formWrapperRef.current?.querySelector<HTMLFormElement>('form');
-        form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-      },
-      'mod+k': () => {
-        commitFormRef.current?.focusLinker();
-      },
-      escape: () => setConfirmOpen(false),
-    },
-    { enabled: true },
-  );
 
   const submit = async (body: CreateCommitRequest) => {
     setServerError(null);
@@ -155,8 +134,6 @@ export function DraftWeek({ week }: DraftWeekProps) {
         onConfirm={lock}
         onClose={() => setConfirmOpen(false)}
       />
-
-      <ShortcutsModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
     </section>
   );
 }

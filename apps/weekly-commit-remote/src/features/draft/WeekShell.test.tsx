@@ -1,7 +1,8 @@
 import { describe, expect, it, beforeAll, afterAll, afterEach } from 'vitest';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
-import { screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '../../test-utils.js';
 import { WeekShell } from './WeekShell.js';
 
@@ -51,5 +52,34 @@ describe('WeekShell', () => {
     );
     renderWithProviders(<WeekShell />);
     await waitFor(() => expect(screen.getByTestId('week-shell-error')).toBeInTheDocument());
+  });
+
+  it('opens the shortcuts modal on "?" and closes on Escape', async () => {
+    server.use(
+      http.get('http://localhost:8080/api/v1/weeks/current', () => HttpResponse.json(draft)),
+    );
+    renderWithProviders(<WeekShell />);
+    await waitFor(() => expect(screen.getByTestId('draft-week')).toBeInTheDocument());
+    expect(screen.queryByTestId('shortcuts-modal')).not.toBeInTheDocument();
+    fireEvent.keyDown(window, { key: '?' });
+    expect(await screen.findByTestId('shortcuts-modal')).toBeInTheDocument();
+    fireEvent.keyDown(window, { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByTestId('shortcuts-modal')).not.toBeInTheDocument());
+  });
+
+  it('exposes the persistent shortcuts hint on the LOCKED state', async () => {
+    server.use(
+      http.get('http://localhost:8080/api/v1/weeks/current', () => HttpResponse.json(locked)),
+      http.post('http://localhost:8080/api/v1/ai/insights/batch', () =>
+        HttpResponse.json({ insights: [] }),
+      ),
+    );
+    renderWithProviders(<WeekShell />);
+    await waitFor(() => expect(screen.getByTestId('locked-week')).toBeInTheDocument());
+    const hint = await screen.findByTestId('shortcuts-hint');
+    expect(hint).toBeInTheDocument();
+    const user = userEvent.setup();
+    await user.click(hint);
+    expect(await screen.findByTestId('shortcuts-modal')).toBeInTheDocument();
   });
 });

@@ -1,8 +1,10 @@
 import { useState, type ReactNode } from 'react';
 import {
   InsightDrillDown,
+  SlackIcon,
   useRtkSubscriptionKick,
   type InsightDrillDownEntity,
+  type InsightSeverity,
 } from '@throughline/shared-ui';
 import {
   useGetCurrentDigestQuery,
@@ -71,16 +73,99 @@ function UserDetail({ userId }: { userId: string }) {
   );
 }
 
+function DetailReasoning({ text }: { text: string }) {
+  return (
+    <section data-testid="digest-detail-text" className="space-y-1">
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-(--color-panel-muted)">
+        AI reasoning
+      </p>
+      <p className="whitespace-pre-wrap text-xs leading-relaxed text-(--color-panel-cell)">
+        {text}
+      </p>
+    </section>
+  );
+}
+
+function NextStep({ children }: { children: ReactNode }) {
+  return (
+    <section
+      data-testid="digest-detail-next-step"
+      className="rounded-md border border-(--color-panel-border) bg-(--color-skeleton-bg) px-3 py-2"
+    >
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-(--color-panel-muted)">
+        Suggested next step
+      </p>
+      <p className="mt-0.5 text-xs leading-relaxed text-(--color-panel-cell)">{children}</p>
+    </section>
+  );
+}
+
 function defaultDetail(entity: InsightDrillDownEntity): ReactNode {
   if (entity.entityType === 'user' && entity.entityId) {
-    return <UserDetail userId={entity.entityId} />;
+    return (
+      <div className="space-y-3">
+        <UserDetail userId={entity.entityId} />
+        {entity.detailText ? <DetailReasoning text={entity.detailText} /> : null}
+        <NextStep>
+          Open this person&apos;s week to align on their plan, or schedule a 1:1 — they&apos;re
+          flagged for attention.
+        </NextStep>
+      </div>
+    );
+  }
+  if (entity.entityType === 'supporting_outcome') {
+    return (
+      <div className="space-y-3">
+        {entity.detailText ? (
+          <DetailReasoning text={entity.detailText} />
+        ) : (
+          <p className="text-xs text-(--color-panel-muted)">
+            No commits landed on this Supporting Outcome this week.
+          </p>
+        )}
+        <NextStep>
+          Reach out to a directly responsible IC and discuss whether the SO needs a commit next
+          week, or whether priorities have shifted and the SO can be retired.
+        </NextStep>
+      </div>
+    );
+  }
+  if (entity.entityType === 'rally_cry') {
+    return (
+      <div className="space-y-3">
+        {entity.detailText ? (
+          <DetailReasoning text={entity.detailText} />
+        ) : (
+          <p className="text-xs text-(--color-panel-muted)">
+            Rally cry observed share is outside expected band.
+          </p>
+        )}
+        <NextStep>
+          Bring this drift to the next leadership sync — either the team-priority weights need to
+          be adjusted, or active rebalancing is required.
+        </NextStep>
+      </div>
+    );
+  }
+  if (entity.entityType === 'commit') {
+    return (
+      <div className="space-y-3">
+        {entity.detailText ? (
+          <DetailReasoning text={entity.detailText} />
+        ) : (
+          <p className="text-xs text-(--color-panel-muted)">
+            This commit has been carried across multiple weeks.
+          </p>
+        )}
+        <NextStep>
+          Decide: is this commit blocked, deprioritised, or under-scoped? Surface the answer in the
+          IC&apos;s next 1:1 and either close it out or break it down.
+        </NextStep>
+      </div>
+    );
   }
   if (entity.detailText) {
-    return (
-      <p data-testid="digest-detail-text" className="whitespace-pre-wrap text-xs leading-relaxed text-(--color-panel-cell)">
-        {entity.detailText}
-      </p>
-    );
+    return <DetailReasoning text={entity.detailText} />;
   }
   return (
     <pre data-testid="digest-detail-default" className="whitespace-pre-wrap break-all">
@@ -128,6 +213,28 @@ export function buildDriftDetail(observed: string, expected: string, direction: 
 // `outcomeId`/`outcomeTitle`, `rallyCry*` for drift, `weeksCarried`, and
 // `recommendedDrillDowns` (often with userId=null). Coerce defensively so
 // every chip gets a real label, a unique key, and a meaningful drawer body.
+function severityForStarved(weeks: number | undefined): InsightSeverity {
+  if (typeof weeks !== 'number') return 'info';
+  if (weeks >= 3) return 'critical';
+  if (weeks >= 2) return 'warning';
+  return 'info';
+}
+
+function severityForCarry(weeks: number | undefined): InsightSeverity {
+  if (typeof weeks !== 'number') return 'info';
+  if (weeks >= 4) return 'critical';
+  if (weeks >= 2) return 'warning';
+  return 'info';
+}
+
+function severityForDrift(observedRaw: string): InsightSeverity {
+  const numeric = Number(observedRaw.replace('%', ''));
+  if (!Number.isFinite(numeric)) return 'warning';
+  // Drift exceptions returned by Sonnet are already past the org's expected range,
+  // so the existence of a drift entry maps to ≥ warning by definition.
+  return numeric >= 35 || numeric <= 5 ? 'critical' : 'warning';
+}
+
 function chipsFor(payload: DigestPayload): InsightDrillDownEntity[] {
   const out: InsightDrillDownEntity[] = [];
   for (const [idx, s] of (payload.starvedOutcomes ?? []).entries()) {
@@ -140,10 +247,10 @@ function chipsFor(payload: DigestPayload): InsightDrillDownEntity[] {
       entityId: id,
       label: `${weeks}${title}`,
       detailText: reason,
+      severity: severityForStarved(s.weeksStarved),
     });
   }
   for (const [idx, d] of (payload.driftExceptions ?? []).entries()) {
-    // Two shapes: per-user (legacy: userId/displayName) or per-rally-cry (live: rallyCryId/rallyCryTitle).
     const isRallyCryShape = Boolean(d.rallyCryId || d.rallyCryTitle);
     if (isRallyCryShape) {
       const id = d.rallyCryId ?? `drift-${idx}`;
@@ -154,7 +261,13 @@ function chipsFor(payload: DigestPayload): InsightDrillDownEntity[] {
       const labelTail = [observed, direction].filter(Boolean).join(' · ');
       const label = labelTail ? `${title} — ${labelTail}` : title;
       const detailText = buildDriftDetail(observed, expected, direction);
-      out.push({ entityType: 'rally_cry', entityId: id, label, detailText });
+      out.push({
+        entityType: 'rally_cry',
+        entityId: id,
+        label,
+        detailText,
+        severity: severityForDrift(observed),
+      });
     } else {
       const id = d.userId ?? `drift-${idx}`;
       out.push({
@@ -165,6 +278,7 @@ function chipsFor(payload: DigestPayload): InsightDrillDownEntity[] {
           : d.userId
             ? `User #${shortId(d.userId)}`
             : `Direct report ${idx + 1}`,
+        severity: 'warning',
       });
     }
   }
@@ -178,6 +292,7 @@ function chipsFor(payload: DigestPayload): InsightDrillDownEntity[] {
       entityId: id,
       label: `${prefix}${text}`,
       detailText: c.note,
+      severity: severityForCarry(weeks),
     });
   }
   const drills = payload.recommendedDrillDowns ?? payload.drillDowns ?? [];
@@ -192,6 +307,7 @@ function chipsFor(payload: DigestPayload): InsightDrillDownEntity[] {
           ? `User #${shortId(u.userId as string)}`
           : `1:1 candidate ${idx + 1}`,
       detailText: u.reason,
+      severity: 'info',
     });
   }
   return out;
@@ -223,60 +339,82 @@ export function DigestHero(props: DigestHeroProps = {}) {
       ? 'Digest will land after Friday reconciliation.'
       : 'Digest unavailable — see deterministic rollup below.');
 
+  const counts =
+    variant === 'OK' && envelope?.digest
+      ? {
+          starved: envelope.digest.starvedOutcomes?.length ?? 0,
+          drift: envelope.digest.driftExceptions?.length ?? 0,
+          carry: envelope.digest.longCarryForwards?.length ?? 0,
+          drills:
+            envelope.digest.recommendedDrillDowns?.length ??
+            envelope.digest.drillDowns?.length ??
+            0,
+        }
+      : null;
+
   return (
     <header
       data-testid="manager-digest-hero"
       data-variant={variant}
-      className="space-y-4 rounded-lg border border-(--color-hero-border) bg-(--color-hero-bg) p-6"
+      className="space-y-5 rounded-lg border border-(--color-hero-border) bg-(--color-hero-bg) p-6"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-(--color-hero-muted)">
-            Weekly digest
-          </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-(--color-hero-muted)">
+              Weekly digest
+            </p>
+            <span
+              data-testid="digest-state-badge"
+              className="rounded-sm bg-(--color-badge-bg) px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-(--color-badge-fg)"
+            >
+              {variant}
+            </span>
+          </div>
           <h1
             data-testid="digest-headline"
-            className="mt-1 text-base font-semibold leading-snug text-(--color-hero-heading)"
+            className="mt-2 text-xl font-semibold leading-tight text-(--color-hero-heading)"
           >
             {headline}
           </h1>
+          {counts ? (
+            <p data-testid="digest-counts" className="mt-2 text-xs text-(--color-hero-muted)">
+              {counts.starved} starved · {counts.drift} drift · {counts.carry} carry-forward ·{' '}
+              {counts.drills} recommended 1:1
+            </p>
+          ) : null}
         </div>
-        <span
-          data-testid="digest-state-badge"
-          className="rounded-sm bg-(--color-badge-bg) px-1.5 py-0.5 text-xs font-medium text-(--color-badge-fg)"
-        >
-          {variant}
-        </span>
+
+        {variant !== 'AWAITING_AI' ? (
+          <div className="flex flex-col items-end gap-1">
+            <button
+              type="button"
+              data-testid="digest-dispatch-slack"
+              disabled={dispatch.isLoading}
+              onClick={onDispatchSlack}
+              className="inline-flex items-center gap-2 rounded-md border border-(--color-hero-heading) bg-(--color-hero-heading) px-3.5 py-2 text-xs font-semibold text-(--color-hero-bg) shadow-sm transition-opacity hover:opacity-90 disabled:opacity-50"
+            >
+              <SlackIcon size={14} />
+              {dispatch.isLoading ? 'Sending…' : 'Send to Slack'}
+            </button>
+            {dispatchAck === 'sent' ? (
+              <span
+                data-testid="digest-dispatch-ack"
+                className="text-[11px] text-(--color-hero-muted)"
+              >
+                Dispatched · check the channel
+              </span>
+            ) : null}
+            {dispatchAck === 'failed' ? (
+              <span className="text-[11px] text-(--color-shell-error)">
+                Dispatch failed — see API logs
+              </span>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
-      {variant !== 'AWAITING_AI' ? (
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            data-testid="digest-dispatch-slack"
-            disabled={dispatch.isLoading}
-            onClick={onDispatchSlack}
-            className="inline-flex items-center gap-2 rounded-md border border-(--color-hero-border) bg-(--color-shell-bg) px-3 py-1.5 text-xs font-medium text-(--color-hero-heading) transition-colors hover:bg-(--color-skeleton-bg) disabled:opacity-50"
-          >
-            {dispatch.isLoading ? 'Sending…' : 'Send digest to Slack'}
-          </button>
-          {dispatchAck === 'sent' ? (
-            <span
-              data-testid="digest-dispatch-ack"
-              className="text-xs text-(--color-hero-muted)"
-            >
-              Dispatched. Check the channel.
-            </span>
-          ) : null}
-          {dispatchAck === 'failed' ? (
-            <span className="text-xs text-(--color-shell-error)">
-              Dispatch failed — see API logs.
-            </span>
-          ) : null}
-        </div>
-      ) : null}
-
-      {isLoading ? (
+      {isLoading && !envelope ? (
         <p data-testid="digest-loading" className="text-sm text-(--color-hero-muted)">
           Loading digest…
         </p>
@@ -352,9 +490,9 @@ export function DigestHero(props: DigestHeroProps = {}) {
               <DigestSection
                 title="Recommended 1:1s"
                 count={
-                  (envelope.digest.recommendedDrillDowns?.length ??
-                    envelope.digest.drillDowns?.length ??
-                    0)
+                  envelope.digest.recommendedDrillDowns?.length ??
+                  envelope.digest.drillDowns?.length ??
+                  0
                 }
                 entities={chipsFor({
                   ...envelope.digest,

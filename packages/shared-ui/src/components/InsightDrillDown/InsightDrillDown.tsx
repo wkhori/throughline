@@ -8,6 +8,8 @@ export type InsightDrillDownEntityType =
   | 'rally_cry'
   | 'note';
 
+export type InsightSeverity = 'info' | 'warning' | 'critical';
+
 export interface InsightDrillDownEntity {
   entityType: InsightDrillDownEntityType;
   entityId: string;
@@ -15,6 +17,8 @@ export interface InsightDrillDownEntity {
   label?: string;
   /** Optional inline detail (e.g., AI reasoning) rendered in the drawer when no fetch is available. */
   detailText?: string;
+  /** Visual severity: drives chip border + drawer accent stripe. Defaults to 'info'. */
+  severity?: InsightSeverity;
 }
 
 export interface InsightDrillDownProps {
@@ -53,7 +57,7 @@ export function InsightDrillDown({ entities, renderTrigger, renderDetail }: Insi
         const trigger = renderTrigger ? (
           renderTrigger(e, label)
         ) : (
-          <DefaultTrigger label={label} />
+          <DefaultTrigger label={label} severity={e.severity ?? 'info'} />
         );
         return (
           <span
@@ -61,7 +65,8 @@ export function InsightDrillDown({ entities, renderTrigger, renderDetail }: Insi
             data-testid="insight-drill-trigger"
             data-entity-type={e.entityType}
             data-entity-id={e.entityId}
-            className="mr-1.5 mb-1 inline-block"
+            data-severity={e.severity ?? 'info'}
+            className="mr-1.5 mb-1 inline-block cursor-pointer"
             onClick={(ev) => {
               ev.preventDefault();
               setOpen(e);
@@ -91,8 +96,20 @@ export function InsightDrillDown({ entities, renderTrigger, renderDetail }: Insi
             role="dialog"
             aria-modal="true"
             data-testid="insight-drill-drawer"
+            data-severity={open.severity ?? 'info'}
             className="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col border-l border-(--color-panel-border) bg-(--color-panel-bg) text-(--color-panel-cell) shadow-2xl"
           >
+            <div
+              aria-hidden
+              className={
+                'h-1 w-full ' +
+                (open.severity === 'critical'
+                  ? 'bg-(--color-shell-error)'
+                  : open.severity === 'warning'
+                    ? 'bg-(--color-ribbon-medium-bg)'
+                    : 'bg-(--color-ribbon-link)')
+              }
+            />
             <header className="flex items-start justify-between gap-3 border-b border-(--color-panel-border) px-5 py-4">
               <div>
                 <p className="text-[11px] font-medium uppercase tracking-wide text-(--color-panel-muted)">
@@ -127,7 +144,10 @@ export function InsightDrillDown({ entities, renderTrigger, renderDetail }: Insi
               {renderDetail ? (
                 renderDetail(open)
               ) : (
-                <pre data-testid="insight-drill-detail-default" className="whitespace-pre-wrap break-all">
+                <pre
+                  data-testid="insight-drill-detail-default"
+                  className="whitespace-pre-wrap break-all"
+                >
                   {JSON.stringify(open, null, 2)}
                 </pre>
               )}
@@ -139,11 +159,19 @@ export function InsightDrillDown({ entities, renderTrigger, renderDetail }: Insi
   );
 }
 
-function DefaultTrigger({ label }: { label: string }) {
+function DefaultTrigger({ label, severity }: { label: string; severity: InsightSeverity }) {
+  const tone =
+    severity === 'critical'
+      ? 'border-(--color-shell-error) text-(--color-shell-error) hover:bg-(--color-shell-error)/10'
+      : severity === 'warning'
+        ? 'border-(--color-ribbon-medium-fg) text-(--color-ribbon-medium-fg) hover:bg-(--color-ribbon-medium-bg)'
+        : 'border-(--color-panel-border) text-(--color-panel-heading) hover:border-(--color-shell-text) hover:bg-(--color-skeleton-bg)';
   return (
-    <button
-      type="button"
-      className="inline-flex items-center gap-1 rounded-md border border-(--color-panel-border) bg-(--color-panel-bg) px-1.5 py-0.5 text-[11px] font-medium text-(--color-panel-heading) transition-colors hover:border-(--color-shell-text) hover:bg-(--color-skeleton-bg)"
+    <span
+      className={
+        'inline-flex items-center gap-1 rounded-md border bg-(--color-panel-bg) px-1.5 py-0.5 text-[11px] font-medium transition-all hover:shadow-[0_0_0_3px_var(--color-skeleton-bg)] ' +
+        tone
+      }
     >
       <span>{label}</span>
       <svg
@@ -159,6 +187,6 @@ function DefaultTrigger({ label }: { label: string }) {
       >
         <path d="M4 2 L8 6 L4 10" />
       </svg>
-    </button>
+    </span>
   );
 }

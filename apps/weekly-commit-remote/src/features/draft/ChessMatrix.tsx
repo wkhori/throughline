@@ -15,11 +15,19 @@ interface ChessMatrixProps {
   rcdo?: RcdoTreeDto;
   weekState: 'DRAFT' | 'LOCKED' | 'RECONCILING' | 'RECONCILED';
   onEditCommit?: (commit: CommitDto) => void;
+  /** Persisted drift scores keyed by commit id; surfaces drift badges in non-DRAFT states. */
+  driftByCommitId?: Record<string, number>;
 }
 
 // Phase-2 chess matrix: 3x3 category × priority grid. Keyboard nav via arrow keys; Enter selects
 // a focused cell. Drag/drop is opt-in click-fallback in Phase 2 (full keyboard parity in Phase 7).
-export function ChessMatrix({ commits, rcdo, weekState, onEditCommit }: ChessMatrixProps) {
+export function ChessMatrix({
+  commits,
+  rcdo,
+  weekState,
+  onEditCommit,
+  driftByCommitId,
+}: ChessMatrixProps) {
   const [focused, setFocused] = useState<{ r: number; c: number } | null>(null);
   const cellRefs = useRef(new Map<string, HTMLElement>());
 
@@ -45,37 +53,56 @@ export function ChessMatrix({ commits, rcdo, weekState, onEditCommit }: ChessMat
   };
 
   return (
-    <div
-      role="grid"
-      aria-label="Commit chess matrix: category by priority"
-      data-testid="chess-matrix"
-      onKeyDown={onKey}
-      className="grid grid-cols-[140px_repeat(3,1fr)] gap-3 text-sm"
-    >
-      <div />
-      {PRIORITIES.map((p) => (
-        <div
-          key={p}
-          role="columnheader"
-          className="text-[11px] font-semibold uppercase tracking-wide text-(--color-panel-muted)"
-        >
-          {p}
-        </div>
-      ))}
-      {CATEGORIES.map((cat, r) => (
-        <RowFragment
-          key={cat}
-          row={r}
-          category={cat}
-          commits={commits}
-          rcdo={rcdo}
-          weekState={weekState}
-          focused={focused}
-          setFocused={setFocused}
-          cellRefs={cellRefs.current}
-          onEditCommit={onEditCommit}
-        />
-      ))}
+    <div data-testid="chess-matrix-wrapper" className="space-y-3">
+      <div
+        data-testid="chess-matrix-legend"
+        className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-(--color-shell-muted)"
+      >
+        <span className="inline-flex items-center gap-1">
+          <span className="font-semibold text-(--color-panel-heading)">Rows</span>
+          <span>Strategic vs reactive intent (← top = most strategic)</span>
+        </span>
+        <span aria-hidden className="text-(--color-panel-border)">
+          ·
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <span className="font-semibold text-(--color-panel-heading)">Columns</span>
+          <span>Priority — Must &gt; Should &gt; Could</span>
+        </span>
+      </div>
+      <div
+        role="grid"
+        aria-label="Commit chess matrix: category by priority"
+        data-testid="chess-matrix"
+        onKeyDown={onKey}
+        className="grid grid-cols-[140px_repeat(3,1fr)] gap-3 text-sm"
+      >
+        <div />
+        {PRIORITIES.map((p) => (
+          <div
+            key={p}
+            role="columnheader"
+            className="text-[11px] font-semibold uppercase tracking-wide text-(--color-panel-muted)"
+          >
+            {p}
+          </div>
+        ))}
+        {CATEGORIES.map((cat, r) => (
+          <RowFragment
+            key={cat}
+            row={r}
+            category={cat}
+            commits={commits}
+            rcdo={rcdo}
+            weekState={weekState}
+            focused={focused}
+            setFocused={setFocused}
+            cellRefs={cellRefs.current}
+            onEditCommit={onEditCommit}
+            driftByCommitId={driftByCommitId}
+          />
+        ))}
+      </div>
     </div>
   );
 }
@@ -90,6 +117,7 @@ interface RowProps {
   setFocused: (v: { r: number; c: number }) => void;
   cellRefs: Map<string, HTMLElement>;
   onEditCommit?: (commit: CommitDto) => void;
+  driftByCommitId?: Record<string, number>;
 }
 
 function RowFragment({
@@ -102,6 +130,7 @@ function RowFragment({
   setFocused,
   cellRefs,
   onEditCommit,
+  driftByCommitId,
 }: RowProps) {
   return (
     <>
@@ -144,6 +173,7 @@ function RowFragment({
                     rcdo={rcdo}
                     weekState={weekState}
                     onEdit={onEditCommit}
+                    driftScore={driftByCommitId?.[cm.id]}
                   />
                 ))}
               </div>
