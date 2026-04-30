@@ -1,0 +1,43 @@
+{
+  "draftCommitText": "Ship the workflow builder GA milestone for paying enterprise pilots",
+  "userId": "01J0USER000000000000000001",
+  "teamId": "01J0TEAM000000000000000001",
+  "candidates": [
+    {
+      "supportingOutcomeId": "01J0SO000000000000000ALPHA",
+      "title": "Reduce day-7 churn for new SMB sign-ups",
+      "parentOutcomeTitle": "Cut churn by 15% this quarter",
+      "parentDOTitle": "Retention reliability",
+      "parentRallyCryTitle": "Win the SMB segment"
+    },
+    {
+      "supportingOutcomeId": "01J0SO000000000000000BETA0",
+      "title": "Ship workflow builder GA for paying pilots",
+      "parentOutcomeTitle": "Convert 6 enterprise pilots to paid",
+      "parentDOTitle": "Enterprise pipeline expansion",
+      "parentRallyCryTitle": "Win the enterprise segment"
+    },
+    {
+      "supportingOutcomeId": "01J0SO000000000000000GAMMA",
+      "title": "Cut p95 dashboard latency below 400ms",
+      "parentOutcomeTitle": "Platform reliability SLA",
+      "parentDOTitle": "Operational excellence",
+      "parentRallyCryTitle": "Be the platform teams trust"
+    },
+    {
+      "supportingOutcomeId": "01J0SO000000000000000DELTA",
+      "title": "Migrate legacy auth provider to Auth0",
+      "parentOutcomeTitle": "Auth modernization complete",
+      "parentDOTitle": "Platform foundations",
+      "parentRallyCryTitle": "Be the platform teams trust"
+    },
+    {
+      "supportingOutcomeId": "01J0SO000000000000000EPSIL",
+      "title": "Halve onboarding completion time",
+      "parentOutcomeTitle": "Activation funnel",
+      "parentDOTitle": "Activation reliability",
+      "parentRallyCryTitle": "Win the SMB segment"
+    }
+  ],
+  "recentUserCommits": []
+}

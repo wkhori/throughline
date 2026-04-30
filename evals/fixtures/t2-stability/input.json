@@ -1,0 +1,29 @@
+{
+  "commitId": "01J0COMMIT00000000000000ST",
+  "commitText": "Ship the workflow builder GA milestone for paying enterprise pilots",
+  "linkedOutcome": {
+    "supportingOutcomeId": "01J0SO000000000000000BETA0",
+    "title": "Ship workflow builder GA for paying pilots",
+    "parentOutcomeTitle": "Convert 6 enterprise pilots to paid",
+    "parentDOTitle": "Enterprise pipeline expansion",
+    "metricStatement": "Number of paying enterprise pilots converted this quarter"
+  },
+  "alternativeOutcomes": [
+    {
+      "supportingOutcomeId": "01J0SO000000000000000ALPHA",
+      "title": "Reduce day-7 churn for new SMB sign-ups"
+    },
+    {
+      "supportingOutcomeId": "01J0SO000000000000000DELTA",
+      "title": "Migrate legacy auth provider to Auth0"
+    },
+    {
+      "supportingOutcomeId": "01J0SO000000000000000EPSIL",
+      "title": "Halve onboarding completion time"
+    },
+    {
+      "supportingOutcomeId": "01J0SO000000000000000GAMMA",
+      "title": "Cut p95 dashboard latency below 400ms"
+    }
+  ]
+}

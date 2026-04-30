@@ -1,0 +1,4 @@
+[
+  { "kind": "allEqual", "path": ["alignmentVerdict"] },
+  { "kind": "allEqual", "path": ["driftScore"] }
+]
