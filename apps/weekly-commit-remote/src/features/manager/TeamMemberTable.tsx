@@ -1,3 +1,4 @@
+import { Users } from 'lucide-react';
 import type { TeamRollupRow } from '../../api/managerEndpoints.js';
 
 interface TeamMemberTableProps {
@@ -11,12 +12,18 @@ interface TeamMemberTableProps {
 export function TeamMemberTable({ rows, onSelectTeam }: TeamMemberTableProps) {
   if (rows.length === 0) {
     return (
-      <p
+      <div
         data-testid="team-member-table-empty"
-        className="rounded-md border border-dashed border-(--color-panel-border) bg-(--color-panel-bg) p-4 text-sm text-(--color-panel-muted)"
+        className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-(--color-panel-border) bg-(--color-panel-bg) py-10 text-center"
       >
-        No teammates in scope
-      </p>
+        <Users size={28} className="text-(--color-panel-muted) opacity-40" aria-hidden="true" />
+        <div>
+          <p className="text-sm font-medium text-(--color-panel-muted)">No teammates in scope</p>
+          <p className="mt-1 text-xs text-(--color-panel-muted) opacity-70">
+            Team members appear here once their week data is available.
+          </p>
+        </div>
+      </div>
     );
   }
   return (
@@ -67,9 +74,7 @@ export function TeamMemberTable({ rows, onSelectTeam }: TeamMemberTableProps) {
                 }
                 className={
                   'border-b border-(--color-panel-border) transition-colors last:border-0 ' +
-                  (interactive
-                    ? 'cursor-pointer hover:bg-(--color-skeleton-bg)'
-                    : '')
+                  (interactive ? 'cursor-pointer hover:bg-(--color-skeleton-bg)' : '')
                 }
               >
                 <td className="px-4 py-3 font-medium text-(--color-panel-heading)">{p.teamName}</td>

@@ -1,3 +1,4 @@
+import { CircleDashed } from 'lucide-react';
 import type { CommitDto, RcdoTreeDto, WeekDto } from '@throughline/shared-types';
 import { RcdoChip, resolveRcdoTrail, useRtkSubscriptionKick } from '@throughline/shared-ui';
 import { useGetRcdoTreeQuery } from '../../api/rcdoEndpoints.js';
@@ -24,21 +25,37 @@ export function ReconciledWeek({ week }: ReconciledWeekProps) {
           Reconciled {formatTimestamp(week.reconciledAt)} · {week.commits.length} commits
         </p>
       </header>
-      <div
-        data-testid="ic-stats"
-        className="grid grid-cols-2 gap-3 sm:grid-cols-4"
-      >
+      <div data-testid="ic-stats" className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard label="Done" value={stats.done} tone="ok" />
         <StatCard label="Partial" value={stats.partial} tone="medium" />
         <StatCard label="Not done" value={stats.notDone} tone="high" />
         <StatCard label="Carried forward" value={stats.carriedForward} tone="low" />
       </div>
       <AlignmentDeltaCard weekId={week.id} />
-      <ul className="space-y-3" data-testid="reconciled-rows">
-        {week.commits.map((c) => (
-          <ReconciledRow key={c.id} commit={c} rcdo={rcdo} />
-        ))}
-      </ul>
+      {week.commits.length === 0 ? (
+        <div
+          data-testid="reconciled-empty"
+          className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-(--color-panel-border) bg-(--color-panel-bg) py-10 text-center"
+        >
+          <CircleDashed
+            size={28}
+            className="text-(--color-panel-muted) opacity-40"
+            aria-hidden="true"
+          />
+          <div>
+            <p className="text-sm font-medium text-(--color-panel-muted)">No commits this week</p>
+            <p className="mt-1 text-xs text-(--color-panel-muted) opacity-70">
+              This week was reconciled with no commits on record.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <ul className="space-y-3" data-testid="reconciled-rows">
+          {week.commits.map((c) => (
+            <ReconciledRow key={c.id} commit={c} rcdo={rcdo} />
+          ))}
+        </ul>
+      )}
     </section>
   );
 }
