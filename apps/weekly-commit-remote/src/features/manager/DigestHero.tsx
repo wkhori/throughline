@@ -324,6 +324,7 @@ export function DigestHero(props: DigestHeroProps = {}) {
                   driftExceptions: [],
                   longCarryForwards: [],
                   drillDowns: [],
+                  recommendedDrillDowns: [],
                 })}
               />
               <DigestSection
@@ -334,6 +335,7 @@ export function DigestHero(props: DigestHeroProps = {}) {
                   starvedOutcomes: [],
                   longCarryForwards: [],
                   drillDowns: [],
+                  recommendedDrillDowns: [],
                 })}
               />
               <DigestSection
@@ -344,6 +346,7 @@ export function DigestHero(props: DigestHeroProps = {}) {
                   starvedOutcomes: [],
                   driftExceptions: [],
                   drillDowns: [],
+                  recommendedDrillDowns: [],
                 })}
               />
               <DigestSection
