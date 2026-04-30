@@ -54,7 +54,7 @@ public class WeekStateMachine {
       return false;
     }
     if (week.getState() != WeekState.DRAFT) {
-      throw new IllegalStateException(
+      throw new com.throughline.weeklycommit.domain.exception.LifecycleConflictException(
           "Cannot lock week in state " + week.getState() + " (expected DRAFT)");
     }
     List<Commit> commits = commitRepo.findAllByWeekIdOrderByDisplayOrderAsc(week.getId());
@@ -111,7 +111,7 @@ public class WeekStateMachine {
   public void startReconcile(Week week, Org org) {
     if (week.getState() == WeekState.RECONCILING) return; // idempotent
     if (week.getState() != WeekState.LOCKED) {
-      throw new IllegalStateException(
+      throw new com.throughline.weeklycommit.domain.exception.LifecycleConflictException(
           "Cannot start reconcile from state " + week.getState() + " (expected LOCKED)");
     }
     ZoneId tz = ZoneId.of(org.getTimezone());
@@ -122,7 +122,7 @@ public class WeekStateMachine {
             .atTime(org.getReconcileOpensTime())
             .atZone(tz);
     if (nowLocal.isBefore(windowOpens)) {
-      throw new IllegalStateException(
+      throw new com.throughline.weeklycommit.domain.exception.LifecycleConflictException(
           "reconcile window not yet open — opens "
               + org.getReconcileOpensDayOfWeek()
               + " at "
@@ -139,7 +139,7 @@ public class WeekStateMachine {
   public void markReconciled(Week week) {
     if (week.getState() == WeekState.RECONCILED) return;
     if (week.getState() != WeekState.RECONCILING) {
-      throw new IllegalStateException(
+      throw new com.throughline.weeklycommit.domain.exception.LifecycleConflictException(
           "Cannot reconcile from state " + week.getState() + " (expected RECONCILING)");
     }
     week.setState(WeekState.RECONCILED);

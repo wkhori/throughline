@@ -8,6 +8,7 @@ import com.throughline.weeklycommit.domain.Org;
 import com.throughline.weeklycommit.domain.ReconciliationOutcome;
 import com.throughline.weeklycommit.domain.User;
 import com.throughline.weeklycommit.domain.Week;
+import com.throughline.weeklycommit.domain.exception.LifecycleConflictException;
 import com.throughline.weeklycommit.domain.repo.CommitRepository;
 import com.throughline.weeklycommit.domain.repo.OrgRepository;
 import com.throughline.weeklycommit.domain.repo.WeekRepository;
@@ -100,7 +101,7 @@ public class ReconcileService {
                   () -> weekRepo.save(new Week(user.getId(), user.getOrgId(), nextWeekStart)));
       long existingCount = commitRepo.countByWeekId(nextWeek.getId());
       if (existingCount + carryForwardItems.size() > CommitService.MAX_COMMITS_PER_WEEK) {
-        throw new IllegalStateException(
+        throw new LifecycleConflictException(
             "Cannot carry forward — next week is at the 7-commit cap (would exceed by "
                 + (existingCount + carryForwardItems.size() - CommitService.MAX_COMMITS_PER_WEEK)
                 + ")");

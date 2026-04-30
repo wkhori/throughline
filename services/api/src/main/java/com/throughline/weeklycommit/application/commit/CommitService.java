@@ -9,6 +9,7 @@ import com.throughline.weeklycommit.domain.SupportingOutcome;
 import com.throughline.weeklycommit.domain.User;
 import com.throughline.weeklycommit.domain.Week;
 import com.throughline.weeklycommit.domain.WeekState;
+import com.throughline.weeklycommit.domain.exception.LifecycleConflictException;
 import com.throughline.weeklycommit.domain.repo.CommitRepository;
 import com.throughline.weeklycommit.domain.repo.SupportingOutcomeRepository;
 import com.throughline.weeklycommit.domain.repo.WeekRepository;
@@ -44,7 +45,7 @@ public class CommitService {
     requireOwner(week, user);
     requireDraft(week);
     if (commitRepo.countByWeekId(week.getId()) >= MAX_COMMITS_PER_WEEK) {
-      throw new IllegalStateException(
+      throw new LifecycleConflictException(
           "Week is at the 7-commit cap; remove or reschedule a commit before adding another");
     }
     if (req.supportingOutcomeId() != null) {
@@ -94,7 +95,7 @@ public class CommitService {
     SupportingOutcome so =
         soRepo.findById(soId).orElseThrow(() -> new NotFoundException("SupportingOutcome", soId));
     if (so.isArchived()) {
-      throw new IllegalStateException("Cannot link to an archived Supporting Outcome");
+      throw new LifecycleConflictException("Cannot link to an archived Supporting Outcome");
     }
   }
 
@@ -106,7 +107,7 @@ public class CommitService {
 
   private static void requireDraft(Week week) {
     if (week.getState() != WeekState.DRAFT) {
-      throw new IllegalStateException(
+      throw new LifecycleConflictException(
           "Cannot mutate commits while week is in state " + week.getState() + " (must be DRAFT)");
     }
   }
