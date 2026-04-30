@@ -202,8 +202,7 @@ public class ManagerDigestService {
     String aiSlackMessage = aiPayload.path("slackMessage").asText("");
     String resolved = resolveCommitReferences(manager, aiSlackMessage);
     payload.put(
-        "slackMessage",
-        resolved.isBlank() ? "Latest digest could not be reformatted." : resolved);
+        "slackMessage", resolved.isBlank() ? "Latest digest could not be reformatted." : resolved);
     String payloadJson;
     try {
       payloadJson = MAPPER.writeValueAsString(payload);
@@ -220,9 +219,9 @@ public class ManagerDigestService {
 
   /**
    * Replace bare commit ULIDs in the AI-generated Slack message with a human-readable form:
-   * "<commit text> (#xxxxxxxx)". Sonnet sometimes drops the {@code commitText} field even though
-   * it has the ID, so we resolve from {@link CommitRepository} at dispatch time. Limit lookups so
-   * a malformed payload cannot fan out into thousands of queries.
+   * "<commit text> (#xxxxxxxx)". Sonnet sometimes drops the {@code commitText} field even though it
+   * has the ID, so we resolve from {@link CommitRepository} at dispatch time. Limit lookups so a
+   * malformed payload cannot fan out into thousands of queries.
    */
   private String resolveCommitReferences(User manager, String slackMessage) {
     if (slackMessage == null || slackMessage.isBlank()) return "";
@@ -302,9 +301,9 @@ public class ManagerDigestService {
   /**
    * Builds the Sonnet user prompt. For each direct report we attach the latest TeamRollupCache row
    * (their team, current week — falling back to most recent prior week if the current week hasn't
-   * been materialised yet). The cached payload already contains the structural signals Sonnet
-   * needs to generate the narrative — outcome shares, starved outcomes, priority drift, ribbon
-   * exceptions — none of which 15Five can produce because their data model is unstructured text.
+   * been materialised yet). The cached payload already contains the structural signals Sonnet needs
+   * to generate the narrative — outcome shares, starved outcomes, priority drift, ribbon exceptions
+   * — none of which 15Five can produce because their data model is unstructured text.
    */
   private String serializeInput(User manager) {
     ObjectNode root = MAPPER.createObjectNode();

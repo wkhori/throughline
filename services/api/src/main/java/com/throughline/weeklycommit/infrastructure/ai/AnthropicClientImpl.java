@@ -187,8 +187,8 @@ public class AnthropicClientImpl implements AnthropicClient {
   }
 
   /**
-   * Some Anthropic responses wrap structured JSON output in markdown fences (```json … ```).
-   * Strip them before validating so the downstream parser sees raw JSON.
+   * Some Anthropic responses wrap structured JSON output in markdown fences (```json … ```). Strip
+   * them before validating so the downstream parser sees raw JSON.
    */
   static String stripMarkdownFences(String s) {
     if (s == null) return "";

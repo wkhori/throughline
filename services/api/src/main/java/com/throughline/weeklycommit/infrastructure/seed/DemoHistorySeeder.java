@@ -55,7 +55,7 @@ import org.springframework.transaction.annotation.Transactional;
  * <ol>
  *   <li>Outcome "Expand enterprise pipeline Q2" receives zero org-wide commits in the most recent 2
  *       weeks (the SO IDs under that DO are excluded from the random-pick pool).
- *   <li>Sarah Mendez's "Refactor billing service test suite" carry-forward chain — created
+ *   <li>Sarah Mendez's "Migrate legacy auth provider to Auth0" carry-forward chain — created
  *       four-weeks-running with {@code parentCommitId} chain depth 4.
  *   <li>Platform Reliability team concentrates 65% of its commits on a single SO under "Reduce P1
  *       incident MTTR < 30min".
@@ -227,7 +227,7 @@ public class DemoHistorySeeder implements CommandLineRunner {
         // Dysfunction #2: Sarah Mendez's 4-week carry-forward chain. One commit per week,
         // each week's commit references the prior week's commit via parentCommitId.
         if (sarah != null && sarah.getId().equals(ic.getId()) && sarahCarryForwardSo != null) {
-          Commit chainCommit = new Commit(saved.getId(), "Refactor billing service test suite");
+          Commit chainCommit = new Commit(saved.getId(), "Migrate legacy auth provider to Auth0");
           chainCommit.setSupportingOutcomeId(sarahCarryForwardSo);
           chainCommit.setCategory(CommitCategory.OPERATIONAL);
           chainCommit.setPriority(CommitPriority.MUST);

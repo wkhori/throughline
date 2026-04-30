@@ -13,6 +13,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,7 +55,7 @@ public class WeekStateMachine {
       return false;
     }
     if (week.getState() != WeekState.DRAFT) {
-      throw new IllegalStateException(
+      throw new com.throughline.weeklycommit.domain.exception.LifecycleConflictException(
           "Cannot lock week in state " + week.getState() + " (expected DRAFT)");
     }
     List<Commit> commits = commitRepo.findAllByWeekIdOrderByDisplayOrderAsc(week.getId());
@@ -73,7 +74,7 @@ public class WeekStateMachine {
     }
     if (!errors.isEmpty()) throw new ValidationException(errors);
     week.setState(WeekState.LOCKED);
-    week.setLockedAt(Instant.now(clock));
+    week.setLockedAt(Instant.now(clock).truncatedTo(ChronoUnit.MICROS));
     // PortfolioReviewService and NotificationLifecycleListener consume WeekLockedEvent
     // AFTER_COMMIT — T3 runs out-of-band so lock latency stays under the perf gate.
     events.publishEvent(new WeekLockedEvent(week.getId(), week.getUserId(), week.getOrgId()));
@@ -111,7 +112,7 @@ public class WeekStateMachine {
   public void startReconcile(Week week, Org org) {
     if (week.getState() == WeekState.RECONCILING) return; // idempotent
     if (week.getState() != WeekState.LOCKED) {
-      throw new IllegalStateException(
+      throw new com.throughline.weeklycommit.domain.exception.LifecycleConflictException(
           "Cannot start reconcile from state " + week.getState() + " (expected LOCKED)");
     }
     ZoneId tz = ZoneId.of(org.getTimezone());
@@ -122,7 +123,7 @@ public class WeekStateMachine {
             .atTime(org.getReconcileOpensTime())
             .atZone(tz);
     if (nowLocal.isBefore(windowOpens)) {
-      throw new IllegalStateException(
+      throw new com.throughline.weeklycommit.domain.exception.LifecycleConflictException(
           "reconcile window not yet open — opens "
               + org.getReconcileOpensDayOfWeek()
               + " at "
@@ -139,11 +140,11 @@ public class WeekStateMachine {
   public void markReconciled(Week week) {
     if (week.getState() == WeekState.RECONCILED) return;
     if (week.getState() != WeekState.RECONCILING) {
-      throw new IllegalStateException(
+      throw new com.throughline.weeklycommit.domain.exception.LifecycleConflictException(
           "Cannot reconcile from state " + week.getState() + " (expected RECONCILING)");
     }
     week.setState(WeekState.RECONCILED);
-    week.setReconciledAt(Instant.now(clock));
+    week.setReconciledAt(Instant.now(clock).truncatedTo(ChronoUnit.MICROS));
     // AlignmentDeltaService (T4), MaterializedRollupJob, and NotificationLifecycleListener
     // consume WeekReconciledEvent AFTER_COMMIT.
     events.publishEvent(new WeekReconciledEvent(week.getId(), week.getUserId(), week.getOrgId()));

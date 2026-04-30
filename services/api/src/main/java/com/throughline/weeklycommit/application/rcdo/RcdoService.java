@@ -4,6 +4,7 @@ import com.throughline.weeklycommit.domain.DefiningObjective;
 import com.throughline.weeklycommit.domain.Outcome;
 import com.throughline.weeklycommit.domain.RallyCry;
 import com.throughline.weeklycommit.domain.SupportingOutcome;
+import com.throughline.weeklycommit.domain.exception.LifecycleConflictException;
 import com.throughline.weeklycommit.domain.repo.DefiningObjectiveRepository;
 import com.throughline.weeklycommit.domain.repo.OutcomeRepository;
 import com.throughline.weeklycommit.domain.repo.RallyCryRepository;
@@ -138,7 +139,7 @@ public class RcdoService {
         .findByOrgIdAndTitleAndArchivedAtIsNull(orgId, req.title())
         .ifPresent(
             (rc) -> {
-              throw new IllegalStateException("Rally Cry with title already exists");
+              throw new LifecycleConflictException("Rally Cry with title already exists");
             });
     RallyCry rc = new RallyCry(orgId, req.title());
     rc.setDescription(req.description());
@@ -176,7 +177,7 @@ public class RcdoService {
         rallyCryRepo.findById(id).orElseThrow(() -> new NotFoundException("RallyCry", id));
     long activeChildren = doRepo.countByRallyCryIdAndArchivedAtIsNull(rc.getId());
     if (activeChildren > 0) {
-      throw new IllegalStateException(
+      throw new LifecycleConflictException(
           "Rally Cry has active Defining Objectives — archive children first");
     }
     rc.archive();
@@ -190,7 +191,7 @@ public class RcdoService {
             .findById(req.rallyCryId())
             .orElseThrow(() -> new NotFoundException("RallyCry", req.rallyCryId()));
     if (rc.isArchived()) {
-      throw new IllegalStateException("Cannot create DO under archived Rally Cry");
+      throw new LifecycleConflictException("Cannot create DO under archived Rally Cry");
     }
     DefiningObjective defo = new DefiningObjective(rc.getId(), req.title());
     defo.setDescription(req.description());
@@ -214,7 +215,7 @@ public class RcdoService {
             .orElseThrow(
                 () -> new NotFoundException("DefiningObjective", req.definingObjectiveId()));
     if (defo.isArchived()) {
-      throw new IllegalStateException("Cannot create Outcome under archived DO");
+      throw new LifecycleConflictException("Cannot create Outcome under archived DO");
     }
     Outcome o = new Outcome(defo.getId(), req.title());
     o.setDescription(req.description());
@@ -239,7 +240,7 @@ public class RcdoService {
             .findById(req.outcomeId())
             .orElseThrow(() -> new NotFoundException("Outcome", req.outcomeId()));
     if (o.isArchived()) {
-      throw new IllegalStateException("Cannot create SO under archived Outcome");
+      throw new LifecycleConflictException("Cannot create SO under archived Outcome");
     }
     SupportingOutcome so = new SupportingOutcome(o.getId(), req.title());
     so.setDescription(req.description());

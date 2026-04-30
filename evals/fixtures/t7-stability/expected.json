@@ -1,0 +1,4 @@
+[
+  { "kind": "allEqual", "path": ["severity"] },
+  { "kind": "allEqualSet", "path": ["issues"] }
+]

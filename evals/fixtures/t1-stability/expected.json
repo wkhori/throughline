@@ -1,0 +1,4 @@
+[
+  { "kind": "allEqual", "path": ["supportingOutcomeId"] },
+  { "kind": "allEqual", "path": ["confidence"] }
+]

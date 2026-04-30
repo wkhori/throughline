@@ -1,3 +1,4 @@
+import { Lock } from 'lucide-react';
 import type { WeekDto } from '@throughline/shared-types';
 import { useRtkSubscriptionKick } from '@throughline/shared-ui';
 import { useGetRcdoTreeQuery } from '../../api/rcdoEndpoints.js';
@@ -22,14 +23,25 @@ export function LockedWeek({ week }: LockedWeekProps) {
             Week of {week.weekStart}
           </h1>
           <p className="mt-1 text-sm text-(--color-hero-text)">
-            Locked {formatTimestamp(week.lockedAt)} · {week.commits.length} commits ·
-            reconcile by Friday
+            Locked {formatTimestamp(week.lockedAt)} · {week.commits.length} commits · reconcile by
+            Friday
           </p>
         </div>
         <span className="rounded-sm bg-(--color-badge-bg) px-2 py-1 text-xs font-medium uppercase tracking-wide text-(--color-badge-fg)">
           Read-only
         </span>
       </header>
+      <div
+        data-testid="locked-week-banner"
+        role="status"
+        className="flex items-center gap-3 rounded-md border border-(--color-ribbon-low-bg) bg-(--color-ribbon-low-bg) px-4 py-3 text-xs text-(--color-ribbon-low-fg)"
+      >
+        <Lock size={14} aria-hidden="true" className="shrink-0" />
+        <span>
+          This week is locked — no plan edits allowed. Start reconciliation on Friday to mark each
+          commit done, partial, or not done.
+        </span>
+      </div>
       <PortfolioReviewCard weekId={week.id} />
       <ChessMatrix commits={week.commits} rcdo={rcdo} weekState="LOCKED" />
     </section>

@@ -19,9 +19,33 @@ export function AlignmentDeltaCard({ weekId }: { weekId: string }) {
     return (
       <div
         data-testid="alignment-delta-loading"
-        className="rounded-lg border border-(--color-panel-border) bg-(--color-panel-bg) p-5 text-xs text-(--color-panel-muted)"
+        className="space-y-4 rounded-lg border border-(--color-hero-border) bg-(--color-hero-bg) p-6"
       >
-        Generating alignment delta…
+        <div className="flex items-start justify-between gap-3">
+          <div className="space-y-2">
+            <div className="h-3 w-28 animate-pulse rounded-md bg-(--color-skeleton-bg)/10" />
+            <div className="h-5 w-72 animate-pulse rounded-md bg-(--color-skeleton-bg)/10" />
+          </div>
+          <div className="h-5 w-20 animate-pulse rounded-sm bg-(--color-skeleton-bg)/10" />
+        </div>
+        <div className="space-y-2">
+          <div className="h-3 w-16 animate-pulse rounded-md bg-(--color-skeleton-bg)/10" />
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="h-4 w-full animate-pulse rounded-md bg-(--color-skeleton-bg)/10"
+            />
+          ))}
+        </div>
+        <div className="space-y-2">
+          <div className="h-3 w-16 animate-pulse rounded-md bg-(--color-skeleton-bg)/10" />
+          {[0, 1].map((i) => (
+            <div
+              key={i}
+              className="h-4 w-5/6 animate-pulse rounded-md bg-(--color-skeleton-bg)/10"
+            />
+          ))}
+        </div>
       </div>
     );
   }
@@ -40,7 +64,9 @@ export function AlignmentDeltaCard({ weekId }: { weekId: string }) {
           <p className="text-xs font-medium uppercase tracking-wide text-(--color-hero-muted)">
             Alignment delta
           </p>
-          <p className="mt-1 text-sm font-semibold text-(--color-hero-heading)">{payload.summary}</p>
+          <p className="mt-1 text-sm font-semibold text-(--color-hero-heading)">
+            {payload.summary}
+          </p>
         </div>
         {isFallback ? (
           <span className="rounded-sm bg-(--color-badge-bg) px-1.5 py-0.5 text-[11px] font-medium uppercase tracking-wide text-(--color-badge-fg)">
@@ -118,5 +144,5 @@ function DeltaList<T>({
 }
 
 function shortId(id: string | null | undefined): string {
-  return typeof id === 'string' && id.length >= 8 ? id.slice(0, 8) : id ?? '—';
+  return typeof id === 'string' && id.length >= 8 ? id.slice(0, 8) : (id ?? '—');
 }

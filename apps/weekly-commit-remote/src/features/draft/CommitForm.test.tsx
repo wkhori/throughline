@@ -5,6 +5,18 @@ import userEvent from '@testing-library/user-event';
 import type { RcdoTreeDto } from '@throughline/shared-types';
 import { CommitForm } from './CommitForm.js';
 
+// Stub T1 endpoint — the SoLinker fires it; we want the typeahead path here.
+vi.mock('../../api/aiEndpoints.js', () => ({
+  useSuggestOutcomeMutation: () => [
+    vi.fn().mockReturnValue({ unwrap: () => Promise.resolve({ payload: null }) }),
+    { isLoading: false, isError: false, data: undefined },
+  ],
+  useQualityLintMutation: () => [
+    vi.fn().mockReturnValue({ unwrap: () => Promise.resolve(null) }),
+    { isLoading: false, isError: false, data: undefined },
+  ],
+}));
+
 const tree: RcdoTreeDto = {
   rallyCries: [
     {
@@ -62,10 +74,12 @@ describe('CommitForm', () => {
     const onSubmit = vi.fn();
     render(<CommitForm weekId="w1" rcdo={tree} onSubmit={onSubmit} />);
     await user.type(screen.getByTestId('commit-text-input'), 'Ship sequence v2');
-    await pickListboxOption(user, 'commit-rc-select', 'rc');
-    await pickListboxOption(user, 'commit-do-select', 'do');
-    await pickListboxOption(user, 'commit-outcome-select', 'o');
-    await pickListboxOption(user, 'commit-so-select', 'so-x');
+    // SoLinker — short text, T1 mock returns null, typeahead is open by default in INITIAL.
+    // Click the first result row to set the SO.
+    const linkerInput = await screen.findByTestId('so-linker-input');
+    await user.type(linkerInput, 'SO');
+    const row = await screen.findByTestId('so-linker-result');
+    await user.click(row);
     await pickListboxOption(user, 'commit-category-select', 'STRATEGIC');
     await pickListboxOption(user, 'commit-priority-select', 'MUST');
     await user.click(screen.getByTestId('commit-form-submit'));

@@ -1,12 +1,16 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRtkSubscriptionKick } from '@throughline/shared-ui';
 import type { CommitDto, CreateCommitRequest, WeekDto } from '@throughline/shared-types';
 import { useGetRcdoTreeQuery } from '../../api/rcdoEndpoints.js';
 import { useCreateCommitMutation, useDeleteCommitMutation } from '../../api/commitsEndpoints.js';
 import { useLockWeekMutation } from '../../api/weeksEndpoints.js';
+import { CarryForwardGhost } from './CarryForwardGhost.js';
 import { ChessMatrix } from './ChessMatrix.js';
-import { CommitForm } from './CommitForm.js';
+import { CommitForm, type CommitFormHandle } from './CommitForm.js';
+import { CommitsList } from './CommitsList.js';
 import { LockWeekDialog } from './LockWeekDialog.js';
+import { ShortcutsModal } from '../help/ShortcutsModal.js';
+import { useShortcuts } from '../../hooks/useShortcuts.js';
 
 interface DraftWeekProps {
   week: WeekDto;
@@ -24,6 +28,29 @@ export function DraftWeek({ week }: DraftWeekProps) {
   const [lockWeek, lockState] = useLockWeekMutation();
   const [serverError, setServerError] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+
+  // Ref on the CommitForm wrapper div; lets mod+Enter locate and submit the form without
+  // pulling the form into ref-based imperative APIs for that path.
+  const formWrapperRef = useRef<HTMLDivElement | null>(null);
+  // Imperative handle on CommitForm — exposes focusLinker() for the mod+K binding so the
+  // shortcut drops the cursor into the SoLinker's typeahead input directly.
+  const commitFormRef = useRef<CommitFormHandle | null>(null);
+
+  useShortcuts(
+    {
+      '?': () => setShortcutsOpen(true),
+      'mod+enter': () => {
+        const form = formWrapperRef.current?.querySelector<HTMLFormElement>('form');
+        form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      },
+      'mod+k': () => {
+        commitFormRef.current?.focusLinker();
+      },
+      escape: () => setConfirmOpen(false),
+    },
+    { enabled: true },
+  );
 
   const submit = async (body: CreateCommitRequest) => {
     setServerError(null);
@@ -95,6 +122,10 @@ export function DraftWeek({ week }: DraftWeekProps) {
         </p>
       </aside>
 
+      <CarryForwardGhost week={week} rcdo={rcdo} />
+
+      <CommitsList commits={week.commits} rcdo={rcdo} weekState="DRAFT" />
+
       <ChessMatrix commits={week.commits} rcdo={rcdo} weekState="DRAFT" onEditCommit={remove} />
 
       {atCap ? (
@@ -105,13 +136,16 @@ export function DraftWeek({ week }: DraftWeekProps) {
           At the 7-commit cap. Remove or rephrase before adding more.
         </p>
       ) : (
-        <CommitForm
-          weekId={week.id}
-          rcdo={rcdo}
-          submitting={createState.isLoading}
-          onSubmit={submit}
-          serverError={serverError}
-        />
+        <div ref={formWrapperRef}>
+          <CommitForm
+            ref={commitFormRef}
+            weekId={week.id}
+            rcdo={rcdo}
+            submitting={createState.isLoading}
+            onSubmit={submit}
+            serverError={serverError}
+          />
+        </div>
       )}
 
       <LockWeekDialog
@@ -121,6 +155,8 @@ export function DraftWeek({ week }: DraftWeekProps) {
         onConfirm={lock}
         onClose={() => setConfirmOpen(false)}
       />
+
+      <ShortcutsModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
     </section>
   );
 }

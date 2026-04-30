@@ -116,7 +116,7 @@ export function CommitCard({ commit, rcdo, weekState, onEdit }: CommitCardProps)
               Remove this commit?
             </h3>
             <p className="mt-1.5 text-xs text-(--color-panel-muted)">
-              "{commit.text.length > 80 ? `${commit.text.slice(0, 80)}…` : commit.text}"
+              &ldquo;{commit.text.length > 80 ? `${commit.text.slice(0, 80)}…` : commit.text}&rdquo;
               <br />
               This cannot be undone — the commit and any AI insights linked to it will be deleted.
             </p>

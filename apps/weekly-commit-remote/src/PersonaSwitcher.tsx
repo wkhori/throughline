@@ -30,6 +30,7 @@ export function PersonaSwitcher() {
     setPending(personaId);
     setError(null);
     try {
+      // eslint-disable-next-line no-restricted-syntax -- bootstrap before any token exists; RTKQ baseQuery requires auth
       const r = await fetch(`${apiBase}/api/v1/auth/demo-login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -11,8 +11,25 @@
 export interface EvalAssertion {
   /** Path through the parsed JSON response — e.g. `["confidence"]`, `["issues", 0, "kind"]`. */
   path: (string | number)[];
-  /** Assertion kind — see runner.ts assertOnce() for semantics. */
-  kind: 'exact' | 'contains' | 'range' | 'oneOf' | 'maxLength' | 'minLength' | 'present' | 'absent';
+  /**
+   * Assertion kind — see runner.ts assertOnce() / assertAcrossRuns() for semantics.
+   *
+   * - `allEqual`: across N runs, every run produced the same value at this path (deep equality
+   *   after canonicalization). Used for stability scenarios that gate the persistent AI cache.
+   * - `allEqualSet`: across N runs, every run produced the same set at this path, ignoring order.
+   *   Used for issue/finding lists where order is incidental.
+   */
+  kind:
+    | 'exact'
+    | 'contains'
+    | 'range'
+    | 'oneOf'
+    | 'maxLength'
+    | 'minLength'
+    | 'present'
+    | 'absent'
+    | 'allEqual'
+    | 'allEqualSet';
   /** Assertion argument (concrete value, [min,max] range, or one-of array). */
   arg?: unknown;
 }
@@ -28,6 +45,12 @@ export interface EvalScenario {
   system: string;
   /** Output token cap — matches AiCopilotService maxTokens settings. */
   maxTokens: number;
+  /**
+   * Override the global N for this scenario. Stability scenarios use 5 — once 5 runs produce the
+   * same output the prompt is provably temperature-invariant for the persistent cache. Defaults
+   * to the module-level `N` when unset.
+   */
+  runs?: number;
 }
 
 export const N = 3 as const; // runs per scenario
@@ -152,12 +175,75 @@ Tone: peer-reviewer, not pedantic. If the commit is fine, return empty \`issues[
 Output contract: ONLY a valid JSON object per schema. No prose, no fences.`;
 
 export const SCENARIOS: EvalScenario[] = [
-  { id: 't1', name: 'E1 — Outcome suggestion (lexical decoy)', model: HAIKU, system: T1_SYSTEM, maxTokens: 400 },
-  { id: 't2', name: 'E2 — Drift warning (aligned pair)', model: HAIKU, system: T2_SYSTEM, maxTokens: 400 },
-  { id: 't3', name: 'E3 — Portfolio review (concentrated)', model: SONNET, system: T3_SYSTEM, maxTokens: 1200 },
-  { id: 't4', name: 'E4 — Alignment delta (blocked_external + 2 prior CF)', model: SONNET, system: T4_SYSTEM, maxTokens: 2500 },
-  { id: 't5', name: 'E5 — Manager digest (rich input)', model: SONNET, system: T5_SYSTEM, maxTokens: 1500 },
-  { id: 't7', name: 'E7 — Commit quality lint (vague Must)', model: HAIKU, system: T7_SYSTEM, maxTokens: 400 },
+  {
+    id: 't1',
+    name: 'E1 — Outcome suggestion (lexical decoy)',
+    model: HAIKU,
+    system: T1_SYSTEM,
+    maxTokens: 400,
+  },
+  {
+    id: 't2',
+    name: 'E2 — Drift warning (aligned pair)',
+    model: HAIKU,
+    system: T2_SYSTEM,
+    maxTokens: 400,
+  },
+  {
+    id: 't3',
+    name: 'E3 — Portfolio review (concentrated)',
+    model: SONNET,
+    system: T3_SYSTEM,
+    maxTokens: 1200,
+  },
+  {
+    id: 't4',
+    name: 'E4 — Alignment delta (blocked_external + 2 prior CF)',
+    model: SONNET,
+    system: T4_SYSTEM,
+    maxTokens: 2500,
+  },
+  {
+    id: 't5',
+    name: 'E5 — Manager digest (rich input)',
+    model: SONNET,
+    system: T5_SYSTEM,
+    maxTokens: 1500,
+  },
+  {
+    id: 't7',
+    name: 'E7 — Commit quality lint (vague Must)',
+    model: HAIKU,
+    system: T7_SYSTEM,
+    maxTokens: 400,
+  },
+  // Stability scenarios — gate the persistent AI cache. N=5 same-input runs must produce the same
+  // verdict; if any one of these regresses, do not enable cache write-through (would persist a
+  // coin flip). Assertions live in the per-scenario expected.json (allEqual / allEqualSet).
+  {
+    id: 't1-stability',
+    name: 'E1S — T1 stability (N=5 same input)',
+    model: HAIKU,
+    system: T1_SYSTEM,
+    maxTokens: 400,
+    runs: 5,
+  },
+  {
+    id: 't2-stability',
+    name: 'E2S — T2 stability (N=5 same input)',
+    model: HAIKU,
+    system: T2_SYSTEM,
+    maxTokens: 400,
+    runs: 5,
+  },
+  {
+    id: 't7-stability',
+    name: 'E7S — T7 stability (N=5 same input)',
+    model: HAIKU,
+    system: T7_SYSTEM,
+    maxTokens: 400,
+    runs: 5,
+  },
 ];
 
 // Anthropic April 2026 pricing (per docs/ai-copilot-spec.md).

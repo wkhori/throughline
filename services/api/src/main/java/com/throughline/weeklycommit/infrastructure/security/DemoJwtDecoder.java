@@ -14,9 +14,9 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtException;
 
 /**
- * HS256 verifier for demo tokens minted by {@link DemoTokenIssuer}. Symmetric secret —
- * acceptable because both the minter and the verifier live inside the same Spring Boot service
- * (no token-issuing third party). Pure verification: signature, exp, iss, aud.
+ * HS256 verifier for demo tokens minted by {@link DemoTokenIssuer}. Symmetric secret — acceptable
+ * because both the minter and the verifier live inside the same Spring Boot service (no
+ * token-issuing third party). Pure verification: signature, exp, iss, aud.
  */
 public class DemoJwtDecoder implements JwtDecoder {
 
@@ -36,7 +36,8 @@ public class DemoJwtDecoder implements JwtDecoder {
         throw new JwtException("Demo token signature invalid");
       }
       var claims = jwt.getJWTClaimsSet();
-      Instant exp = claims.getExpirationTime() == null ? null : claims.getExpirationTime().toInstant();
+      Instant exp =
+          claims.getExpirationTime() == null ? null : claims.getExpirationTime().toInstant();
       Instant iat = claims.getIssueTime() == null ? null : claims.getIssueTime().toInstant();
       if (exp != null && exp.isBefore(Instant.now())) {
         throw new JwtException("Demo token expired at " + exp);

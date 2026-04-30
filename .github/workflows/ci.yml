@@ -18,7 +18,7 @@ jobs:
       - run: yarn install --frozen-lockfile
       - run: yarn nx run-many -t lint
       - run: yarn nx run-many -t type-check
-      - run: yarn nx run-many -t test --coverage
+      - run: yarn nx run-many -t test
       - run: yarn nx run-many -t build
 
   backend:

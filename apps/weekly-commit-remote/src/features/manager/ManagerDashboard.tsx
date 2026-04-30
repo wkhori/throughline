@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { BarChart3, Inbox } from 'lucide-react';
 import { useRtkSubscriptionKick } from '@throughline/shared-ui';
 import {
   useGetTeamRollupQuery,
@@ -35,14 +36,69 @@ export function ManagerDashboard({ onSelectTeam }: ManagerDashboardProps) {
   if (rollup.isLoading && !rollup.data) {
     return (
       <section data-testid="manager-dashboard-loading" className="mx-auto max-w-6xl space-y-4 p-6">
+        {/* Hero skeleton */}
         <div
           data-testid="manager-skeleton-hero"
-          className="h-32 animate-pulse rounded-lg bg-(--color-skeleton-bg)"
-        />
+          className="rounded-lg border border-(--color-panel-border) bg-(--color-panel-bg) p-6"
+        >
+          <div className="h-3 w-24 animate-pulse rounded-md bg-(--color-skeleton-bg)/10" />
+          <div className="mt-3 h-6 w-64 animate-pulse rounded-md bg-(--color-skeleton-bg)/10" />
+          <div className="mt-2 h-4 w-48 animate-pulse rounded-md bg-(--color-skeleton-bg)/10" />
+          <div className="mt-4 flex gap-3">
+            <div className="h-8 w-28 animate-pulse rounded-md bg-(--color-skeleton-bg)/10" />
+            <div className="h-8 w-36 animate-pulse rounded-md bg-(--color-skeleton-bg)/10" />
+          </div>
+        </div>
+        {/* Panel pair skeleton */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="rounded-lg border border-(--color-panel-border) bg-(--color-panel-bg) p-5">
+            <div className="h-4 w-32 animate-pulse rounded-md bg-(--color-skeleton-bg)/10" />
+            <div className="mt-3 space-y-2">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="flex items-center justify-between">
+                  <div className="h-3 w-48 animate-pulse rounded-md bg-(--color-skeleton-bg)/10" />
+                  <div className="h-5 w-20 animate-pulse rounded-sm bg-(--color-skeleton-bg)/10" />
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="rounded-lg border border-(--color-panel-border) bg-(--color-panel-bg) p-5">
+            <div className="h-4 w-28 animate-pulse rounded-md bg-(--color-skeleton-bg)/10" />
+            <div className="mt-3 space-y-2">
+              {[0, 1].map((i) => (
+                <div
+                  key={i}
+                  className="h-3 w-full animate-pulse rounded-md bg-(--color-skeleton-bg)/10"
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+        {/* Table skeleton */}
         <div
           data-testid="manager-skeleton-table"
-          className="h-64 animate-pulse rounded-lg bg-(--color-skeleton-bg)"
-        />
+          className="overflow-hidden rounded-lg border border-(--color-panel-border) bg-(--color-panel-bg)"
+        >
+          <div className="border-b border-(--color-panel-border) px-4 py-3">
+            <div className="h-3 w-48 animate-pulse rounded-md bg-(--color-skeleton-bg)/10" />
+          </div>
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="flex items-center justify-between border-b border-(--color-panel-border) px-4 py-3 last:border-0"
+            >
+              <div className="h-4 w-32 animate-pulse rounded-md bg-(--color-skeleton-bg)/10" />
+              <div className="flex gap-6">
+                {[0, 1, 2, 3, 4].map((j) => (
+                  <div
+                    key={j}
+                    className="h-4 w-8 animate-pulse rounded-md bg-(--color-skeleton-bg)/10"
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </section>
     );
   }
@@ -97,7 +153,20 @@ export function ManagerDashboard({ onSelectTeam }: ManagerDashboardProps) {
         >
           <h2 className="text-sm font-semibold text-(--color-panel-heading)">Starved outcomes</h2>
           {starvedList.length === 0 ? (
-            <p className="text-xs text-(--color-panel-muted)">No starved outcomes detected.</p>
+            <div
+              data-testid="starved-outcomes-empty"
+              className="flex flex-col items-center gap-2 py-6 text-center"
+            >
+              <Inbox
+                size={24}
+                className="text-(--color-panel-muted) opacity-40"
+                aria-hidden="true"
+              />
+              <p className="text-xs font-medium text-(--color-panel-muted)">No starved outcomes</p>
+              <p className="text-[11px] text-(--color-panel-muted) opacity-70">
+                Every outcome received at least one commit this week.
+              </p>
+            </div>
           ) : (
             <ul className="space-y-2 text-sm">
               {starvedList.map((s) => (
@@ -125,9 +194,20 @@ export function ManagerDashboard({ onSelectTeam }: ManagerDashboardProps) {
         >
           <h2 className="text-sm font-semibold text-(--color-panel-heading)">Priority drift</h2>
           {driftEntries.length === 0 ? (
-            <p className="text-xs text-(--color-panel-muted)">
-              All teams within their priority bands.
-            </p>
+            <div
+              data-testid="drift-exceptions-empty"
+              className="flex flex-col items-center gap-2 py-6 text-center"
+            >
+              <BarChart3
+                size={24}
+                className="text-(--color-panel-muted) opacity-40"
+                aria-hidden="true"
+              />
+              <p className="text-xs font-medium text-(--color-panel-muted)">All teams on target</p>
+              <p className="text-[11px] text-(--color-panel-muted) opacity-70">
+                No teams outside their expected priority bands.
+              </p>
+            </div>
           ) : (
             <ul className="space-y-2 text-sm">
               {driftEntries.map((d, i) => (
@@ -160,13 +240,7 @@ export function ManagerDashboard({ onSelectTeam }: ManagerDashboardProps) {
   );
 }
 
-function TeamDetailDrawer({
-  row,
-  onClose,
-}: {
-  row: TeamRollupRow | null;
-  onClose: () => void;
-}) {
+function TeamDetailDrawer({ row, onClose }: { row: TeamRollupRow | null; onClose: () => void }) {
   if (!row) return null;
   const p = row.payload;
   return (

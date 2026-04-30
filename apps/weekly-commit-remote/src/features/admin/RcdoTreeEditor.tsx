@@ -220,7 +220,7 @@ export function RcdoTreeEditor() {
               Archive this Rally Cry?
             </h3>
             <p className="mt-1.5 text-xs text-(--color-panel-muted)">
-              "{archiveTarget.title}"
+              &ldquo;{archiveTarget.title}&rdquo;
               <br />
               The Rally Cry and every Defining Objective, Outcome, and Supporting Outcome under it
               will be hidden from new commits. The backend will reject this if there are still

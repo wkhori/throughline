@@ -36,9 +36,7 @@ public class ManagerController {
   private final CurrentUserResolver currentUser;
 
   public ManagerController(
-      ManagerService service,
-      ManagerDigestService digestService,
-      CurrentUserResolver currentUser) {
+      ManagerService service, ManagerDigestService digestService, CurrentUserResolver currentUser) {
     this.service = service;
     this.digestService = digestService;
     this.currentUser = currentUser;
@@ -70,10 +68,10 @@ public class ManagerController {
   }
 
   /**
-   * Manual Slack-dispatch hook. Re-sends the latest cached digest payload through the live
-   * channel so the caller can preview the Block Kit message without re-running the LLM. Routes
-   * via {@code ALIGNMENT_RISK} kind to dodge the {@code WEEKLY_DIGEST} dedup index — the message
-   * is clearly badged "Manual Slack preview" in the body.
+   * Manual Slack-dispatch hook. Re-sends the latest cached digest payload through the live channel
+   * so the caller can preview the Block Kit message without re-running the LLM. Routes via {@code
+   * ALIGNMENT_RISK} kind to dodge the {@code WEEKLY_DIGEST} dedup index — the message is clearly
+   * badged "Manual Slack preview" in the body.
    */
   @PostMapping("/digest/dispatch-slack")
   @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")

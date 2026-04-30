@@ -5,6 +5,7 @@ export * from './store/createBaseApi.js';
 export * from './hooks/useAuthToken.js';
 export * from './hooks/useApiBaseUrl.js';
 export * from './hooks/useRtkSubscriptionKick.js';
+export * from './components/AIStatusIndicator/AIStatusIndicator.js';
 export * from './components/InsightDrillDown/InsightDrillDown.js';
 export * from './components/Logo/Logo.js';
 export * from './components/StateBadge/StateBadge.js';

@@ -1,14 +1,18 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import type {
   CommitCategory,
   CommitDto,
   CommitPriority,
   CreateCommitRequest,
-  OutcomeCandidateDto,
   RcdoTreeDto,
 } from '@throughline/shared-types';
-import { AiSuggestionPanel } from './AiSuggestionPanel.js';
 import { CommitQualityHint } from './CommitQualityHint.js';
+import { SoLinker, type SoLinkerHandle } from './SoLinker.js';
+
+export interface CommitFormHandle {
+  /** Focus the SO linker (used by the mod+K shortcut). */
+  focusLinker: () => void;
+}
 
 interface CommitFormProps {
   weekId: string;
@@ -21,32 +25,35 @@ interface CommitFormProps {
 }
 
 // Phase-2 commit composer / editor. Mirrors the backend constraints (5–280 chars, requires SO,
-// category/priority enum). Used inline inside DraftWeek and re-used by the future edit drawer.
-export function CommitForm({
-  weekId,
-  rcdo,
-  initial,
-  submitting,
-  onSubmit,
-  onCancel,
-  serverError,
-}: CommitFormProps) {
+// category/priority enum). The legacy 4-dropdown RCDO cascade is replaced by an AI-first
+// <SoLinker> that infers the SO from the commit text and falls back to typeahead.
+export const CommitForm = forwardRef<CommitFormHandle, CommitFormProps>(function CommitForm(
+  { weekId, rcdo, initial, submitting, onSubmit, onCancel, serverError }: CommitFormProps,
+  ref,
+) {
   const [text, setText] = useState(initial?.text ?? '');
   const [supportingOutcomeId, setSO] = useState<string>(initial?.supportingOutcomeId ?? '');
   const [category, setCategory] = useState<CommitCategory>(initial?.category ?? 'OPERATIONAL');
   const [priority, setPriority] = useState<CommitPriority>(initial?.priority ?? 'SHOULD');
-  const [manualSelectAt, setManualSelectAt] = useState<number | null>(null);
+
+  const linkerRef = useRef<SoLinkerHandle | null>(null);
 
   const tooShort = text.trim().length < 5;
   const tooLong = text.length > 280;
   const noSO = supportingOutcomeId === '';
   const disabled = tooShort || tooLong || noSO || submitting;
 
-  const candidates: OutcomeCandidateDto[] = useMemo(() => flattenCandidates(rcdo), [rcdo]);
   const supportingOutcomeTitle = useMemo(() => {
-    const match = candidates.find((c) => c.supportingOutcomeId === supportingOutcomeId);
-    return match?.title ?? null;
-  }, [candidates, supportingOutcomeId]);
+    return findSoTitle(rcdo, supportingOutcomeId);
+  }, [rcdo, supportingOutcomeId]);
+
+  // Expose a focus method so the mod+K binding can drop the cursor straight into the linker.
+  const focusLinker = useCallback(() => {
+    linkerRef.current?.focus();
+  }, []);
+  if (ref && typeof ref === 'object') {
+    ref.current = { focusLinker };
+  }
 
   const handle = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,23 +106,14 @@ export function CommitForm({
           priority={priority}
           supportingOutcomeTitle={supportingOutcomeTitle}
         />
-        <AiSuggestionPanel
-          draftCommitText={text}
-          candidates={candidates}
-          manuallySelectedAt={manualSelectAt}
-          onAccept={(soId) => {
-            setSO(soId);
-            setManualSelectAt(null);
-          }}
-        />
       </div>
-      <RcdoCascade
-        tree={rcdo}
-        value={supportingOutcomeId}
-        onChange={(v) => {
-          setSO(v);
-          setManualSelectAt(Date.now());
-        }}
+      <SoLinker
+        ref={linkerRef}
+        rcdo={rcdo}
+        commitText={text}
+        value={supportingOutcomeId === '' ? null : supportingOutcomeId}
+        onChange={(soId) => setSO(soId ?? '')}
+        disabled={submitting}
       />
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <SelectField
@@ -173,6 +171,20 @@ export function CommitForm({
       </div>
     </form>
   );
+});
+
+function findSoTitle(tree: RcdoTreeDto | undefined, supportingOutcomeId: string): string | null {
+  if (!tree || !supportingOutcomeId) return null;
+  for (const rc of tree.rallyCries) {
+    for (const defo of rc.definingObjectives) {
+      for (const o of defo.outcomes) {
+        for (const so of o.supportingOutcomes) {
+          if (so.id === supportingOutcomeId) return so.title;
+        }
+      }
+    }
+  }
+  return null;
 }
 
 interface SelectOption {
@@ -401,130 +413,4 @@ function CheckIcon({ visible }: { visible: boolean }) {
       <path d="M3.5 8.5l3 3 6-6" />
     </svg>
   );
-}
-
-interface RcdoCascadeProps {
-  tree: RcdoTreeDto | undefined;
-  value: string;
-  onChange: (supportingOutcomeId: string) => void;
-}
-
-// Cascading 4-step picker (Rally Cry → DO → Outcome → Supporting Outcome). Each level is only
-// enabled once its parent is chosen. Replaces the flat 144-option dropdown — manageable scan,
-// no hunting through repeated prefixes.
-function RcdoCascade({ tree, value, onChange }: RcdoCascadeProps) {
-  const ancestry = useMemo(() => findAncestry(tree, value), [tree, value]);
-  const [rcId, setRcId] = useState<string>(ancestry?.rcId ?? '');
-  const [doId, setDoId] = useState<string>(ancestry?.doId ?? '');
-  const [outcomeId, setOutcomeId] = useState<string>(ancestry?.outcomeId ?? '');
-
-  useEffect(() => {
-    if (ancestry) {
-      setRcId(ancestry.rcId);
-      setDoId(ancestry.doId);
-      setOutcomeId(ancestry.outcomeId);
-    }
-  }, [ancestry]);
-
-  const rallyCries = tree?.rallyCries ?? [];
-  const rc = rallyCries.find((r) => r.id === rcId);
-  const dos = rc?.definingObjectives ?? [];
-  const defo = dos.find((d) => d.id === doId);
-  const outcomes = defo?.outcomes ?? [];
-  const outcome = outcomes.find((o) => o.id === outcomeId);
-  const sos = outcome?.supportingOutcomes ?? [];
-
-  return (
-    <div data-testid="commit-so-cascade" className="space-y-3">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <SelectField
-          id="commit-rc"
-          label="Rally Cry"
-          value={rcId}
-          onChange={(v) => {
-            setRcId(v);
-            setDoId('');
-            setOutcomeId('');
-            onChange('');
-          }}
-          options={rallyCries.map((r) => ({ value: r.id, label: r.title }))}
-          testId="commit-rc-select"
-        />
-        <SelectField
-          id="commit-do"
-          label="Defining Objective"
-          value={doId}
-          onChange={(v) => {
-            setDoId(v);
-            setOutcomeId('');
-            onChange('');
-          }}
-          options={dos.map((d) => ({ value: d.id, label: d.title }))}
-          testId="commit-do-select"
-          disabled={!rcId}
-        />
-      </div>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <SelectField
-          id="commit-outcome"
-          label="Outcome"
-          value={outcomeId}
-          onChange={(v) => {
-            setOutcomeId(v);
-            onChange('');
-          }}
-          options={outcomes.map((o) => ({ value: o.id, label: o.title }))}
-          testId="commit-outcome-select"
-          disabled={!doId}
-        />
-        <SelectField
-          id="commit-so"
-          label="Supporting Outcome"
-          value={value}
-          onChange={onChange}
-          options={sos.map((so) => ({ value: so.id, label: so.title }))}
-          testId="commit-so-select"
-          disabled={!outcomeId}
-        />
-      </div>
-    </div>
-  );
-}
-
-function findAncestry(
-  tree: RcdoTreeDto | undefined,
-  supportingOutcomeId: string,
-): { rcId: string; doId: string; outcomeId: string } | null {
-  if (!tree || !supportingOutcomeId) return null;
-  for (const rc of tree.rallyCries) {
-    for (const defo of rc.definingObjectives) {
-      for (const o of defo.outcomes) {
-        if (o.supportingOutcomes.some((so) => so.id === supportingOutcomeId)) {
-          return { rcId: rc.id, doId: defo.id, outcomeId: o.id };
-        }
-      }
-    }
-  }
-  return null;
-}
-
-function flattenCandidates(tree: RcdoTreeDto | undefined): OutcomeCandidateDto[] {
-  if (!tree) return [];
-  const out: OutcomeCandidateDto[] = [];
-  for (const rc of tree.rallyCries) {
-    for (const defo of rc.definingObjectives) {
-      for (const o of defo.outcomes) {
-        for (const so of o.supportingOutcomes) {
-          out.push({
-            supportingOutcomeId: so.id,
-            title: so.title,
-            parentOutcomeTitle: o.title,
-            parentDOTitle: defo.title,
-            parentRallyCryTitle: rc.title,
-          });
-        }
-      }
-    }
-  }
-  return out;
 }

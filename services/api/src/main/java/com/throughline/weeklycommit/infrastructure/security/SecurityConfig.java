@@ -5,7 +5,6 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -88,8 +87,14 @@ public class SecurityConfig {
    * application.yml}; despite the name, this decoder is the prod path because both demo personas
    * and Auth0 logins flow through it.
    */
+  /**
+   * No {@code @Profile} restriction: in the {@code test} profile both {@code demoSecret} and {@code
+   * issuerUri} resolve to the empty string, so the method returns a {@link MockJwtDecoder}. Spring
+   * Security's resource-server auto-config requires a {@link JwtDecoder} bean in every profile that
+   * mounts the security filter chain — restricting this bean to {@code !test} previously made every
+   * {@code @SpringBootTest} fail context bootstrap with a missing-bean error.
+   */
   @Bean
-  @Profile("!test")
   public JwtDecoder jwtDecoder() {
     JwtDecoder demoDecoder =
         (demoSecret == null || demoSecret.isBlank())

@@ -84,6 +84,13 @@ const server = setupServer(
   http.post('http://localhost:8080/api/v1/commits', () =>
     HttpResponse.json(commit, { status: 201 }),
   ),
+  // SoLinker fires T1 — return a low-confidence response so the linker drops into the
+  // typeahead path, mirroring how a fresh DRAFT week behaves under real conditions.
+  http.post('http://localhost:8080/api/v1/ai/suggest-outcome', () =>
+    HttpResponse.json({
+      payload: { supportingOutcomeId: null, confidence: 0, rationale: 'no_credible_match' },
+    }),
+  ),
 );
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
@@ -111,15 +118,21 @@ describe('DraftWeek', () => {
     expect(screen.queryByTestId('commit-form')).not.toBeInTheDocument();
   });
 
+  async function pickFirstSoLinkerResult(user: ReturnType<typeof userEvent.setup>) {
+    const input = await screen.findByTestId('so-linker-input');
+    await user.type(input, 'SO');
+    const row = await screen.findByTestId('so-linker-result');
+    await user.click(row);
+  }
+
   it('submits a new commit through the create mutation', async () => {
     const user = userEvent.setup();
     renderWithProviders(<DraftWeek week={week} />);
-    await waitFor(() => expect(screen.getByTestId('commit-rc-select')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByTestId('so-linker-input')).toBeInTheDocument());
     await user.type(screen.getByTestId('commit-text-input'), 'Plan something useful');
-    await pickListboxOption(user, 'commit-rc-select', 'rc');
-    await pickListboxOption(user, 'commit-do-select', 'do');
-    await pickListboxOption(user, 'commit-outcome-select', 'o');
-    await pickListboxOption(user, 'commit-so-select', 'so-x');
+    await pickFirstSoLinkerResult(user);
+    await pickListboxOption(user, 'commit-category-select', 'STRATEGIC');
+    await pickListboxOption(user, 'commit-priority-select', 'MUST');
     await user.click(screen.getByTestId('commit-form-submit'));
     // Successful submit clears the text input.
     await waitFor(() =>
@@ -135,12 +148,11 @@ describe('DraftWeek', () => {
     );
     const user = userEvent.setup();
     renderWithProviders(<DraftWeek week={week} />);
-    await waitFor(() => expect(screen.getByTestId('commit-rc-select')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByTestId('so-linker-input')).toBeInTheDocument());
     await user.type(screen.getByTestId('commit-text-input'), 'Another commit text');
-    await pickListboxOption(user, 'commit-rc-select', 'rc');
-    await pickListboxOption(user, 'commit-do-select', 'do');
-    await pickListboxOption(user, 'commit-outcome-select', 'o');
-    await pickListboxOption(user, 'commit-so-select', 'so-x');
+    await pickFirstSoLinkerResult(user);
+    await pickListboxOption(user, 'commit-category-select', 'STRATEGIC');
+    await pickListboxOption(user, 'commit-priority-select', 'MUST');
     await user.click(screen.getByTestId('commit-form-submit'));
     await waitFor(() =>
       expect(screen.getByTestId('commit-form-error').textContent).toContain('7-commit cap'),

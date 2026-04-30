@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ClipboardList } from 'lucide-react';
 import type { CommitDto, ReconciliationOutcome, WeekDto } from '@throughline/shared-types';
 import {
   useReconcileWeekMutation,
@@ -107,6 +108,28 @@ export function Reconcile({ week }: ReconcileProps) {
           </button>
         )}
       </header>
+
+      {!isReconciling && (
+        <div
+          data-testid="reconcile-pre-start"
+          className="flex flex-col items-center gap-4 rounded-lg border border-dashed border-(--color-panel-border) bg-(--color-panel-bg) py-12 text-center"
+        >
+          <ClipboardList
+            size={32}
+            className="text-(--color-panel-muted) opacity-40"
+            aria-hidden="true"
+          />
+          <div>
+            <p className="text-sm font-medium text-(--color-panel-heading)">Ready to reconcile</p>
+            <p className="mt-1 text-xs text-(--color-panel-muted)">
+              Mark each commit done, partial, or not done. Carry forward any that need another week.
+            </p>
+          </div>
+          <p className="text-[11px] text-(--color-panel-muted) opacity-70">
+            {week.commits.length} commit{week.commits.length === 1 ? '' : 's'} to review
+          </p>
+        </div>
+      )}
 
       {isReconciling && (
         <ul className="space-y-3" data-testid="reconcile-rows">

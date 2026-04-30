@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * Demo-login endpoint. Mints a real signed (HS256) JWT for one of the three Throughline demo
  * personas — {@code ic}, {@code manager}, {@code admin}. Every other endpoint then verifies the
- * token through the same JwtDecoder pipeline as Auth0 tokens. Permitted without auth in
- * {@link com.throughline.weeklycommit.infrastructure.security.SecurityConfig}; rate-limiting is
+ * token through the same JwtDecoder pipeline as Auth0 tokens. Permitted without auth in {@link
+ * com.throughline.weeklycommit.infrastructure.security.SecurityConfig}; rate-limiting is
  * intentionally absent because the demo audience is the hiring partner, not the open internet.
  */
 @RestController
