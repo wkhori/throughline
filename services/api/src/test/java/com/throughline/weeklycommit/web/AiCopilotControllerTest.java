@@ -134,6 +134,81 @@ class AiCopilotControllerTest extends PostgresIntegrationTestBase {
   }
 
   @Test
+  void qualityLint_sets_X_Cache_MISS_first_then_HIT_on_replay() throws Exception {
+    String body =
+        "{\"commitId\":\"01HXCOMMIT0000000000000003\","
+            + "\"commitText\":\"Ship onboarding email v2\",\"category\":\"OPERATIONAL\","
+            + "\"priority\":\"SHOULD\",\"supportingOutcomeTitle\":\"Reduce churn\"}";
+    mvc.perform(
+            post("/api/v1/ai/quality-lint")
+                .with(jwtFor(icSub, "IC"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+        .andExpect(status().isOk())
+        .andExpect(
+            org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
+                .string("X-Cache", "MISS"));
+    mvc.perform(
+            post("/api/v1/ai/quality-lint")
+                .with(jwtFor(icSub, "IC"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+        .andExpect(status().isOk())
+        .andExpect(
+            org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
+                .string("X-Cache", "HIT"));
+  }
+
+  @Test
+  void batchInsights_returns_latest_insight_per_commit() throws Exception {
+    String a = "01HXCOMMIT0000000000000010";
+    String b = "01HXCOMMIT0000000000000011";
+    String aBody =
+        "{\"commitId\":\""
+            + a
+            + "\",\"commitText\":\"Ship onboarding email v2\",\"category\":\"OPERATIONAL\","
+            + "\"priority\":\"SHOULD\",\"supportingOutcomeTitle\":\"Reduce churn\"}";
+    String bBody =
+        "{\"commitId\":\""
+            + b
+            + "\",\"commitText\":\"Refactor billing tests\",\"category\":\"OPERATIONAL\","
+            + "\"priority\":\"SHOULD\",\"supportingOutcomeTitle\":\"Reduce churn\"}";
+    mvc.perform(
+            post("/api/v1/ai/quality-lint")
+                .with(jwtFor(icSub, "IC"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(aBody))
+        .andExpect(status().isOk());
+    mvc.perform(
+            post("/api/v1/ai/quality-lint")
+                .with(jwtFor(icSub, "IC"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(bBody))
+        .andExpect(status().isOk());
+
+    String batch = "{\"commitIds\":[\"" + a + "\",\"" + b + "\"],\"kind\":\"T7_QUALITY\"}";
+    mvc.perform(
+            post("/api/v1/ai/insights/batch")
+                .with(jwtFor(icSub, "IC"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(batch))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.insights").isArray())
+        .andExpect(jsonPath("$.insights.length()").value(2));
+  }
+
+  @Test
+  void batchInsights_rejects_unknown_kind_with_400() throws Exception {
+    mvc.perform(
+            post("/api/v1/ai/insights/batch")
+                .with(jwtFor(icSub, "IC"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    "{\"commitIds\":[\"01HXCOMMIT0000000000000010\"],\"kind\":\"NOT_A_KIND\"}"))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
   void aiEndpoints_return_401_when_unauthenticated() throws Exception {
     mvc.perform(
             post("/api/v1/ai/suggest-outcome")

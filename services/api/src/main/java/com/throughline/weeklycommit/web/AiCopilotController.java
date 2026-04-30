@@ -8,8 +8,10 @@ import com.throughline.weeklycommit.application.ai.AiCopilotService;
 import com.throughline.weeklycommit.application.ai.AlignmentDeltaService;
 import com.throughline.weeklycommit.application.ai.PortfolioReviewService;
 import com.throughline.weeklycommit.domain.AIInsight;
+import com.throughline.weeklycommit.domain.AIInsightKind;
 import com.throughline.weeklycommit.domain.User;
 import com.throughline.weeklycommit.domain.Week;
+import com.throughline.weeklycommit.domain.repo.AIInsightRepository;
 import com.throughline.weeklycommit.domain.repo.WeekRepository;
 import com.throughline.weeklycommit.infrastructure.security.ManagerScope;
 import com.throughline.weeklycommit.web.error.NotFoundException;
@@ -44,6 +46,7 @@ public class AiCopilotController {
   private final PortfolioReviewService portfolioReviewService;
   private final AlignmentDeltaService alignmentDeltaService;
   private final WeekRepository weekRepository;
+  private final AIInsightRepository insightRepository;
   private final ManagerScope managerScope;
   private final CurrentUserResolver currentUser;
 
@@ -52,12 +55,14 @@ public class AiCopilotController {
       PortfolioReviewService portfolioReviewService,
       AlignmentDeltaService alignmentDeltaService,
       WeekRepository weekRepository,
+      AIInsightRepository insightRepository,
       ManagerScope managerScope,
       CurrentUserResolver currentUser) {
     this.aiService = aiService;
     this.portfolioReviewService = portfolioReviewService;
     this.alignmentDeltaService = alignmentDeltaService;
     this.weekRepository = weekRepository;
+    this.insightRepository = insightRepository;
     this.managerScope = managerScope;
     this.currentUser = currentUser;
   }
@@ -140,9 +145,17 @@ public class AiCopilotController {
                             c.parentDOTitle(),
                             c.parentRallyCryTitle()))
                 .toList(),
-            body.recentUserCommits() == null ? List.of() : body.recentUserCommits());
+            body.recentUserCommits() == null
+                ? List.of()
+                : body.recentUserCommits().stream()
+                    .map(
+                        m ->
+                            new AiCopilotService.RecentCommit(
+                                m.getOrDefault("supportingOutcomeId", ""),
+                                m.getOrDefault("text", "")))
+                    .toList());
     AIInsight insight = aiService.suggestOutcome(input, u.getId(), u.getOrgId());
-    return ResponseEntity.status(HttpStatus.OK).body(AIInsightDto.from(insight));
+    return cachedOk(insight);
   }
 
   @PostMapping("/drift-check")
@@ -164,7 +177,7 @@ public class AiCopilotController {
                         new AiCopilotService.AlternativeOutcome(a.supportingOutcomeId(), a.title()))
                 .toList());
     AIInsight insight = aiService.checkDrift(input, u.getId(), u.getOrgId());
-    return ResponseEntity.status(HttpStatus.OK).body(AIInsightDto.from(insight));
+    return cachedOk(insight);
   }
 
   @PostMapping("/quality-lint")
@@ -178,7 +191,49 @@ public class AiCopilotController {
             body.priority(),
             body.supportingOutcomeTitle());
     AIInsight insight = aiService.qualityLint(input, u.getId(), u.getOrgId());
-    return ResponseEntity.status(HttpStatus.OK).body(AIInsightDto.from(insight));
+    return cachedOk(insight);
+  }
+
+  /**
+   * Batch hydration — returns the latest insight per (commit, kind) tuple so the FE can paint many
+   * rows in one round trip. Skips commits with no insight rather than 404-ing the whole request.
+   * Empty {@code commitIds} yields an empty list.
+   */
+  @PostMapping("/insights/batch")
+  public ResponseEntity<BatchInsightsResponse> batchInsights(
+      @Valid @RequestBody BatchInsightsRequest body) {
+    User u = currentUser.requireCurrentUser();
+    AIInsightKind kind;
+    try {
+      kind = AIInsightKind.valueOf(body.kind());
+    } catch (IllegalArgumentException ex) {
+      throw new IllegalArgumentException(
+          "kind must be one of "
+              + java.util.Arrays.toString(AIInsightKind.values())
+              + "; got "
+              + body.kind());
+    }
+    if (body.commitIds() == null || body.commitIds().isEmpty()) {
+      return ResponseEntity.ok(new BatchInsightsResponse(List.of()));
+    }
+    List<AIInsight> rows = insightRepository.findLatestByEntityIdsAndKind(body.commitIds(), kind);
+    List<AIInsightDto> dtos =
+        rows.stream()
+            .filter(i -> i.getOrgId().equals(u.getOrgId()))
+            .map(AIInsightDto::from)
+            .toList();
+    return ResponseEntity.ok(new BatchInsightsResponse(dtos));
+  }
+
+  /**
+   * Wraps an {@link AIInsight} with the {@code X-Cache: HIT|MISS} header. The legacy 60s dedupe and
+   * the V7 persistent cache_key path both stamp the {@code cache:} prefix on {@link
+   * AIInsight#getModel()}; {@link AiCopilotService#wasCacheHit(AIInsight)} reads that.
+   */
+  private static ResponseEntity<AIInsightDto> cachedOk(AIInsight insight) {
+    return ResponseEntity.status(HttpStatus.OK)
+        .header("X-Cache", AiCopilotService.wasCacheHit(insight) ? "HIT" : "MISS")
+        .body(AIInsightDto.from(insight));
   }
 
   // ---------- Request DTOs ----------
@@ -217,6 +272,11 @@ public class AiCopilotController {
       @NotBlank String category,
       @NotBlank String priority,
       @NotBlank String supportingOutcomeTitle) {}
+
+  public record BatchInsightsRequest(
+      @NotNull @Size(max = 250) List<@NotBlank String> commitIds, @NotBlank String kind) {}
+
+  public record BatchInsightsResponse(List<AIInsightDto> insights) {}
 
   // ---------- Response DTO ----------
 
