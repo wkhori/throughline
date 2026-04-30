@@ -88,3 +88,33 @@ Feature: Commit CRUD in DRAFT
     Then a "carry-forward-ghost" row renders above the grouped commits list
     And the ghost row displays the parent commit text and a "4 weeks" running badge
     And clicking the ghost row navigates to the parent commit's lineage view
+
+  @ui @ai-t1
+  Scenario: typing a commit auto-suggests a Supporting Outcome via the linker chip
+    Given my draft week contains no commits
+    And the org's RCDO subtree contains 12 candidate Supporting Outcomes
+    When I type the commit text "Ship the new onboarding email sequence to reduce day-7 churn"
+    And I wait for the SO linker debounce (500ms) to settle
+    Then the so-linker transitions through THINKING into SUGGESTED
+    And the so-linker-chip renders the full Rally Cry › Defining Objective › Outcome › Supporting Outcome breadcrumb
+    And the so-linker-chip carries the "AI suggested" tint until the IC touches it
+
+  @ui @happy-path
+  Scenario: clicking "Change" on the linker chip opens the typeahead
+    Given my draft week contains no commits
+    And the AI has populated the so-linker-chip with a high-confidence Supporting Outcome
+    When I click the "Change" button on the so-linker-chip
+    Then the so-linker-input is rendered and focused
+    And the so-linker-results list shows every Supporting Outcome with a breadcrumb context line
+    And the so-linker transitions into TYPEAHEAD_OPEN
+
+  @ui @happy-path
+  Scenario: arrow-key navigation in the typeahead picks an SO
+    Given my draft week contains no commits
+    And the so-linker-input is open and focused
+    When I type "enterprise" into the so-linker-input
+    And I press the ArrowDown key once
+    And I press the Enter key
+    Then the second so-linker-result is selected
+    And the so-linker chip renders the picked Supporting Outcome with no AI-suggested tint
+    And the so-linker transitions into FILLED

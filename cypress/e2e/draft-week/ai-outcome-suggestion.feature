@@ -19,8 +19,9 @@ Feature: AI Outcome Suggestion (T1)
     Then a "POST /api/v1/ai/suggest-outcome" request fires exactly once
     And the request body lists 12 candidates and the recent-user-commits array
     And the response body matches schema "T1_SUGGESTION"
-    And the AISuggestionPanel renders the candidate's title with confidence ≥0.8
-    And the panel exposes a "Use suggestion" action that links the commit to the suggested SO
+    And the SO linker chip renders the candidate's title with an "AI suggested" badge and confidence ≥0.8
+    And the chip's breadcrumb shows the full Rally Cry › Defining Objective › Outcome › Supporting Outcome path
+    And clicking the chip's "Change" action opens the typeahead so the IC can override the AI's pick
 
   @stub @edge
   Scenario: Suggestion suppressed within 30 seconds of a manual SO pick
