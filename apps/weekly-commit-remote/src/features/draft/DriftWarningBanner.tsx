@@ -1,55 +1,35 @@
-import { useEffect, useRef, useState } from 'react';
-import type { DriftCheckLinkedOutcome, DriftCheckPayload } from '@throughline/shared-types';
-import { useDriftCheckMutation } from '../../api/aiEndpoints.js';
+import { useEffect, useState } from 'react';
+import type { DriftCheckPayload } from '@throughline/shared-types';
+import { interpretDrift } from './driftRule.js';
 
 interface DriftWarningBannerProps {
-  commitId: string;
-  commitText: string;
-  linkedOutcome: DriftCheckLinkedOutcome | null;
-  alternativeOutcomes: Array<{ supportingOutcomeId: string; title: string }>;
+  /** Persisted T2_DRIFT payload from the batch insights cache. Undefined means no insight yet. */
+  payload: DriftCheckPayload | undefined;
+  /**
+   * Stable identifier for the underlying insight (e.g. its `id` or `createdAt`).
+   * When this changes, the banner un-dismisses itself so a freshly-persisted
+   * insight is shown again.
+   */
+  insightKey?: string | null;
 }
 
-const DEBOUNCE_MS = 1500;
-const MIN_LEN = 25;
-
 /**
- * T2 — Drift Warning (Haiku, debounced 1.5s). Surfaces only when drift > 0.5; silent-degrades on
- * any error per spec. The banner appears under the commit row in the editor.
+ * T2 — Drift Warning. Renders inline beneath a commit card whenever the persisted
+ * T2_DRIFT insight resolves to drifted=true under the shared interpretDrift rule.
+ * The backend persists this insight on commit save and the POST /ai/drift-check
+ * mutation invalidates the AIInsight tag, so the cached payload is always fresh —
+ * no live re-inference happens here.
  */
-export function DriftWarningBanner({
-  commitId,
-  commitText,
-  linkedOutcome,
-  alternativeOutcomes,
-}: DriftWarningBannerProps) {
-  const [check, { data, isError, isLoading }] = useDriftCheckMutation();
+export function DriftWarningBanner({ payload, insightKey }: DriftWarningBannerProps) {
   const [dismissed, setDismissed] = useState(false);
-  const lastKeyRef = useRef('');
 
   useEffect(() => {
     setDismissed(false);
-  }, [commitText, linkedOutcome?.supportingOutcomeId]);
+  }, [insightKey]);
 
-  useEffect(() => {
-    if (!linkedOutcome) return;
-    if (commitText.trim().length < MIN_LEN) return;
-    const handle = window.setTimeout(() => {
-      const key = `${commitId}|${linkedOutcome.supportingOutcomeId}|${commitText.trim()}`;
-      if (key === lastKeyRef.current) return;
-      lastKeyRef.current = key;
-      void check({
-        commitId,
-        commitText: commitText.trim(),
-        linkedOutcome,
-        alternativeOutcomes,
-      });
-    }, DEBOUNCE_MS);
-    return () => window.clearTimeout(handle);
-  }, [commitId, commitText, linkedOutcome, alternativeOutcomes, check]);
-
-  if (dismissed || isError || isLoading) return null;
-  const payload = data?.payload as DriftCheckPayload | undefined;
-  if (!payload || payload.driftScore <= 0.5) return null;
+  if (dismissed) return null;
+  const { drifted, score, fixSuggestion, alignmentVerdict } = interpretDrift(payload);
+  if (!drifted) return null;
 
   return (
     <div
@@ -58,12 +38,17 @@ export function DriftWarningBanner({
       className="mt-2 rounded-md border border-(--color-ribbon-medium-bg) bg-(--color-ribbon-medium-bg) p-3 text-xs"
     >
       <p className="font-medium text-(--color-ribbon-medium-fg)">
-        Drift detected (<span data-testid="drift-score">{payload.driftScore.toFixed(2)}</span>) —{' '}
-        {payload.alignmentVerdict}
+        Drift detected{' '}
+        {score !== null ? (
+          <>
+            (<span data-testid="drift-score">{score.toFixed(2)}</span>)
+          </>
+        ) : null}{' '}
+        {alignmentVerdict ? <>— {alignmentVerdict}</> : null}
       </p>
-      {payload.fixSuggestion ? (
+      {fixSuggestion ? (
         <p data-testid="drift-fix" className="mt-1 text-(--color-ribbon-medium-fg) opacity-80">
-          {payload.fixSuggestion}
+          {fixSuggestion}
         </p>
       ) : null}
       <button
