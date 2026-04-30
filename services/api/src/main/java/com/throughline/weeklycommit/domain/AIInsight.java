@@ -48,6 +48,15 @@ public class AIInsight {
   @Column(name = "input_hash", nullable = false, length = 64)
   private String inputHash;
 
+  /**
+   * Persistent, content-keyed cache key — sha256 of {@code modelVersion + ":" + kind + ":" +
+   * canonicalizedInputJson}. Nullable for historical rows that pre-date the cache substrate (V7).
+   * Cache hits look up by {@code (cache_key, kind)}; the partial unique index in V7 enforces one
+   * cache participant per tuple while exempting NULL rows.
+   */
+  @Column(name = "cache_key", length = 64)
+  private String cacheKey;
+
   @Column(name = "tokens_input", nullable = false)
   private int tokensInput;
 
@@ -169,5 +178,13 @@ public class AIInsight {
 
   public void setCostCents(BigDecimal costCents) {
     this.costCents = costCents;
+  }
+
+  public String getCacheKey() {
+    return cacheKey;
+  }
+
+  public void setCacheKey(String cacheKey) {
+    this.cacheKey = cacheKey;
   }
 }
