@@ -1,7 +1,8 @@
 import { Lock } from 'lucide-react';
-import type { WeekDto } from '@throughline/shared-types';
+import type { DriftCheckPayload, WeekDto } from '@throughline/shared-types';
 import { useRtkSubscriptionKick } from '@throughline/shared-ui';
 import { useGetRcdoTreeQuery } from '../../api/rcdoEndpoints.js';
+import { useGetBatchInsightsQuery } from '../../api/aiEndpoints.js';
 import { ChessMatrix } from '../draft/ChessMatrix.js';
 import { PortfolioReviewCard } from '../ai/PortfolioReviewCard.js';
 
@@ -12,6 +13,22 @@ interface LockedWeekProps {
 export function LockedWeek({ week }: LockedWeekProps) {
   useRtkSubscriptionKick();
   const { data: rcdo } = useGetRcdoTreeQuery();
+  const commitIds = week.commits.map((c) => c.id);
+  const { data: insights } = useGetBatchInsightsQuery(
+    { commitIds, kinds: ['drift'] },
+    { skip: commitIds.length === 0 },
+  );
+  const driftByCommitId: Record<string, number> = {};
+  if (insights?.byCommit) {
+    for (const [id, slot] of Object.entries(insights.byCommit)) {
+      const drift = slot.T2_DRIFT;
+      if (!drift) continue;
+      const payload = drift.payload as DriftCheckPayload | undefined;
+      if (payload && typeof payload.driftScore === 'number') {
+        driftByCommitId[id] = payload.driftScore;
+      }
+    }
+  }
   return (
     <section data-testid="locked-week" className="mx-auto max-w-6xl space-y-6 p-6">
       <header className="flex flex-wrap items-end justify-between gap-4 rounded-lg border border-(--color-hero-border) bg-(--color-hero-bg) p-6">
@@ -43,7 +60,12 @@ export function LockedWeek({ week }: LockedWeekProps) {
         </span>
       </div>
       <PortfolioReviewCard weekId={week.id} />
-      <ChessMatrix commits={week.commits} rcdo={rcdo} weekState="LOCKED" />
+      <ChessMatrix
+        commits={week.commits}
+        rcdo={rcdo}
+        weekState="LOCKED"
+        driftByCommitId={driftByCommitId}
+      />
     </section>
   );
 }
