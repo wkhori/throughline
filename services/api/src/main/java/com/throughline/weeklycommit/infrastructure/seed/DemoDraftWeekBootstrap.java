@@ -33,8 +33,12 @@ import org.springframework.transaction.annotation.Transactional;
  *
  * <p>This runner detects weeks whose {@code reconciledAt} matches the seeder's deterministic
  * pattern ({@code weekStart + 5 days} at midnight in the org timezone) and rewinds the most recent
- * such week per IC to {@code DRAFT}. Any reconcile written by a real demo run carries a different
+ * such week per IC to {@code DRAFT}. Any reconcile written by a real run carries a different
  * timestamp and is left alone, so the runner is safe to fire on every startup.
+ *
+ * <p>Carry-forward ghost row: the auth-migration chain commit ({@code CARRIED_FORWARD} state, text
+ * contains "Migrate legacy auth provider to Auth0") is intentionally kept in {@code
+ * CARRIED_FORWARD} state so the FE renders it as the ghost row pinned at the top of the DRAFT week.
  */
 @Component
 @Profile("dev")
@@ -99,6 +103,22 @@ public class DemoDraftWeekBootstrap implements CommandLineRunner {
       week.setReconciledAt(null);
       weekRepo.save(week);
       for (Commit commit : commitRepo.findAllByWeekIdOrderByDisplayOrderAsc(week.getId())) {
+        // Preserve the auth-migration carry-forward chain commit so the FE sees it as the ghost
+        // row pinned at the top of the DRAFT week. Any commit that is already CARRIED_FORWARD and
+        // references the chain text is left in CARRIED_FORWARD state; only ordinary ACTIVE commits
+        // have their reconciliation fields reset.
+        boolean isChainCommit =
+            commit.getState() == CommitState.CARRIED_FORWARD
+                && commit.getText() != null
+                && commit.getText().contains("Migrate legacy auth provider to Auth0");
+        if (isChainCommit) {
+          // Keep CARRIED_FORWARD; clear only reconciliation fields so the ghost row renders
+          // cleanly.
+          commit.setReconciliationOutcome(null);
+          commit.setReconciliationNote(null);
+          commitRepo.save(commit);
+          continue;
+        }
         commit.setReconciliationOutcome(null);
         commit.setReconciliationNote(null);
         if (commit.getState() == CommitState.CARRIED_FORWARD) {

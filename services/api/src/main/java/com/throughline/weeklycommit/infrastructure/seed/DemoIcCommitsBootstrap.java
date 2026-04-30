@@ -32,14 +32,15 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Demo polish: seed four sample DRAFT commits for the {@code @demo.throughline.app} IC persona's
- * current week so the chess matrix is populated the moment a reviewer opens the IC view. Three
- * commits are well-aligned to their Supporting Outcome; the fourth is intentionally drift-y
- * (Reactive priority bug-bash linked to a strategic SMB outcome) so the T2 drift warning fires
- * inline and the AI surface is visible without the reviewer having to type anything.
+ * Seed eight DRAFT commits for the {@code @demo.throughline.app} IC persona's current week so the
+ * chess matrix is populated on first load.
  *
- * <p>Idempotent: skips if the demo persona already has commits, if the week isn't DRAFT, or if the
- * SO catalogue we look up isn't present.
+ * <p>Distribution: five commits concentrated on the "Deliver workflow builder GA" outcome, two on
+ * the "Reduce flake rate below 1%" reliability outcome, and one intentionally drift-y commit (P1
+ * incident response text linked to a strategic SMB/ICP outcome) so T2 fires visibly on the row.
+ *
+ * <p>Idempotent: skips if the persona already has commits, if the week isn't DRAFT, or if the SO
+ * catalogue is absent.
  */
 @Component
 @Profile("dev")
@@ -48,10 +49,11 @@ public class DemoIcCommitsBootstrap implements CommandLineRunner {
 
   private static final Logger log = LoggerFactory.getLogger(DemoIcCommitsBootstrap.class);
 
-  // Three aligned + one intentionally drift-y commit. Each tuple is
-  // (text, SO title contains, category, priority, displayOrder).
-  // The drift seed picks an SO under "Win the SMB segment" but tags it Reactive — the linked SO
-  // is strategic, so T2 should flag the mismatch.
+  // Eight commits: five aligned to the workflow-builder GA outcome (concentration visible in T3),
+  // two aligned to reliability/flake reduction, and one intentionally drift-y commit whose text
+  // is incident-response work but whose SO is linked to the strategic SMB/ICP outcome — T2 should
+  // flag the mismatch visibly on the row. Each tuple: (text, SO title contains, category,
+  // priority, displayOrder).
   private record Seed(
       String text,
       String soTitleContains,
@@ -61,33 +63,61 @@ public class DemoIcCommitsBootstrap implements CommandLineRunner {
 
   private static final List<Seed> SEEDS =
       List.of(
+          // --- Workflow builder GA cluster (5 commits) ---
           new Seed(
-              "Ship the new SDR scoring rubric and onboard all reps to the qualification framework",
-              "Tighten ICP qualification",
+              "Ship the workflow builder GA milestone — all trigger types wired and load-tested"
+                  + " against 50K events/hour",
+              "Deliver workflow builder GA",
               CommitCategory.STRATEGIC,
               CommitPriority.MUST,
               0),
           new Seed(
-              "Run an A/B test on the simplified self-serve onboarding flow with sample-data"
-                  + " preload",
-              "Reduce setup friction",
+              "Instrument end-to-end metrics for the workflow builder GA launch: funnel drop-off,"
+                  + " step latency p95, error rate by trigger type",
+              "Deliver workflow builder GA",
               CommitCategory.OPERATIONAL,
-              CommitPriority.SHOULD,
+              CommitPriority.MUST,
               1),
           new Seed(
-              "Instrument week-1 activation events and ship the dashboard for the GTM weekly"
-                  + " review",
-              "Lift activation events week-1",
+              "Roll out automation for workflow builder GA smoke suite across all trigger"
+                  + " permutations in staging",
+              "Deliver workflow builder GA",
               CommitCategory.OPERATIONAL,
               CommitPriority.SHOULD,
               2),
-          // Intentionally drift-y: bug-bash work linked to a strategic SMB outcome.
           new Seed(
-              "Bug-bash the staging billing flake — flapping P1 alerts woke oncall twice this week",
+              "Complete the Auth0 PKCE handshake integration for third-party workflow triggers"
+                  + " and validate token refresh across all IDP configurations",
+              "Enable third-party triggers",
+              CommitCategory.STRATEGIC,
+              CommitPriority.MUST,
+              3),
+          new Seed(
+              "Run A/B test on workflow onboarding modal: guided-setup vs blank-canvas path,"
+                  + " target ≥15% improvement in first-workflow completion",
+              "Deliver workflow builder GA", CommitCategory.OPERATIONAL, CommitPriority.SHOULD, 4),
+          // --- Reliability cluster (2 commits) ---
+          new Seed(
+              "Instrument metrics for flake rate baseline and ship the flaky-test dashboard to"
+                  + " platform-reliability Slack channel",
+              "Reduce flake rate below 1%",
+              CommitCategory.OPERATIONAL,
+              CommitPriority.SHOULD,
+              5),
+          new Seed(
+              "Roll out automation for the retry-on-flake wrapper in the CI pipeline; validate"
+                  + " flake rate drops below 1% threshold on three consecutive runs",
+              "Reduce flake rate below 1%", CommitCategory.OPERATIONAL, CommitPriority.SHOULD, 6),
+          // --- Intentional drift (1 commit): P1 incident response linked to SMB/ICP SO ---
+          // T2 should fire: commit text is reactive incident work; linked SO is a strategic
+          // ICP-qualification outcome under "Win the SMB segment".
+          new Seed(
+              "Rotate compromised JWT signing key and audit all active sessions — P1 incident"
+                  + " response, oncall page at 02:47",
               "Tighten ICP qualification",
               CommitCategory.REACTIVE,
-              CommitPriority.COULD,
-              3));
+              CommitPriority.MUST,
+              7));
 
   private final OrgRepository orgRepo;
   private final UserRepository userRepo;
