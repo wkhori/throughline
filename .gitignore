@@ -72,3 +72,4 @@ infra/terraform/**/.terraform.lock.hcl
 
 CODEBASE-DIGEST.html
 study-guide.html
+analytics/

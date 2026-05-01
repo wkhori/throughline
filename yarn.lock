@@ -1957,10 +1957,10 @@
     find-pkg "2.0.0"
     resolve "1.22.8"
 
-"@module-federation/vite@1.14.5":
-  version "1.14.5"
-  resolved "https://registry.yarnpkg.com/@module-federation/vite/-/vite-1.14.5.tgz#e64a79c0db14fb712e81684718309bd1cf12efb4"
-  integrity sha512-uTIPnW+ibZZCVcmj/A+hriP9rPQkPIEKwGWLYoedJJh/Hg4RyHnkWMqIuezzFNKtcyaoHFltAKR4RFbi+gNdGA==
+"@module-federation/vite@1.15.1":
+  version "1.15.1"
+  resolved "https://registry.yarnpkg.com/@module-federation/vite/-/vite-1.15.1.tgz#c56f0a429b175f6ee2aa98e7f2f06016f864e24a"
+  integrity sha512-omp8UYFsKiGIWj9nTSIGF1GsybA+8A/Z8W0P7Y2PRdf4oL/GveXF3haQT6u0OFPm/v3veKYphC1LpvOZoDQBHQ==
   dependencies:
     "@module-federation/dts-plugin" "2.3.3"
     "@module-federation/runtime" "2.3.3"

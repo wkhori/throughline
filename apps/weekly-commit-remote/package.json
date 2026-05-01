@@ -24,7 +24,7 @@
     "tinykeys": "^3.0.0"
   },
   "devDependencies": {
-    "@module-federation/vite": "1.14.5",
+    "@module-federation/vite": "1.15.1",
     "@testing-library/dom": "10.4.0",
     "@testing-library/jest-dom": "6.6.3",
     "@testing-library/react": "16.1.0",

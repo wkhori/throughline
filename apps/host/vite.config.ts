@@ -1,17 +1,50 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
+import { federation } from '@module-federation/vite';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
 
-// v1 deploy note: @module-federation/vite 1.14.5 emits a circular import
-// between the shared-package chunks and their loadShare proxies, deadlocking
-// every top-level await on the host and blocking React mount. Since the
-// host's RemoteBoundary is a Phase 0 static placeholder that never actually
-// imports the federated remote, federation is unused at runtime. Building
-// host as a plain Vite SPA unblocks v1 — federation can be reintroduced once
-// the remote is genuinely consumed (and the upstream cycle is resolved).
-// See docs/architecture-decisions.md (to be updated).
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const sharedDeps = JSON.parse(
+  readFileSync(resolve(__dirname, '../../packages/shared-deps-versions.json'), 'utf-8'),
+) as Record<string, string>;
+
+// Workspace-source packages aren't federation singletons — each consumer bundles its own copy.
+const SHARED_SKIP = new Set(['@throughline/shared-ui', '@throughline/shared-types']);
+const sharedSingletons = Object.fromEntries(
+  Object.entries(sharedDeps)
+    .filter(([k]) => !k.startsWith('_') && !SHARED_SKIP.has(k))
+    .map(([name, requiredVersion]) => [
+      name,
+      { singleton: true, requiredVersion: requiredVersion as string },
+    ]),
+);
+
+const REMOTE_ENTRY =
+  process.env.VITE_WEEKLY_COMMIT_REMOTE_URL ?? 'http://127.0.0.1:5174/remoteEntry.js';
+
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
-  server: { port: 5173, host: '127.0.0.1' },
-  build: { target: 'esnext', modulePreload: false, cssCodeSplit: false },
+  plugins: [
+    react(),
+    tailwindcss(),
+    federation({
+      name: 'host',
+      remotes: {
+        weekly_commit_remote: {
+          type: 'module',
+          name: 'weekly_commit_remote',
+          entry: REMOTE_ENTRY,
+          entryGlobalName: 'weekly_commit_remote',
+          shareScope: 'default',
+        },
+      },
+      shared: sharedSingletons,
+      dts: false,
+    }),
+  ],
+  server: { port: 5173, host: '127.0.0.1', origin: 'http://127.0.0.1:5173' },
+  build: { target: 'chrome89' },
+  optimizeDeps: { esbuildOptions: { target: 'chrome89' } },
 });

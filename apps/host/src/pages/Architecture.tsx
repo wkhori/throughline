@@ -593,9 +593,9 @@ type DecisionRow = {
 const decisionRows: DecisionRow[] = [
   {
     requirement: 'Vite 5 + Module Federation host/remote',
-    treatment: 'Substituted',
+    treatment: 'Implemented',
     rationale:
-      'Runtime federation is deferred because @module-federation/vite 1.14.5 deadlocks the host build. v1 ships as two Vite SPAs with the host/remote contract preserved: shared packages, version-pinned singleton dependencies, and one JWT contract. Swap path: re-enable the plugin once the upstream cycle is fixed or migrate to @originjs/vite-plugin-federation.',
+      'Host loads the weekly-commit remote at runtime via @module-federation/vite 1.15.1. Singleton npm deps shared across host and remote; workspace-source packages bundled per-consumer. Remote stays independently deployable and standalone-runnable.',
   },
   {
     requirement: 'Redux Toolkit + RTK Query',
@@ -804,38 +804,29 @@ function Section7Federation() {
           <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
             @throughline/shared-types
           </code>
-          . Those are the architectural seams the host and remote need to preserve; the runtime
-          federation plugin itself is the part deferred for v1.
+          . Those are the architectural seams the host and remote preserve at runtime.
         </p>
         <p>
-          We evaluated{' '}
+          The host federates the remote via{' '}
           <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
             @module-federation/vite
           </code>{' '}
-          1.14.5 in both apps. The bundler emits a chunk cycle between the shared-package proxies
-          and the host’s top-level awaits that prevents React from mounting; the{' '}
+          1.15.1: it loads the remote’s{' '}
           <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
-            eager
+            remoteEntry.js
           </code>{' '}
-          escape hatch is not exposed in this plugin version. Forking the plugin to fix this is not
-          a v1-scoped change.
-        </p>
-        <p>
-          So v1 ships separate Vite SPAs with the federation contract preserved. Re-enabling the
-          runtime should be a narrow config and integration change once upstream lands a fix or we
-          migrate to{' '}
+          at{' '}
           <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
-            @originjs/vite-plugin-federation
+            /app
           </code>
-          ; nothing in the host/remote interface changes. The decision is documented in{' '}
+          , imports{' '}
           <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
-            apps/host/vite.config.ts
+            weekly_commit_remote/App
           </code>{' '}
-          and{' '}
-          <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
-            docs/architecture-decisions.md
-          </code>
-          .
+          dynamically, and shares singleton npm deps (React, Redux, RTK, react-redux,
+          react-router-dom, Auth0). Workspace-source packages are bundled per-consumer so they
+          don’t conflict with the federation share scope. The remote stays independently
+          deployable and standalone-runnable.
         </p>
       </Prose>
     </SectionBlock>

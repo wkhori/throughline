@@ -1,16 +1,7 @@
-import { useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { Landing } from './pages/Landing.js';
 import { Architecture } from './pages/Architecture.js';
-
-const REMOTE_APP_URL = 'https://weekly-commit-remote-production.up.railway.app/';
-
-function RemoteRedirect() {
-  useEffect(() => {
-    window.location.href = REMOTE_APP_URL;
-  }, []);
-  return null;
-}
+import { RemoteBoundary } from './components/RemoteBoundary.js';
 
 export function App() {
   return (
@@ -18,7 +9,7 @@ export function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/architecture" element={<Architecture />} />
-        <Route path="/app" element={<RemoteRedirect />} />
+        <Route path="/app" element={<RemoteBoundary />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
