@@ -10,8 +10,10 @@ const sharedSingletons = Object.fromEntries(
     .map(([name, version]) => [name, { singleton: true, requiredVersion: version as string }]),
 );
 
+// Railway sets VITE_WEEKLY_COMMIT_REMOTE_URL on the host service to the
+// deployed remote's remoteEntry.js. Falls back to local dev URL.
 const REMOTE_ENTRY =
-  process.env.VITE_REMOTE_ENTRY ?? 'http://127.0.0.1:5174/remoteEntry.js';
+  process.env.VITE_WEEKLY_COMMIT_REMOTE_URL ?? 'http://127.0.0.1:5174/remoteEntry.js';
 
 export default defineConfig({
   plugins: [
