@@ -1,9 +1,15 @@
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, type ComponentType } from 'react';
 
-// Federated remote is wired in apps/host/vite.config.ts via @module-federation/vite.
-// `weekly_commit_remote/App` resolves to apps/weekly-commit-remote/src/federated-entry.tsx
-// which carries its own Provider + ApiBaseUrlProvider tree.
-const RemoteApp = lazy(() => import('weekly_commit_remote/App'));
+// Phase 0: the remote isn't loaded yet — we resolve a placeholder. Phase 2
+// flips the dynamic import to the federation-exposed module.
+const PlaceholderRemote: ComponentType = () => (
+  <section style={style.placeholder}>
+    <h2>Weekly Commit (remote placeholder)</h2>
+    <p>The federated remote will mount here in Phase 2.</p>
+  </section>
+);
+
+const RemoteApp = lazy<ComponentType>(async () => ({ default: PlaceholderRemote }));
 
 export function RemoteBoundary() {
   return (
@@ -14,5 +20,6 @@ export function RemoteBoundary() {
 }
 
 const style: Record<string, React.CSSProperties> = {
+  placeholder: { padding: 32, fontFamily: 'system-ui, sans-serif', color: '#374151' },
   loading: { padding: 32, color: '#6b7280' },
 };

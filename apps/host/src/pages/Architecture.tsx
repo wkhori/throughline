@@ -593,9 +593,9 @@ type DecisionRow = {
 const decisionRows: DecisionRow[] = [
   {
     requirement: 'Vite 5 + Module Federation host/remote',
-    treatment: 'Implemented',
+    treatment: 'Substituted',
     rationale:
-      'Both apps run @module-federation/vite 1.14.5. The remote exposes ./App via federated-entry.tsx (own Provider + ApiBaseUrlProvider). The host federates it via lazy(() => import("weekly_commit_remote/App")) in RemoteBoundary; /app mounts the remote in-process. Singletons (React, Redux, RTK, react-redux, react-router-dom, shared-ui, shared-types) come from packages/shared-deps-versions.json.',
+      'Runtime federation is deferred because @module-federation/vite 1.14.5 deadlocks the host build. v1 ships as two Vite SPAs with the host/remote contract preserved: shared packages, version-pinned singleton dependencies, and one JWT contract. Swap path: re-enable the plugin once the upstream cycle is fixed or migrate to @originjs/vite-plugin-federation.',
   },
   {
     requirement: 'Redux Toolkit + RTK Query',
@@ -804,56 +804,36 @@ function Section7Federation() {
           <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
             @throughline/shared-types
           </code>
-          . Those are the architectural seams the host and remote share; the runtime federation
-          plugin loads the remote on top of them.
+          . Those are the architectural seams the host and remote need to preserve; the runtime
+          federation plugin itself is the part deferred for v1.
         </p>
         <p>
-          Both apps run{' '}
+          We evaluated{' '}
           <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
             @module-federation/vite
           </code>{' '}
-          1.14.5. The remote exposes{' '}
+          1.14.5 in both apps. The bundler emits a chunk cycle between the shared-package proxies
+          and the host’s top-level awaits that prevents React from mounting; the{' '}
           <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
-            ./App
+            eager
           </code>{' '}
-          → a thin{' '}
-          <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
-            federated-entry.tsx
-          </code>{' '}
-          that brings its own Redux Provider and{' '}
-          <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
-            ApiBaseUrlProvider
-          </code>
-          , so the host doesn’t need to know about the remote’s store. The host loads it via{' '}
-          <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
-            lazy(() =&gt; import('weekly_commit_remote/App'))
-          </code>{' '}
-          inside{' '}
-          <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
-            RemoteBoundary
-          </code>
-          ; the host’s{' '}
-          <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
-            /app
-          </code>{' '}
-          route mounts the remote in-process.
+          escape hatch is not exposed in this plugin version. Forking the plugin to fix this is not
+          a v1-scoped change.
         </p>
         <p>
-          The plugin manages chunk splitting internally — no{' '}
+          So v1 ships separate Vite SPAs with the federation contract preserved. Re-enabling the
+          runtime should be a narrow config and integration change once upstream lands a fix or we
+          migrate to{' '}
           <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
-            manualChunks
-          </code>{' '}
-          override — and both apps target{' '}
-          <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
-            esnext
-          </code>{' '}
-          to supply the native top-level await the runtime relies on. Wiring is in{' '}
+            @originjs/vite-plugin-federation
+          </code>
+          ; nothing in the host/remote interface changes. The decision is documented in{' '}
           <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
             apps/host/vite.config.ts
           </code>{' '}
           and{' '}
           <code className="rounded bg-(--color-badge-bg) px-1 py-0.5 text-xs text-(--color-badge-fg)">
-            apps/weekly-commit-remote/vite.config.ts
+            docs/architecture-decisions.md
           </code>
           .
         </p>

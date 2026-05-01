@@ -1,35 +1,12 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
-import { federation } from '@module-federation/vite';
-import sharedDeps from '../../packages/shared-deps-versions.json' with { type: 'json' };
 
-const sharedSingletons = Object.fromEntries(
-  Object.entries(sharedDeps)
-    .filter(([k]) => !k.startsWith('_'))
-    .map(([name, version]) => [name, { singleton: true, requiredVersion: version as string }]),
-);
-
+// v1 deploy: federation disabled — see apps/host/vite.config.ts for rationale.
+// The standalone bootstrap.tsx mounts WeeklyCommitApp directly, so the remote
+// runs as its own Vite SPA at https://weekly-commit-remote-production.up.railway.app/.
 export default defineConfig({
-  plugins: [
-    react(),
-    tailwindcss(),
-    federation({
-      name: 'weekly_commit_remote',
-      filename: 'remoteEntry.js',
-      exposes: {
-        './App': './src/federated-entry.tsx',
-      },
-      shared: sharedSingletons,
-    }),
-  ],
-  server: {
-    port: 5174,
-    host: '127.0.0.1',
-    cors: true,
-    origin: 'http://127.0.0.1:5174',
-    // Same .d.ts reload-storm fix as in apps/host/vite.config.ts.
-    watch: { ignored: ['**/*.d.ts', '**/*.d.ts.map'] },
-  },
-  build: { target: 'esnext', modulePreload: false },
+  plugins: [react(), tailwindcss()],
+  server: { port: 5174, host: '127.0.0.1', cors: true },
+  build: { target: 'esnext', modulePreload: false, cssCodeSplit: false },
 });
