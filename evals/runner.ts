@@ -1,22 +1,6 @@
-// Throughline AI eval runner — wraps the published `evalkit` npm package
-// (https://www.npmjs.com/package/evalkit, ADR row 34).
-//
-// Behaviour:
-//   1. Loads .env.local for ANTHROPIC_API_KEY (mandatory).
-//   2. For every scenario in evalkit.config.ts:
-//      - Reads `evals/fixtures/<id>/input.json` (a Record passed verbatim as the user message).
-//      - Reads `evals/fixtures/<id>/expected.json` (assertion list).
-//      - Calls Anthropic Messages API N=3 times at temperature 0.
-//      - Hands every Anthropic response to evalkit's `runChecks` for the JSON-validity +
-//        schema-match + content-match leg of every scenario, and applies the project-specific
-//        path-based assertion DSL on top for value/range/oneOf checks evalkit doesn't expose
-//        out of the box.
-//   3. Writes a Markdown report to `evals/last-run.md`.
-//   4. Exits non-zero if any scenario passed fewer than PASS_THRESHOLD of N runs.
-//
-// Hard rules: every scenario MUST be called against the real Anthropic API. No stubs. No retries
-// for transient HTTP failures (eval = signal, not robustness test). If a network error occurs,
-// the run for that scenario fails outright and shows up red in the report.
+// Eval runner. Wraps the `evalkit` npm package (ADR row 34) and adds a path-based
+// assertion DSL for the value / range / oneOf / stability checks evalkit doesn't
+// expose. Real Anthropic calls only — no stubs, no retries (eval = signal).
 
 import { readFile, writeFile } from 'node:fs/promises';
 import { existsSync, readFileSync } from 'node:fs';
