@@ -31,6 +31,14 @@ export default defineConfig({
       shared: sharedSingletons,
     }),
   ],
-  server: { port: 5173, host: '127.0.0.1', origin: 'http://127.0.0.1:5173' },
+  server: {
+    port: 5173,
+    host: '127.0.0.1',
+    origin: 'http://127.0.0.1:5173',
+    // Editor / build-side TypeScript writes .d.ts files into shared-ui's src tree
+    // (gitignored). Watching them triggers a reload storm in dev when both host
+    // and remote are running. Ignore them at the watcher level.
+    watch: { ignored: ['**/*.d.ts', '**/*.d.ts.map'] },
+  },
   build: { target: 'esnext', modulePreload: false },
 });

@@ -23,6 +23,13 @@ export default defineConfig({
       shared: sharedSingletons,
     }),
   ],
-  server: { port: 5174, host: '127.0.0.1', cors: true, origin: 'http://127.0.0.1:5174' },
+  server: {
+    port: 5174,
+    host: '127.0.0.1',
+    cors: true,
+    origin: 'http://127.0.0.1:5174',
+    // Same .d.ts reload-storm fix as in apps/host/vite.config.ts.
+    watch: { ignored: ['**/*.d.ts', '**/*.d.ts.map'] },
+  },
   build: { target: 'esnext', modulePreload: false },
 });
